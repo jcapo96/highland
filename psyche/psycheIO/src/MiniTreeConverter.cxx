@@ -80,7 +80,7 @@ bool MiniTreeConverter::AddFileToTChain(const std::string& inputString){
 
   // ------------- Check that the header tree exists (needed for POT counting). If it doesn't ignore the file -----------------
 
-  bool isMC = false;
+  //  bool isMC = false;
   if (!gDirectory->FindObjectAny("header")){
     std::cout << "      ----> This file does not contain a header tree. IGNORED !!!!" << std::endl;
     return true;
@@ -91,7 +91,7 @@ bool MiniTreeConverter::AddFileToTChain(const std::string& inputString){
     Header *header=0;
     chain.SetBranchAddress("POTInfo", &header);    
     chain.GetEntry(0);      
-    isMC = header->GetIsMC(); 
+    //    isMC = header->GetIsMC(); 
   }
 
   // ----------  Deal with RooTrackerVtx trees. Only for the first file
