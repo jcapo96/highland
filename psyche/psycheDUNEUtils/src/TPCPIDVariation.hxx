@@ -34,8 +34,8 @@ public:
   
   virtual ~TPCPIDVariation() {
     for (unsigned int i = 0; i < kNPULLS; i++){
-      if (_mean[i])  delete _mean[i];   _mean[i]   = NULL;
-      if (_sigma[i]) delete _sigma[i];  _sigma[i]  = NULL;
+      if (_mean[i]){  delete _mean[i];   _mean[i]   = NULL;}
+      if (_sigma[i]){ delete _sigma[i];  _sigma[i]  = NULL;}
     }
   }
   

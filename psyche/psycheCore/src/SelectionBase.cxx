@@ -1177,7 +1177,6 @@ std::vector<StepBase*> SelectionBase::GetStepsInBranchValidate(Int_t branchID) c
 //********************************************************************
 std::vector<StepBase*> SelectionBase::GetStepsInBranchWithDummy(const std::vector<UInt_t>& branch, UInt_t first, UInt_t last) const{
 //********************************************************************
-  std::cout << "anselmo 1" << std::endl;
 
     std::vector<StepBase*> steps;
 
@@ -1185,13 +1184,10 @@ std::vector<StepBase*> SelectionBase::GetStepsInBranchWithDummy(const std::vecto
 
     steps.push_back(_rootStep);
 
-  std::cout << "anselmo 2" << std::endl;
-    
     // 1. No steps were added yet, return an empty vector
     if ( _rootStep->GetNextSteps().size() ==0) return steps;
     else if ( _rootStep->GetNextSteps().size() ==1) _rootStep->GetNextSteps(steps);
 
-      std::cout << "anselmo 3" << std::endl;
 
     StepBase::BranchStatus status= StepBase::BranchOK;
     for (UInt_t i=0;i<branch.size();i++){
