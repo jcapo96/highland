@@ -110,6 +110,7 @@ public:
     seltrk_pida,
     seltrk_pida2,
     seltrk_pdg,
+    seltrk_CNNscore,
     seltrk_kinetic,
     seltrk_hit_dedx,
     seltrk_hit_dedx_raw,
@@ -142,6 +143,10 @@ public:
     seltrk_ntruedau,
     seltrk_dau_truemom,
     seltrk_dau_trueendmom,
+    seltrk_dau_CNNscore,
+    seltrk_dau_chi2_prot,
+    seltrk_dau_chi2_ndf,
+    seltrk_dau_vtxdistance,
 
     ntracks,
     trk_truemom,

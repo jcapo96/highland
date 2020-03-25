@@ -16,8 +16,8 @@ int nutype_codes[]         = {14         , -14              , 12       , -12    
 int nutype_colors[]        = {2          , 3                , 4        , 5              , COLOTHER};
 const int NNUTYPE = sizeof(nutype_types)/sizeof(nutype_types[0]);
 
-std::string part_types[] = {"#mu^{-}", "e^{-}", "#pi^{-}", "k^{-}", "#mu^{+}", "e^{+}", "#pi^{+}", "k^{+}", "p"   , NAMEOTHER};
-int pdg[]                = {13       , 11     , -211     , -321   , -13      , -11    , 211      ,  321    ,  2212, CATOTHER};
+std::string part_types[] = {"#mu^{-}", "e^{-}", "#pi^{0}", "k^{-}", "#mu^{+}", "e^{+}", "#pi^{+}", "k^{+}" , "p"  , NAMEOTHER};
+int pdg[]                = {13       , 11     , 111      , -321   , -13      , -11    , 211      ,  321    ,  2212, CATOTHER};
 int part_colors[]        = {2        , 3      , 4        ,  94    , 7        , 6      , 31       ,  92     ,   8  , COLOTHER};
 const int NPART = sizeof(part_types)/sizeof(part_types[0]);
 
