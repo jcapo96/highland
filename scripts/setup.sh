@@ -25,13 +25,19 @@ if [[ ${HOSTNAME} =~ "fnal" ]] ; then
          export ROOTSYS=$larsoft_products/root/$root_dir/$compiler2
          
          export LD_LIBRARY_PATH=$larsoft_products/gcc/$gcc_dir/$compiler/lib64:$larsoft_products/gcc/$gcc_dir/$compiler/lib:$larsoft_products/gcc/$gcc_dir/$compiler/lib64:$larsoft_products/tbb/$tbb_dir/$compiler2/lib:$LD_LIBRARY_PATH         
-         export PATH=$larsoft_products/cmake/$cmake_dir/$compiler/bin/:$larsoft_products/gcc/$gcc_dir/$compiler/bin/:$PATH
+         export $larsoft_products/cmake/$cmake_dir/$compiler/bin/:$larsoft_products/gcc/$gcc_dir/$compiler/bin/:$PATH
          
 else
    export ROOTSYS=/hep/sw/root-6.12.06/myroot
 fi
 
-
+export PATH=$ROOTSYS/bin:$PATH
 export CMAKE_MODULE_PATH=$ROOTSYS
 export CMAKE_PREFIX_PATH=$ROOTSYS
+
+
+export DYLD_LIBRARY_PATH=$ROOTSYS/lib:$DYLD_LIBRARY_PATH
+export   LD_LIBRARY_PATH=$ROOTSYS/lib:$LD_LIBRARY_PATH
+
+
 export HIGHLAND_PACKAGE_HIERARCHY=pionAnalysis:baseAnalysis:highlandTools:psycheSelections:highlandIO:highlandCorrections:highlandUtils:LArSoftReader:highlandEventModel:highlandCore:psycheIO:psycheDUNEUtils:psycheUtils:psycheEventModel:psycheCore
