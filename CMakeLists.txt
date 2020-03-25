@@ -123,7 +123,7 @@ INSTALL(TARGETS highland DESTINATION ${CMAKE_SOURCE_DIR}/lib)
 #-------------------------------------------------------
 
 add_executable(pion.exe  ${CMAKE_SOURCE_DIR}/highland2/pionAnalysis/app/RunPionAnalysis.cxx)
-target_link_libraries(pion.exe ${ROOT_LIBRARIES} "${CMAKE_BINARY_DIR}/libhighland.dylib")
+target_link_libraries(pion.exe ${ROOT_LIBRARIES} "${CMAKE_BINARY_DIR}/libhighland${CMAKE_SHARED_LIBRARY_SUFFIX}")
 INSTALL(TARGETS pion.exe DESTINATION ${CMAKE_SOURCE_DIR}/bin)
 
 #-------------------------------------------------------
