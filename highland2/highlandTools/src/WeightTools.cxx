@@ -211,10 +211,10 @@ std::string weightTools::ApplyExternalWeights(TTree* tree, const std::string& cu
       std::stringstream siw;
       siw << iw;
       std::string ssiw = siw.str(); 
-      bool found=false;
+      //      bool found=false;
       if (uopt2.find("WE"+ssiw+" ")!=std::string::npos){
         w = w+"*ext_weight["+ssiw+"]";
-        found=true;
+        //        found=true;
       }
     }
   }

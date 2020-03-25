@@ -3063,7 +3063,7 @@ const std::vector<int> LArSoftTreeConverter::GetPFParticleHitsIndices(const reco
 int LArSoftTreeConverter::GetMVAIndex(const std::string& tag, const std::string& name){
 //*****************************************************************************
 
-  for (Int_t i =0;i<MVADescription->obj.size();i++){
+  for (UInt_t i =0;i<MVADescription->obj.size();i++){
     if (MVADescription->obj[i].fOutputInstance != tag) continue;
     for (Int_t j =0;j<4;j++){
       if (MVADescription->obj[i].fOutputNames[j] == name) return j;
