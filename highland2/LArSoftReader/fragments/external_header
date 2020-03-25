@@ -1,0 +1,22 @@
+########################### Start External Header ######################### 
+# -*- makefile -*-
+# 
+# A fragment used by CMT to build the an external library.  This executes a
+# compilation script that is found in the src directory.  See the
+# "external" fragment for the full documentation.
+#
+
+${CONSTITUENT}_output = ../$(tag)
+
+ifndef ${CONSTITUENT}_stamps
+  ifdef $(package)_stamps
+     ${CONSTITUENT}_stamps=$($(package)_stamps)
+  else
+     ${CONSTITUENT}_stamps=$(${CONSTITUENT}_output)/${CONSTITUENT}.stamp
+  endif
+endif
+
+${CONSTITUENT} :: $(${CONSTITUENT}_stamps)
+	@echo "${CONSTITUENT} OK... " 
+
+########################### End External Header ########################

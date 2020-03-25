@@ -1,0 +1,591 @@
+/*! \page highland2/highlandIOHistory History for the highland2/highlandIO Package 
+
+\section highlandIO_v0r1_history Version v0r1
+
+Freeze information:
+   - Freeze Date: Wed Sep 17 17:10:38 2014
+   - Freeze User: acervera
+   - Freeze Host: neutrinos8.local
+
+First freeze of this package, which corresponds to a psyche release
+
+CHANGES WITH RESPECT highlandIO in OLD HIGHLAND
+
+- Disable some unecessary branches to make the code faster.
+- Change vectors by arrays to match psyche
+- add protections not to exceed MAX array values defined in psyche
+- CreateFlatTree is currently nor working. People should use old highland FlatTrees for the moment
+
+
+\section highlandIO_v0r3_history Version v0r3
+
+Freeze information:
+   - Freeze Date: Wed Oct  8 00:14:55 2014
+   - Freeze User: acervera
+   - Freeze Host: Anselmo-Cerveras-MacBook-Pro.local
+
+oaAnalysisTreeConverter
+
+- FillTrueInfo() was missing hence no true<-->recon association was in place 
+  restore RooTracker info retrieving (is not working for me locally (ROOT problem) for prod 5 files but seems
+  is a configuration problem since no one else observed it so far)
+
+FlatTreeConverter:
+
+- Use the new TreeConverterUtils class instead of the copy implemented in HighlandAnalysisUtils, now both psyche and highland2 are using the exact same methods... 
+- Use eactly the same branches as in psyche
+- added simple conditional compilation to resolve the issue with doubles-->floats change
+  
+CreateFlatTree
+
+- some changes in preparation for flat tree creation in highland2:
+  fix possible crash when creating a list of true track ids to save
+  fill single tree --> a flattree one 
+- Flat tree is created and can be read to do analysis but there are some problems with the truth info 
+
+
+
+\section highlandIO_v0r5_history Version v0r5
+
+Freeze information:
+   - Freeze Date: Thu Oct  9 17:40:54 2014
+   - Freeze User: acervera
+   - Freeze Host: Anselmo-Cerveras-MacBook-Pro.local
+
+Correct some bugs related with FlatTree creation and reading
+
+ - proper true track <--> true vertex association through vertex index (highland style). It was preventing truth info to be loaded correctly
+ - for some reason TrueVertex Lepton and Proton branches were off and some variable in the microtree were not filled: 
+   truemu_truemom, truemu_truedir, etc
+
+
+
+\section highlandIO_v0r7_history Version v0r7
+
+Freeze information:
+   - Freeze Date: Sat Oct 11 00:26:42 2014
+   - Freeze User: acervera
+   - Freeze Host: Anselmo-Cerveras-MacBook-Pro.local
+
+Fix some problems related to the FlatTree created from highland2 
+
+don't read sPOTSincePreviousSpill since this variable is not in the new FlatTree yet. This was causing problems in the next variable (run) 
+that was preventing the PileUp correction to be applied. 
+Conditional compilation also in cxx file since the subrun variable is different in old and new trees Subrun vs SubRun
+
+
+\section highlandIO_v0r9_history Version v0r9
+
+Freeze information:
+   - Freeze Date: Mon Nov 17 17:19:32 2014
+   - Freeze User: acervera
+   - Freeze Host: portanselmo.ific.uv.es
+
+
+
+Fully validated	version	of FlatTree creation, Selection and Systematics.
+It will	be used	to create first	official FlatTrees.
+
+CreateFlatTree
+--------------
+
+- add antiNueCC true reaction preselection
+- add corrections to the flat tree creation
+- Since for a Global track we only save one segment per subdetector we should chose the one with more nodes. 
+  This was already in highland and now have been propagated to highland2. 
+  With this change we remove one source of discrepancy between flattree and oaAnalysis since 
+  the selection cuts (PID and quality cut) use the segment with more nodes in the case there are several
+- Correct problem when we have several segments in the same TPC for a global track and those segments segments do not appear after each other in the array. This is very rear but it can happen. 
+  We should also save the segments with more nodes in this case
+- by default save all true tracks. Otherwise some weight systematics give different results
+
+FlatTreeConverter
+-------------------
+
+- Enable many branches needed by the extended classes (AnaSubDet, AnaDetCrossing, ...). Also enable branches 
+  related with tracker components, which were disabled
+- Reflect the fact that the FlatTree created with highland2 uses the bit field convention for Detector variables, while 
+  the old FlatTree using the old convention (124=TPC1-TPC2-FGD1, ...). This will probably change
+- Correct an important bug, where the true det crossing was not converted for the flat trees, 
+  this was correctly done for the oaAnalysisTreeConverter, and is also wrong in psyche for the redoconverteer...
+- Fill the AnaBunchB::Weight from the FlatTree, which for the moment corresponds to the pileup correction
+- Read raw and corrected dedx variables (can chose in parameters file which one to use, by default corrected).
+  Read RangeMomentum Flip  variables. 
+  Read TimeNodes information
+
+oaAnalysisTreeConverter
+--------------------------
+
+- fill NHits, Length and DirectionEnd variables in AnaSubTrack. 
+- Read node times and range momentum flip
+
+
+\section highlandIO_v0r11_history Version v0r11
+
+Freeze information:
+   - Freeze Date: Sun Nov 30 13:31:20 2014
+   - Freeze User: acervera
+   - Freeze Host: Macintosh-64b9e8d35af0.local
+
+Release for te highland to highland2 migration tutorial on Dec 1st 2014.
+Selections give the same results for oaAnalysis and FlatTrees
+Systematics give slighly different results (Under investigation). Not crucial for tutorial
+
+
+- update to changes in psyche related to variable size arrays
+- add ability to apply the Alternate momentum correction
+- Use the ResizeArray method to give the proper size to the TrueVertex->TrueTracks vector, since its 
+  size its not know a priory. The array will be created with a big size (NMAXTRUETRACKS) 
+  and then resized to TrueVertex->nTrueTracks once filled. 
+
+
+
+\section highlandIO_v0r13_history Version v0r13
+
+Freeze information:
+   - Freeze Date: Wed Dec 10 19:23:26 2014
+   - Freeze User: acervera
+   - Freeze Host: Macintosh-64b9e8d35af0.local
+
+Mainly correct bug 1059, fix some memory leaks and add ECAL variables
+
+- fill NNodes for sub-detector segments: ecal,  p0d,  smrd
+- Addition of ECAL variables in FillEcalTrackInfo() and change of trackerECAL from NULL to GetChain(ReconDir/TrackerECal)
+  Addition of #if VERSION_HAS_ECAL_LLR in order to avoid incompatibilities between PROD6 and 5 with the PID ECAL variables in FillEcalTrackInfo
+- use the presence of the config tree in the input file to discriminate between highland and highland2 FlatTrees. 
+  The program stops when the FlatTree type does not match the #define USEHIGHLAND2 line in FlatTreeConverter.
+  In that way the user does not get confuse with undesired output and crashes due to incompatible FlatTrees
+- enabled branches necessary for keeping the link to the RooTracker vertices (fixes a part of bug #1059)
+- read also brunches for ecal NNodes and start/end positions, 
+  relevant for numuCCQE syst work (had it locally but probably wont hurt to have it here as well)
+- Correct another memory leak, now in FillTrueTrackRecoInfo. 
+  A TrueTrack was created fot the true reco mactching but never deleted.
+
+
+
+\section highlandIO_v0r15_history Version v0r15
+
+Freeze information:
+   - Freeze Date: Wed Jan  7 17:07:28 2015
+   - Freeze User: acervera
+   - Freeze Host: portanselmo.ific.uv.es
+
+
+
+oaAnalysisTreeConverter
+
+- Put sand muon information
+- multiply the POT accumulated by 2.5e17 when running on sand muon mc, now if you access the header you will get already 
+  the total pot used and not the number of files used for sand muons. This is now similar to the magnet files
+- substitute RunID>1000000 by IsMC. This should solve bug 1060 fo Nuwro, for which the run number convention is different
+- Initial commit of extended data classes to permit saving of
+  information from local reconstruction to the flat tree. 
+
+CreateFlatTree
+
+- Initial commit of extended data classes to permit saving of
+  information from local reconstruction to the flat tree. 
+
+
+
+\section highlandIO_v0r17_history Version v0r17
+
+Freeze information:
+   - Freeze Date: Thu Jan  8 18:37:33 2015
+   - Freeze User: acervera
+   - Freeze Host: Macintosh-64b9e8d35af0.local
+
+ECal LLR variables of TTrackerECALReconModule are only available for prod6
+so added a conditional compilation  to account for it
+
+
+
+\section highlandIO_v0r19_history Version v0r19
+
+Freeze information:
+   - Freeze Date: Tue Jan 27 17:35:31 2015
+   - Freeze User: acervera
+   - Freeze Host: Macintosh-64b9e8d35af0.local
+
+
+Correct several bugs and add ECAL variables
+
+FlatTreeConverter:
+ - enable several ECAL variables
+ - use the total number of sub-detectors for ECAL and SMRD so have  arrays of appropriate size and correspond to what is in the flat-tree
+ - add protection against empty Flattrees, as we did in oaAnalysisTreeConverter
+ - Sove bug 1070. The particle variable was 0 because the sTrueVertexLeptonPDG branch in the flat tree was not enabled. 
+
+oaAnalysisTreeConverter:
+ - solve bug 1066, by using the correct genie reaction code
+ - Add ToF between detectors
+ - Solution for bug 1065 implemented. Don't add the file to the TChain when it has 0 entries
+
+
+
+\section highlandIO_v0r21_history Version v0r21
+
+Freeze information:
+   - Freeze Date: Wed Feb 18 11:26:58 2015
+   - Freeze User: acervera
+   - Freeze Host: Macintosh-64b9e8d35af0.local
+
+Add default mainpage.dox so that package  can be referenced from another one in doxygen using \ref
+
+
+FlatTreeConverter:
+- Ignore FlatTree files which does not have header. Otherwise POT counting will be wrong
+- for AnaTrack added also the alternate momentum,   direction end and direc
+  from the the alternate with same PID as the main one but with reverse se
+  this is to be able to consistently reverse a track based on time info
+- Convert back flat treetof variables to Dataclasse ones
+- enable reading kaon TPC pull from flat tree
+- Add the AnaTECALRecon information to the FlatTreeConverter.
+- To avoid mistmatching problems between the flattree and RooTrackerVtx entries in all cases 
+  (even when we skip some events) loop over RooTrackerVtx entries until the run, subrun and evt numbers match the ones 
+  in the flattree. In general, once the first match is found the loop finds the good entry in the first iteration of the loop 
+  so we don't expend time in this operation. This should totally solve bug 1059
+- Bunch=-999 when the entry in the FlatTree is just for the Spill info, because there are no reconstructed tracks. 
+  We should skip this and not create a new bunch for it. In this case the Spill will have no bunches
+- replacing variable names, as of bugzilla 1076
+
+oaAnalysisTreeConverter:
+- fix for NuWro (where NE### variables in the NRooTrackerVtx are not filled)
+- add FillTrueVertexRooInfo (moving some code from FillTrueVertexInfo)
+  (preparing for getting more info from RooTrackerVtx)  
+- since sometimes FSI creates leptons, make sure that the one saved in
+  trueVertex->LeptonPDG/LeptonMom/LeptonDir
+  is the one properly corresponding to truevertex->NuPDG
+- in truevertex->ProtonMom save the HM proton instead of a random one
+- Add converter for TP0DVertex information. This information is
+encapsulated in the AnaP0DReconVertex analysis object.
+- get true lepton info from RooTrackerVtx instead of TruthTrajectoryModule:
+   trueVertex->LeptonPDG, LeptonMom, LeptonDir, Q2
+   fix for NuWro needed
+- discard Pauli blocked vertices in the truth tree (see bugzilla 1011)
+- add Position and Charge of the first 2 more upstream and the first 2 more downstream hits of each reconstructed track
+(porting from old highland)
+- create an AnaBunch even if there are no tracks but there is a global vertex (its track/s should be right out of bunch)
+(porting from old highland)
+- move CompareCleanliness in .hxx (as a class) and improve it to better sort globalV->trueV
+(porting from old highland)
+- add evaluation of Cleanliness and Completeness for each pair globalVertex-trueVertex (saved in AnaRecTrueMatch):
+they were wrongly evaluated in TGlobalReconModule (fixe from oaAnalysis v5r30)
+but anyway it is better to evaluate them in higland where objects are "bunched"
+(porting from old highland)
+- fill global vertex consituents even with a null pointer if not found the ID
+(porting from highland 2013)
+- replacing variable names, as of bugzilla 1076
+
+
+\section highlandIO_v1r1_history Version v1r1
+
+Freeze information:
+   - Freeze Date: Tue Mar 31 18:52:42 2015
+   - Freeze User: acervera
+   - Freeze Host: Macintosh-64b9e8d35af0.local
+
+Major freeze with many changes in psyche 
+to allow selection depending systematics, and performance optimization
+
+
+- fill array AnaTrueVertex::NPrimaryParticles
+  counting outgoing primary particles directly from RooTrackerVtx
+  this and further commits will solve but 1051
+
+- In the event there were no tracks in a bunch, but the global vertex
+  (and potentially AnaLocalBunch components) still can be saved.
+  Need to ensure the bunch is created as an AnaLocalReconBunch if saving
+  of local reconstruction is enabled in parameters file.
+
+- follow up the renaming of AnaTrack:Vertex in ReconVertex in DataClasses
+(the global vertex associated to the track)
+- fix bug 1061 in FlatTreeConverter about true vertices associated to global vertices
+
+
+- completely change the way of finding the primary true lepton in rooTrackerVtx (good for Neut, Genie and NuWro in both prod 5 and 6)
+- get also ProtonMom from rooTrackerVtx
+- get rid of NBaryons
+- fill NPrimaryParticle[kMesons]
+
+- tag coherent interaction on hydrogen (neut bug, bugzilla 1056)
+- delete all the true and reco objects associated to coherent interaction on hydrogen
+ and to Pauli blocked vertices (bugzilla 1011): this is done after filling spill and bunches,
+ by calling the method DeleteBadObjects (that calls DeleteTrueTrack, DeleteRecoTrack and DeleteRecoVertex... it was hard!);
+ this can be disabled hard-coding the bool _discardPauliBlocked and _discardCohOnH on top of oaAnalysisTreeConverter.cxx
+
+- in getting the true lepton (and warning for errors) consider also some rare cases where FSI produce other leptons
+
+- fill true->vertexNPrimarParticles (to be used in GetTopology)
+  either from RooTrackerVtx (if available) of from TrueTracks
+- use RooTrackerVtx info for the true lepton as in oaAnalysisTreeConverter
+ (will replace some vars in old flattrees)
+
+
+\section highlandIO_v1r3_history Version v1r3
+
+Freeze information:
+   - Freeze Date: Thu Apr 30 16:00:26 2015
+   - Freeze User: acervera
+   - Freeze Host: Macintosh-64b9e8d35af0.local
+
+Many bugs corrected. It is worth noting that the POT counting is now slighly higher for MC (bug 1091): 
+
+- reduce warning of "no beam summary data" to just one per file,
+  in order to avoid continous warning when running over control samples
+- if no rooTrackerVtx found, save true lepton vars and
+  true proton vars from TruthTrajectoriesModule
+- if many true proton, use the first one (that is the hit one),
+  for ProtonMom and ProtonDir
+- remove ToF info since it is now in psyche
+- partially fix bug 1097
+- fix warnings for global vertex constituents not found (when too many tracks, not all saved)
+- in truth tree save also 2p2h for nuwro (that has reaction code 70)
+- To get the POT from the RooTrackerVtx tree loop over estries until the POT for a given vertex is not 0. 
+  Previously only the last entry was checked. This should solve bug 1091
+- fix bug 1101 (suppress warnings from GetParticle for flattrees without RooTrackerVtx)
+- in vertex->NPrimaryParticles[kMesons] count all mesons instead of only the most common,
+  by using a range of PDG codes. Same for kBaryons.
+- wrong offset for sPOTSincePreviousSpill produces a runtime error becaouse of index beaing added twice
+- Fixed double counting GENIE POTs
+- fix bug 1107
+- avoid crash before warnings when running over a prod5 file with highland compiled with prod6
+- add protection against empty spills to solve bug 1104. Skip the spill when the RooTrackerVtx 
+  has no vertices. This condition is not applied for cosmics
+- add antinu NC in truth tree explicitly
+
+
+
+\section highlandIO_v1r5_history Version v1r5
+
+Freeze information:
+   - Freeze Date: Mon Jun 22 19:23:52 2015
+   - Freeze User: acervera
+   - Freeze Host: Macintosh-64b9e8d35af0.local
+
+requirements:
+ - use psycheIO such that CreateMiniTree can work with MiniTrees as input
+ - remove unecessary explicit dependency on nd280Analysis tools since this is implicitly used through highlandTools
+
+CreateMiniTree:
+ - Add functionality to create the new FlatTree format (MiniTree), saving directly the AnaSpill class 
+
+FlatTreeConverter:
+ - correct indentation. Reed roo tracker when requested
+ - fix handling of NRooTrackerVtx in sand muon files (bugzilla 1128)
+ - read trECALLength, which is used for the ECAL PID
+ - Add UniqueID to AnaSubTrack
+
+oaAnalysisTreeConverter:
+ - For MC, read the POTPerSpill variable in HeaderDir and set it into AnaBeam::POT. 
+ - fix handling of NRooTrackerVtx in sand muon files (bugzilla 1128)
+ - P0DEcal info was not loaded into the DataClasses. This should solve bug 1127
+ - properly deal with POTSincePreviousSavedSpill, POTPerSpill, IncrementPOTBySpill and IncrementPOTByFile. 
+   Move getting the POT per file from the roo tracker to a separate method
+ - check that the current added file has not the same run and subrun as the previous. 
+   If so exit. This may happen when a file has same run and subrun but different keyname. For example: 
+   production006/B/mcp/neut/2010-11-water/magnet/run2/anal/oa_nt_beam_90210042-0035
+ - set null segments->true of true bad ogjects
+ - add methods to delete fully contained true events (true vertex and its associated true tracks) in the specified subdetectors, 
+  controlled via parameters file. When saving events with ECAL objects consider only events with at least two objects, since 
+  all analyses with ECAL only objects (and nothing else) require at least two objects
+ - use the GeometryManager to load the geometry when starting a new file. The geometry will be loaded when its hasg code changes. 
+   In this case the GeomID is incremented and saved into the AnaSpillB class
+ - set TPCsegment->TrueTrack = NULL when this true track has to be deleted (for bug 1011 or 1056)
+   but the recontrack associated to this segment will not (since it is associated to a different truetrack)
+ - Add new FGD2 Vertex Activity variables (commented -> need to be checked
+ - Add UniqueID to AnaSubTrack
+
+
+\section highlandIO_v1r7_history Version v1r7
+
+Freeze information:
+   - Freeze Date: Wed Jul  1 10:46:37 2015
+   - Freeze User: acervera
+   - Freeze Host: Macintosh-64b9e8d35af0.local
+
+Release motivated by baseAnalysis splitting
+- for the moment RooTrackerVtx filtering is only available for oaAnalysis input
+
+
+\section highlandIO_v1r9_history Version v1r9
+
+Freeze information:
+   - Freeze Date: Sat Aug  1 11:32:10 2015
+   - Freeze User: acervera
+   - Freeze Host: Macintosh-64b9e8d35af0.local
+
+FlalTreeConverter:
+- Change old flattree tof related variable names
+- moved AnaDetCrossing momentum vars to BaseDataClasses (needed for ECal EM energy syst))
+- read TargetMom and TargetDir
+- port commit from oaAnalysisConverter of last 2 months:
+  fix in FillTrueVertexRooInfo for sand muon prod 5 files (where NE#vc vars are filled with -1)
+
+CreateMiniTree:
+- create a full spill at for the last not saved entry, otherwise this spill will not be processed when running highland analyses and the POT will not be counted
+
+oaAnalysisTreeConverter:
+- Delete Fully contained true vertices and associated objects within the DeleteBadObjects method, in such a way that all links are properly 
+  deleted and there is no inteference with the pauli blocked and coherent stuff
+- retrieve some pre-FSI from NRooTrackerVtx
+  (commented out by now, need to check how much the file size increases)
+- Attempt to do bunching for local recon objects. 
+  Create a bunch also when there are no global PIDs
+- Added P0DRecon clusters to the oaAnalysis tree converter
+- in DeleteBadOjects, do not delete tracks without truth association
+  (which might be linked to a bad true vtx via a global vertex, see bug 1056)
+- suppress error message about primary lepton not found for sand muons (even though it's not yet clear why it happens: see bug 1136)
+- better explain warning of bug 1161
+- don't Remove TrueVertices With No TrueTracks by default. Add a parameter to control that
+
+
+\section highlandIO_v1r11_history Version v1r11
+
+Freeze information:
+   - Freeze Date: Wed Sep 23 17:55:34 2015
+   - Freeze User: acervera
+   - Freeze Host: portanselmo.ific.uv.es
+
+
+Summary:
+ - Correct Bug 1167: Highland2 analyses can get stuck in an infinite loop if using the skip events (-s) command line option.
+ - Correct Bug 1172:  oaAnalysisTreeConverter::DeleteBadObjects crash
+ - Correct Bug 1174: issues in deleting fully contained events
+ - Correct Bug 1143: RunCreateFlatTree crashes with prod 5 control sample files
+ - Solve bug with rooTrackerVtx links in mini tree
+ - Fix memory leaks related to local recon objects
+
+FlalTreeConverter:
+- attempt to solve bug 1167 releated with finding the right entry in the RooTrackerVtx tree
+- When skiping events the first entry to be read should be the one corresponding to the first bunch in the spill, since it is in that entry when the spill info (TrueVertices and TrueTracks is filled). This should solve last thread of bug 1167
+
+
+MiniTreeConverter:
+- add new HighlandMiniTreeConverter such that the correct AnaSpillB type is created
+
+CreateMiniTree:
+- When appliying RooTrackerVtx tree filtering the RooVtxIndex of true vertices in AnaSpill must be changed. 
+This change should be done before filling the MiniTree.  This should solve the problem observed by Enrico and Tianlu with the 
+links when running on MiniTrees
+Add protection for non existing OutOfBunch, specially relevant when creating a MiniTree from another MiniTree
+- Don't delete bunches containing tracks associated to a vertex that belong to a non deleted bunch. Otherwise 
+a sg fault will occur because the vertex contains a track that has been deleted.
+ 
+
+oaAnalysisTreeConverter:
+- Updated P0DReconClusters reading to match that of P0DParticles and P0DVertices. This should save P0DReconClusters from all bunches incl out-of-time
+- Fix memory leaks. Call delete on TClonesArray pointers in destructor of oaAnalysisTreeConverter.
+- Fixed bug when using _bunchP0DClusters. Wasn't cleared properly before filling in GetBunchLocalObjects. Also wasn't checking that they were empty in FillBunchInfo
+- fix bug 1172: add protection missing for non-existing pointers in DeleteBadObject
+- Merged GlobalVertices/LocalReconObject filling into the same loop as GlobalPID filling in FillBunchInfo. This fixes a serious bug whereby many local recon objects were skipped because there were no reconstructed global vertices
+- save AnaTrueVertex::NuEnergy even though there is no the primary lepton as in sand files (see bug 1136)
+- in FillBunchInfo, re-introduce the second loop over bunches for global vertices
+(which was removed last week): this should fix bug 1172.
+also make the code more clear by splitting FillBunchInfo into:
+FillPIDs, FillGlobalVertices, FillP0DVertices, FillP0DParticles, FillP0DClusters, FillTECALReconObjects, FillTECALReconObjects
+- add in oaAnalysisTreeConverter::HasNonContainedReconTracks a check
+that also all the associated global vertices are "fully contained" (see bug 1174)
+- In AddFileToChain read the first entry in the BasicHeader tree and not the last but one, since this gives problems for 
+files with a single entry (this happens sometimes for control samples). This should solve bug 1143
+
+
+
+
+
+
+\section highlandIO_v1r13_history Version v1r13
+
+Freeze information:
+   - Freeze Date: Fri Jan  8 13:04:17 2016
+   - Freeze User: acervera
+   - Freeze Host: Macintosh-64b9e8d35af0-2.local
+
+SUMMARY:
+- Add functionality for complete treatment of P0D contained objects 
+- Don't read branches not present in the tree, to solve bug 1238. 
+- add SpillsSincePreviousSavedSpill functionality for the MiniTree
+
+FlalTreeConverter:
+- Switch on kaon dE/dx variables (expected mean, sigma) by default, should fix Bug 1196.
+- FIll track->Chi2 and track->NDOF (likely an old typo)
+- Don't read branches not present in the tree, to solve bug 1238. 
+  Use the new utility method utils::ConfigureTreeBranch, which check the existence of the leaf 
+  in the tree. Ths has to be done after reading the first file and not in the Initialize method
+
+CreateFlatTree:
+- for consistency added flip kinematics and tof corrections (will only be run if enabled and the former
+  one is enabled as well, since ToF may involve flipping), 
+  both off by default
+- update to the new convention for true vertex detectors
+
+CreateMiniTree:
+- add SpillsSincePreviousSavedSpill functionality for the MiniTree 
+- update to the new convention for true vertex detectors
+
+oaAnalysisTreeConverter:
+- fully integrate P0D objects into the system, as native highland2 objects. The AnaLocalReconBunch is not used in this new approach. 
+  Instead new P0D classes (in P0DDataClasses.hxx) inheriting from highland2 objects are used. 
+  P0d DelayedClusters info has been added into AnaSpill and AnaEvent such that selections can use only event (don't need spill)
+- add a new parameter highlandIO.P0DDataClasses.UseReconDirP0DNew to switch on the new P0D objects, independently of the highlandIO.FlatTree.UseReconDirP0D parameter, which is only use for the 
+  AnaLocalReconBunch. In fact both cannot be on simultaneously
+- correct bug 1215
+- Fill the variables PionMom and PionDir that have been added to AnaTrueVertex.
+  This is done in the same way as for ProtonMom and ProtonDir, but for PDG==211.
+  The variables are required e.g. for true pion kinematics in a CC-1pi measurement.
+  The discussion regarding these variables can be found in Bugzilla #1214.
+- add SpillsSincePreviousSavedSpill functionality for the MiniTree
+- count GoodSpills only in POT ans Spills since previous saved spills, otherwise MiniTree and oaAnalysis can give different results 
+  for data when bad quality spills are skept
+- For real data files the last entry has negative EventID and no reconstructed objects. Don't create 
+  a spill for Spills with EventID<0
+- for AnaTrueVertex fill the Detector member using the psyche detector bits definitions
+
+oaAnalysisP0DTreeConverter: 
+- This is not a new converter, but only a different cxx file with P0D specific functions of the oaAnalysisTreeConverter. 
+  Those functions are use to convert the TP0DReconModule objects into native, fully-integrated highland2 objects
+
+New temporary files: ND280GeomId.hxx ND280GeomId.cxx ND280GeomIdDef.hxx P0DGeometryManager.hxx P0DGeometryManager.cxx 
+- add files needed for getting the position of a given GeomId. Temporarly here until we make sure this is what we want 
+
+
+
+
+\section highlandIO_v1r15_history Version v1r15
+
+Freeze information:
+   - Freeze Date: Fri Feb  5 12:26:22 2016
+   - Freeze User: acervera
+   - Freeze Host: portanselmo.ific.uv.es
+
+oaAnalysisTreeConverter: 
+- Remove Type and Position from AnaP0DHit and add GeomID and Time.
+  Position and Type can be obtained from the GeomID
+
+CreateFlatTree.cxx, highlandIO.parameters.dat  
+ - added MomRangeCorrection
+
+Move to version v2 
+
+
+\section highlandIO_v2r1_history Version v2r1
+
+Freeze information:
+   - Freeze Date: Sun Mar  6 18:09:44 2016
+   - Freeze User: acervera
+   - Freeze Host: Macintosh-64b9e8d35af0-2.local
+
+major reorganization with new packages and  changes in event model class names
+
+- udapt to changes in base packages
+- DataClassesIO: Define and Write methods, needed for FlatTrees are now only here, not in the DataClasses themselfs. 
+  The IO classes inherit now from the dataClasses. Before it was the other way around
+  IO classes are only needed to create the flat-trees, 
+  hence no need  to create IO objects throughout the code but only when actually
+  creating the flat-trees,  IO object are created out of higher-level ones (keeping only the information
+  needed to dump an object into a flat-tree) an only used to fill the trees in CreateFlatTree
+- FlatTreeConverter: inherit from redoTreeConverter. keep TrueTrack in flattree variable names for backwards compatibility
+- oaAnalysisP0DTreeConverter: add missing parenthesis in conditional
+
+
+*/

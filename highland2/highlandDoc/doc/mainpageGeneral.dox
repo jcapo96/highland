@@ -1,0 +1,43 @@
+
+The HighLAND framework (<b>HIGH</b> <b>L</b>evel <b>AN</b>alysis <b>D</b>evelopment) is designed to simplify the process
+of analysing data in particle detectors. It allows the user to quickly run analyses, plot results, evaluate the impact of
+systematic errors and much more. To allow this two set of packages have been identified:
+  - \b PSyChE (<b>P</b>ropagation of <b>S</b>ystematics and <b>Ch</b>aracterization of <b>E</b>vents) is a high performance set of packages which performs event selection and propagation 
+  of systematics.	        
+  - \b HighLAND: use the PSyChE packages as core, and it adds in addition Corrections, FlatTree creation, tools for Drawing, etc. In practice PSyChE is part of the HighLAND distribution.
+
+The main reason to keep PSyChE and HighLAND separated is that PSyChE should be able to run directly by fitters on a event-by-event basis,
+being speed a must. This is why the core of the framework is usually developed only by HighLAND experts, while there is more freedom in the non PSyChE part. 
+
+\n
+\image html highland_flow.png width=1000px
+\n
+
+The analysis flow is in the above diagram. For every event a set of \b corrections are applied to make data and MC agree better.
+Then a loop over toy experiments is done, each toy experiment will be an independent analysis of the same event, in which the event properties are varied.
+This allows propagating systematic errors numerically. For each toy experiment, a set of <b>event variations</b> change some aspect of the data. The <b>event selection</b>
+proceeds then on that modified data. Finally, a \b weight for the event in this particular toy experiment is computed, to account for systematics that cannot be
+propagated as variations, and for event weight corrections. Those three operations, event variations, event selection and event weights are performed by PSyChE.
+HighLAND provides in addition the infraestructure to do the event loop, apply corrections, create and fill root trees that can be easily analysed using a set of
+tools for drawing (also provided by HighLAND), extensions to the event model, etc.
+
+\n
+\n
+Each analysis that uses the framework defines its own executable, for example a hypothetic analysis package called myAnalysis would have an application RunMyAnalysis.cxx. The output of this
+executable is a root file with several trees. Some of them contain a summary of the variables used in the analysis as well as selection cuts information
+(those are called micro-trees: default, all_syst, ...), while there are also single-entry trees containing more general information such as the amount of
+POT that was analysed (header tree), and configuration information for the analysis (config tree). The output file can then be analysed using a simple ROOT macro,
+and the \ref DrawingTools "DrawingTools" methods provide many useful functions for doing this.
+
+
+\n
+\n
+The following related pages contain more detailed documentation:
+   - \ref overview
+   - \ref structure
+   - \ref microtree
+   - \ref DrawingTools
+   - \ref systematics
+   - \ref advanced
+
+

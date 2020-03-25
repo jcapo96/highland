@@ -1,0 +1,6 @@
+sed s!SOURCE_DIR!$1!g $1/scripts/setup_cmake.sh_template > $1/scripts/setup_cmake.sh
+
+
+
+
+

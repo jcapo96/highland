@@ -1,0 +1,418 @@
+/*!
+\page advanced More advanced tips for implementing an analysis
+
+This page contains more advanced tips for implementing an analysis in the 
+highland framework. If you haven't yet completed the 
+<a href="tutorial.html">tutorial</a>, you should do that first.
+
+The following sections are currently included:
+ - \ref hlaadv_useanalysis
+ - \ref hlaadv_useselection
+ - \ref hlaadv_fv
+ - \ref hlaadv_stack
+ - \ref hlaadv_parameters
+ - \ref hlaadv_extenddata
+ - \ref hlaadv_branches
+
+\section hlaadv_useanalysis Using an analysis from another
+
+It is possible for an analysis to use another. In the past this was solved with inheritance (a AnalysisAlgorithm inherits from another), however we found useful
+to allow using several analyses simultaneously from another one, and this was complicated using inheritance. This is how is done: 
+
+\code
+//********************************************************************
+bool myAnalysis::Initialize(){
+//********************************************************************
+
+  // How to use someone else's analysis   
+
+  // Create an instance of the analysis we wwant to use and keep it as a data member
+  _someoneElsesAnalysis = new someoneElsesAnalysis(this);
+
+  // Tell myAnalysis to use _someoneElsesAnalysis
+  UseAnalysis(_someoneElsesAnalysis);
+
+  // Initialize _someoneElsesAnalysis
+  if (!_someoneElsesAnalysis->Initialize()) return false;
+}
+\endcode
+
+
+The "UseAnalysis" functionality is recommended when the analysis is an extension of a more basic one(s).
+For example, we might be interested in filling the same micro-tree variables as the more basic analysis, plus some others.
+Or in using the same systematics, etc. The call to the UseAnalysis method ensures that the managers are the same for both analyses. However we should call
+our selves the methods of the used analysis. For example:
+
+\code
+
+//********************************************************************
+void myAnalysis::DefineMicroTrees(bool addBase){
+//********************************************************************
+
+  // -------- Add variables to the analysis tree ----------------------
+
+   // Add variables from someoneElesesAnalysis (including by default the ones in baseAnalysis,
+   // from which someoneElesesAnalysis is suposed to inherit by default. Otherwise addBase should be false)
+  _someoneElsesAnalysis->DefineMicroTrees(addBase);
+
+  ...
+}
+\endcode
+
+
+\section hlaadv_useselection Using a selection from another
+
+A selection can use steps (cuts or actions) from another one since those are external to the selection (are added to it). We just need to include
+the corresponding header file where those steps are decleared, and then add the steps normally to our selection.
+
+
+\code
+#include "someoneElsesSelection.hxx"
+
+//*******************************************************************************
+void mySelection::DefineSteps(){
+//*******************************************************************************
+
+    AddStep(StepBase::kCut,    "cut 1 name",    new myCut1(),              true);  // decleared in mySelection.hxx
+    AddStep(StepBase::kAction, "action 1 name", new myAction1(),               );  // decleared in mySelection.hxx
+    AddStep(StepBase::kAction, "action 2 name", new someoneElsesAction3(),     );  // decleared in someoneElsesSelection.hxx
+    AddStep(StepBase::kCut,    "cut 2 name",    new someoneElsesCut5(),        );  // decleared in someoneElsesSelection.hxx     
+
+  ...
+
+    // Set the branch aliases
+    SetBranchAlias(0,"trunk");
+}
+
+\endcode
+
+One can also copy steps from an existing selection to annother. For example, the code below add several steps in one go:  
+
+
+\code
+#include "someoneElsesSelection.hxx"
+
+//*******************************************************************************
+void mySelection::DefineSteps(){
+//*******************************************************************************
+
+    // Add two of my steps
+    
+    AddStep(StepBase::kCut,    "cut 1 name",    new myCut1(),              true);  // decleared in mySelection.hxx
+    AddStep(StepBase::kAction, "action 1 name", new myAction1(),               );  // decleared in mySelection.hxx
+
+    // create an instance of someoneElsesSelection
+    someoneElsesSelection _someoneElsesSelection;
+
+    // Initialize that selection
+    _someoneElsesSelection.Initialize();
+
+    // Copy from someoneElsesSelection, branch 0 (trunk), steps from 1(second) to 10, into branch 0 of mySelection  
+    CopySteps(_someoneElsesSelection,0,1,10,0);    
+
+  ...
+
+    // Set the branch aliases
+    SetBranchAlias(0,"trunk");
+}
+\endcode
+
+\section hlaadv_fv Defining your own fiducial volume
+
+The detector volume definitions are defined in the DetDef namespace in 
+DetectorDefinition.cxx (in the psyche...Utils package). These definitions are the minimum and maximum corners of 
+the box describing each detector.
+
+In this example, the FGD and P0D \b fiducial volumes are defined in the FVDef namespace in 
+FiducialVolumeDefinition.cxx (also in psyche...Utils package). 
+These definitions are the amount to \b shrink the volume of the detector. The
+fiducial volume cuts can be overridden, using code similar to the following. It is wise
+to set the new volumes in the Initialize method of your analysis class:
+
+\code
+bool myAnalysis::Initialize() {
+  FVDef::FVdefminFGD1.SetXYZ(52.17, 57.17, 20.925);
+  FVDef::FVdefmaxFGD1.SetXYZ(52.17, 47.17, 0);
+  FVDef::FVdefminFGD2.SetXYZ(52.17, 57.17, 7.55);
+  FVDef::FVdefmaxFGD2.SetXYZ(52.17, 47.17, -2.95);
+  FVDef::FVdefminP0D.SetXYZ(142.79, 17.39, 96.48);
+  FVDef::FVdefmaxP0D.SetXYZ(62.45, 40.99, 61.247);
+}
+\endcode
+
+This will update the FV seen in all places in the code.
+
+
+\section hlaadv_stack Adding your own categories for drawing stacked histograms
+
+When drawing histograms using the DrawingTools, it is possible to create stacked
+histograms based on the value of a variable in the micro-tree. For example, the "particle"
+category creates a stack based on the PDG code of a true track.
+
+The standard categories are defined in TrackCategoryTools::AddStandardCategories(), which 
+is called when the ND::categ() singleton is first accessed. The standard categories are 
+filled by calling the anaUtils::FillCategories() function in baseAnalysis, which takes an
+AnaTrack as input.
+
+It is possible to extend the categories by adding your own. These new definitions are saved
+in the output file, so are automatically available when the DrawingTools are instantiated
+in your analysis macro. There are two stages to using the new category. First, you must
+define the category, such as
+
+\code
+//********************************************************************
+bool myAnalysis::Initialize(){
+//********************************************************************
+
+  // Define the standard categories (in highlandUtils/vXrY/src/CategoriesUtils.cxx
+  anaUtils::AddStandardCategories();
+
+  // ----- Now add my custom category ---------
+  
+  std::string mycateg_types[] = {"type1" , "type2", "type3" , "type4"};    // Names of the category types
+  int mycateg_codes[]         = { 1      , 2      , 3       , 4      };    // code associated to each type
+  int mycateg_colors[]        = { 7      , 4      , 3       , 2      };    // color associated to each type 
+
+  const int NTYPES = sizeof(mycateg_types)/sizeof(mycateg_types[0]);       // get the number of types added
+
+  // Add the category to the CategoryManager (currently a singleton, to be changed)
+  anaUtils::_categ->AddCategory("mycateg", NTYPES, mycateg_types, mycateg_codes, mycateg_colors);
+}
+\endcode
+
+After defining the new category, we must fill it. We do this by implementing the 
+FillCategories() method:
+
+\code
+//********************************************************************
+void myAnalysis::FillCategories() {
+//********************************************************************
+
+  AnaParticle* track = <your selected track from the ToyBox>
+  
+  // Fill the standard categories 
+  anaUtils::FillCategories(&GetEvent(), track);
+
+  // Fill my specific category.
+  int code = <whatever code you want to set for track>;
+  cat().SetCode("mycateg", code);
+}
+\endcode
+
+
+\section hlaadv_parameters Using parameters files
+
+Parameters files should be placed in the \c parameters directory in your analysis package (myAnalysis/vXrY/parameters),
+and be named like \c myAnalysis.parameters.dat.
+
+The syntax for specifying parameters looks like
+\code
+ < myAnalysis.Cuts.HiMom.MinMom = 100. >
+ < myAnalysis.Cuts.Quality.MinTPCNodes = 35 >
+ < myAnalysis.Cuts.PID.DSThreshold = 300. >
+ < myAnalysis.Cuts.PID.DSTrShMax = 0.2 >
+
+ < myAnalysis.Calib.CalibrationAlgorithmName = algo1 >
+\endcode
+
+The first bit of the parameter name \b must match your analysis' package name. You can use
+any string you like for the rest of parameter name.
+
+To access the values of the parameters, use the ND::params() singleton, which is found in
+Parameters.hxx in psycheCore: 
+
+\code
+#include "Parameters.hxx"
+
+void myAnalysis::SomeFunction() {
+  double min_mom    = ND::params().GetParameterD("myAnalysis.Cuts.HiMom.MinMom");
+  int num_tpc_nodes = ND::params().GetParameterI("myAnalysis.Cuts.Quality.MinTPCNodes");
+  std::string algo  = ND::params().GetParameterS("myAnalysis.Calib.CalibrationAlgorithmName");
+}
+\endcode
+
+Notice that your parameters file can overrride parameters from a lower level analysis package. For example 
+myAnalysis.parameters.dat could contain the line
+
+\code
+Number of toy experiments
+  < baseAnalysis.Systematics.NumberOfToys = 100 >
+
+Enable/disable the configuration with all selected systematics 
+  < baseAnalysis.Configurations.EnableAllSystematics = 1 >
+\endcode
+
+what means that the all_syst configuration will be run and with 100 toy experiments, regardless of what is set in baseAnalysis.parametsrs.dat
+
+\section hlaadv_extenddata Extend the data classes with custom information
+
+As mentioned previously, the DataClasses only contain a subset of the information
+found in the original analysis files. This means that they may not contain all the information
+you want in order to perform your analysis. It is possible to extend the existing event model (the data classes)
+by standard inheritance, as it is done in DataClasses (in highlandEventModel) with respect to BaseDataClasses (in psycheEventModel). Imagine a AnaExtendedParticle
+class extending AnaParticle with an additional property:
+
+
+\code
+class AnaExtendedParticle: public AnaParticle{
+public :
+
+  AnaExtendedParticle():AnaParticle(){}
+  virtual ~AnaExtendedParticle(){}
+
+  /// Clone this object.
+  virtual AnaExtendedParticle* Clone() {
+    return new AnaExtendedParticle(*this);
+  }
+
+protected:
+
+  /// Copy constructor is protected, as Clone() should be used to copy this object.
+  AnaExtendedParticle(const AnaExtendedParticle& part):AnaParticle(part){}
+
+public:
+  /// The additional property
+  Float_t myProperty;
+};
+\endcode
+
+
+To fill the additional info a new InputConverer, let's call it myConverter,  inheriting from the existing one (let's call it baseConverter)
+should be implemented. This converter should have methods as: 
+
+\code
+    // Overwrides the method in the base converter and fills the additional info
+    virtual void FillParticleInfo(..., AnaParticleB* part);
+
+    // Creates an AnaParticleB of the appropriate type. This function overrides the one in baseConverter, such 
+    // that everytime a new AnaExtendedParticle is created the appropriate constructor is instantiated
+    virtual AnaParticleB* MakeParticle() { return new AnaExtendedParticle(); }
+\endcode
+
+
+where the FillParticleInfo method is implemented in the .cxx file, and looks like:
+
+\code
+//********************************************************************
+void myConverter::FillParticleInfo(..., AnaParticleB* part){
+//********************************************************************
+
+   // Fill the base part of AnaExtendedParticle
+   baseConverter::FillParticleInfo(..., part);
+
+   // Cast to the appropriate type to have acces to the extra properties
+   AnaExtendedParticle* extPart = static_cast<AnaExtendedParticle*>(part);
+
+   // Fill the additional properties
+   part->MyProperty = < some property from info in the input file >; 
+}
+\endcode
+
+
+\section hlaadv_branches Cut branches
+
+Selection cuts can be splitted in branches in order to allow different cut chains in a single selection. 
+For example we may want to have two different event selections, sharing the first set of cuts but splitting at some point. 
+To be more concrete let's consider a practical example: we select events with vertex in SubDet1 or SubDet2. For events in SubDet2 two independent samples 
+are selected in Water layers or scintillator layers. So far we have fouw branches: SubDet1, SubDet2, SubDet2-Water, SubDet2-Scint. Then we split each of this branches
+in three subbranches for events with 0, 1 or >1 pions. In practice: 
+
+\code
+//*******************************************************************************
+void myMultiBranchSelection::DefineSteps(){
+//*******************************************************************************
+
+    // A cut common to all branches
+    AddStep(StepBase::kCut, "event quality", new EventQualityCut(), true);
+
+    // Add a split to the trunk with 2 branches
+    AddSplit(2);
+
+    // ********* Selection in subdetector 1 //
+    AddStep(0,StepBase::kAction, "SubDet1 FV", new SetDetectorFVAction(SubDetId::kSubDet1));
+
+    // Copy from numuCCSubDet1Selection, branch 0 (trunk), steps from 1(second) to 10, into branch 0
+    numuCCSubDet1Selection _numuCCSubDet1Selection;
+    _numuCCSubDet1Selection.Initialize();
+    CopySteps(_numuCCSubDet1Selection,0,1,10,0);
+
+    //Additional actions for the multi-pi selection in SubDet1 (must to this before spliting)
+    AddStep(0, StepBase::kAction, "fill_summary_SubDet1", new FillSummaryAction_numuCCMultiPi());
+    AddStep(0, StepBase::kAction, "find_pions_SubDet1",   new FindPionsAction());
+
+    // ********* Selection in subdetector 2 //
+    // this is needed here to avoid that the box is replaced with the candidate in SubDet2
+    AddStep(1,StepBase::kCut, "> 0 tracks & no SubDet1 tracks", new TotalMultiplicitySubDet2Cut(), true);
+
+    AddStep(1,StepBase::kAction, "SubDet2 FV", new SetDetectorFVAction(SubDetId::kSubDet2));
+
+    // Copy from numuCCSubDet2Selection, branch 0 (trunk), steps from 2(third) to 10, into branch 1
+    numuCCSubDet2Selection _numuCCSubDet2Selection;
+    _numuCCSubDet2Selection.Initialize();
+    CopySteps(_numuCCSubDet2Selection,0,2,10,1);
+
+    // Additional actions for the multi-pi selection in SubDet2
+    AddStep(1, StepBase::kAction, "fill_summary_SubDet2", new FillSummaryAction_numuCCMultiPiSubDet2());
+    AddStep(1, StepBase::kAction, "find_pions_SubDet2",   new FindPionsAction());
+
+    // split in SubDet2 into water and scint
+    AddSplit(2,1);
+    AddStep(1,0, StepBase::kCut, "numu CC in water SubDet2", new WaterCut());
+    AddStep(1,1, StepBase::kCut, "numu CC in scint SubDet2", new ScintillatorCut());
+
+
+    // ******* MultiPi selection splitting ****** //
+
+    // ********* SubDet1 ********* //
+
+    // multi-pi split for SubDet1 (3 branches for branch 0,1 which correspond to branchID 2)
+    AddSplit(3,0);
+    AddStep(0,0, StepBase::kCut, "CC-0pi",   new NoPionCut());
+    AddStep(0,1, StepBase::kCut, "CC-1pi",   new OnePionCut());
+    AddStep(0,2, StepBase::kCut, "CC-Other", new OthersCut());
+
+
+    // ********* SubDet2 ********* //
+
+    // multi-pi split for SubDet2 water (3 branches for branch 1,0 which correspond to branchID 4)
+    AddSplit(3,1,0);
+    AddStep(1,0,0, StepBase::kCut, "CC-0pi",   new NoPionCut());
+    AddStep(1,0,1, StepBase::kCut, "CC-1pi",   new OnePionCut());
+    AddStep(1,0,2, StepBase::kCut, "CC-Other", new OthersCut());
+
+    // multi-pi split for SubDet2 scint (3 branches for branch 1,1 which correspond to branchID 5)
+    AddSplit(3,1,1);
+    AddStep(1,1,0, StepBase::kCut, "CC-0pi",   new NoPionCut());
+    AddStep(1,1,1, StepBase::kCut, "CC-1pi",   new OnePionCut());
+    AddStep(1,1,2, StepBase::kCut, "CC-Other", new OthersCut());
+
+
+
+    // ****** Set the branch aliases ********* //
+
+    // An alias (name) and index, must be given to each of the branches
+    // So far branches are identified by a sequence of numbers at each split (arguments after the string below)
+    // With the instractions below we assign a unique index to each branch (first argument below) and a name
+
+    SetBranchAlias(0, "numuCC_SubDet1",      0);
+
+    SetBranchAlias(1, "numuCC_SubDet2",      1);
+    SetBranchAlias(2, "numuCC_SubDet2-water",1,0);
+    SetBranchAlias(3, "numuCC_SubDet2-scint",1,1);
+
+    SetBranchAlias(4, "numuCC_SubDet1_CC-0pi",  0,0);
+    SetBranchAlias(5, "numuCC_SubDet1_CC-1pi",  0,1);
+    SetBranchAlias(6, "numuCC_SubDet1_CC-Other",0,2);
+
+    SetBranchAlias(7, "numuCC_SubDet2-water_CC-0pi",  1,0,0);
+    SetBranchAlias(8, "numuCC_SubDet2-water_CC-1pi",  1,0,1);
+    SetBranchAlias(9, "numuCC_SubDet2-water_CC-Other",1,0,2);
+
+    SetBranchAlias(10,"numuCC_SubDet2-scint_CC-0pi",  1,1,0);
+    SetBranchAlias(11,"numuCC_SubDet2-scint_CC-1pi",  1,1,1);
+    SetBranchAlias(12,"numuCC_SubDet2-scint_CC-Other",1,1,2);
+
+}
+\endcode
+
+*/

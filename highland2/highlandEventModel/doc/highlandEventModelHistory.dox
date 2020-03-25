@@ -1,0 +1,18 @@
+/*! \page highland2/highlandEventModelHistory History for the highland2/highlandEventModel Package 
+
+\section highlandEventModel_v2r1_history Version v2r1
+
+Freeze information:
+   - Freeze Date: Sun Mar  6 17:36:19 2016
+   - Freeze User: acervera
+   - Freeze Host: Macintosh-64b9e8d35af0-2.local
+
+major reorganization with new packages and  changes in event model class names
+
+- new package to contain extended event model. It depends only on psycheEventModel and nd280AnalysisTools
+- Versioning: version manager stuff moved to VersionManager in highlandCore
+- MomentumEnd (previously BackMomentum in tpc object) and PIDEmHip moved to BaseDataClasses, becouse they are needed for nue (to be checked)
+- AnaP0DParticle inherits from AnaParticleMomE as well
+
+
+*/

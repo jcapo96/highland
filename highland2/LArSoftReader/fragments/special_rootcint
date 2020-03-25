@@ -1,0 +1,20 @@
+# -*- makefile -*-
+# 
+# A makefile fragment used by CMT to build the ROOT dictionary files.
+#
+
+$(dict)${NAME}.special_rootcint : $(dict)$(patsubst %_LinkDef,%Dict,${NAME}).cxx
+	@touch $@
+
+
+
+$(dict)$(patsubst %_LinkDef,%Dict,${NAME}).cxx : \
+	$(patsubst %LinkDef.h,%.h*,${FULLNAME}) \
+    ${FULLNAME}  $(ROOT_stamps)
+	@echo "Generating ROOT Dictionary from " $(filter-out %~,$^)
+	$(rootcint) -f ../src/$(VERSIONDIR)/$(DATAMCDIR)/LArSoftReaderProjectDict.cxx -c -I$(ROOTSYS)/include/root  -I"$(ROOTSYS)/include/root" $(includes)  LArSoftReaderProjectHeaders.h ../src/$(VERSIONDIR)/$(DATAMCDIR)/LArSoftReaderLinkDef.h 
+
+# End of fragment.
+
+
+

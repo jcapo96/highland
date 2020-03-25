@@ -1,0 +1,214 @@
+/*! \page highland2/highlandCoreHistory History for the highland2/highlandCore Package 
+
+\section highlandCore_v2r1_history Version v2r1
+
+Freeze information:
+   - Freeze Date: Sun Mar  6 17:35:52 2016
+   - Freeze User: acervera
+   - Freeze Host: Macintosh-64b9e8d35af0-2.local
+
+major reorganization with new packages and  changes in event model class names
+
+- This is a new package containing extended machinery: 
+  AnalysisAlgorithm, AnalysisLoop, SimpleLoopBase. Category, Configuration, Correction, DocString and Output stuff. 
+  MemoryUsage and VersionManager
+- this package depends now only on psycheCore
+- DrawingTools, SystematicTools and HistoStack in highlandTools
+- DataClasses go to new package highlandEventModel
+- TrackCategory... --> Category...
+- CategoryManager: instead of using the manager as a singleton (ND::categ()) it is now another manager in AnalysisAlgorithm (ana().cat()). 
+  move specific categories and AddStandard.. methods to CategoriesUtils
+- AnalysisAlgorithm: 
+   - Move implementation of many methods to derived algorithms such that highlandCore does not have to depend on undesired packages. 
+     Now MakeEvent, CheckFillTruthTree and FillTruthTree are pure virtual. 
+   - New pure virtual methods DefineProductions and DefineInputConverters. 
+   - Adapt to non-singletons CategoryManager and DocStringManager
+   - Use new CoreDataClasses
+- AnalysisLoop: 
+  - move versioning stuff to baseAnalysis to avoid undesired dependencies. 
+  - temporarily move InitializeGeometry to baseAnalysis to avoid dependency on psycheND280Utils.
+  - Adapt to new CoreDataClasses
+  - call new AnalysisAlgorithm methods DefineProductions and DefineInputConverters
+  - Temporarily remove call to ND::params().LoadParametersFiles(anaUtils::GetPackageHierarchy(), true);
+- decouple nd280AnalysisTools preprocessor directives in Versioning.hxx/cxx from the rest that was in those files, and call it VersionManager. 
+  Versioning is now in highlandEventModel. In that way highlandCore does not depend on nd280AnalysisTools
+- Add HighlandInputManager, which inherits from InputManager and extends it with bunch stuff, raw spill, etc, not needed in psyche
+
+
+
+\section highlandCore_v2r3_history Version v2r3
+
+Freeze information:
+   - Freeze Date: Wed May  4 18:59:26 2016
+   - Freeze User: acervera
+   - Freeze Host: Macintosh-64b9e8d35af0-2.local
+
+- Correction classes: prepare to use indices (i.e. enums) instead of names, 
+  for the moment keep backward compatibility so that anlyzers don`t need to re-generate the flat-trees
+- We are in the process of converting all weight systematics into a weight correction + systematic. In that way the default configuration can have all corrections associated with 
+  weight systematics. Add weight_corr and weight_corr total variables to the micro-trees (including default). weight_corr contains all weight corrections included 
+  the pileup and flux that were previously in the weight variable (kept for the moment, but not used anywere)
+- use the new EventWeight and EventVariation Managers
+- For the moment add a ZeroToyMaker (with zero variation)  
+- Changes in method names: TrackCategory --> Category, TrackType --> CategoryType
+- port from highland2 v1r15 the fix for bug 1237
+
+
+
+\section highlandCore_v2r5_history Version v2r5
+
+Freeze information:
+   - Freeze Date: Sat Jun 11 17:40:49 2016
+   - Freeze User: acervera
+   - Freeze Host: Macintosh-64b9e8d35af0-2.local
+
+- rootmap_setup: Only the packages highlandCore depends on should be specified
+- CategoryClasses: add methods to get colors, names and codes for a given catagory to solve bug 1006
+- AnalysisAlgorithm, AnalysisLoop 
+  - Add FillConfigTree() method to AnalysisAlgorithm and call it from AnalysisLoop such that one can add user's defined 
+    config tree variables. Move common config tree variables from AnalysisLoop to AnalysisAlgorithm
+  - Add analysis point functionality. AnalysisLoop sets into AnalysisAlgorithm the point at which it is. 
+    This allows for example avoiding to use the ToyBox from FillTruthTree (see bug 1321)
+
+
+
+\section highlandCore_v2r7_history Version v2r7
+
+Freeze information:
+   - Freeze Date: Tue Aug  9 12:48:18 2016
+   - Freeze User: acervera
+   - Freeze Host: macintosh-64b9e8d35af0.local
+
+
+SimpleLoopBase: 
+- Initialize, InitializeSpill, Finalize, FinalizeSpill, DefineOutputTree cannot be pure virtual since 
+  they are implemented in SimpleLoopBase.cxx. 
+- Print info about entries being run, not anymore in converters
+
+AnalysisLoop:
+
+- Properly dump entries being run and percentage, as explained in bug 1332. 
+  Also dump here that info, since this is not done in converters anymore
+- Fill allways the toy_index variable to address bug 1349
+- move RooTrackerVtx stuff to baseAnalysis
+
+OutputManager:
+ - add fast mechanism to check variable types when Filling at running time. This should solve bug 1341
+ - move RooTrackerVtx stuff from OutputManager (which is supposed to be general) to a RooTrackerVtxManager in highlandUtils
+
+HighlandInputManager:
+- remove DEPRECATED method InputIsoaAnalysisTree(), mark as deprecated for several releases !!!
+
+AnalysisAlgorithm:
+- Remove any RooTrackerVtx stuff. Most of it was obsolete. The few remaining things are moved to baseAnalysis
+
+
+
+\section highlandCore_v2r9_history Version v2r9
+
+Freeze information:
+   - Freeze Date: Fri Sep 23 17:24:31 2016
+   - Freeze User: acervera
+   - Freeze Host: macintosh-64b9e8d35af0.local
+
+- OutputManager: add NMAXSPECIALTREES (=20). All trees with index below NMAXSPECIALTREES are considered special trees
+- AnalysisLoop: add functionality to use a file with events to skim. micro-trees start at index NMAXSPECIALTREES
+- HighlandInputManager: use psyche InputManager in the LoadSpill method
+- requirements: remove make_fragment stuff since there are no fragments for this package
+
+
+\section highlandCore_v2r11_history Version v2r11
+
+Freeze information:
+   - Freeze Date: Wed Oct 19 09:39:15 2016
+   - Freeze User: acervera
+   - Freeze Host: macintosh-64b9e8d35af0.local
+
+FREEZE FOR BANFF DEVELOPMENT
+
+AnalysisLoop: 
+ - uncomment  ND::params().LoadParametersFiles(anaUtils::GetPackageHierarchy(), true);
+   was commented out because the GetPackageHierarchy() method was in psycheUtils, while highlandCore does not depend on 
+   that package anymore. So we have now move this method (and the ones used by it) to CoreUtils in psycheCore
+
+AnalysisAlgorithm.hxx AnalysisLoop.cxx 
+- improvements in doxygen documentation
+
+VersionManager:
+- add method to get the version of a specific package
+- add VersionManager_LinkDef.h 
+
+
+
+\section highlandCore_v2r13_history Version v2r13
+
+Freeze information:
+   - Freeze Date: Thu Nov 10 16:22:46 2016
+   - Freeze User: acervera
+   - Freeze Host: portcervera.ific.uv.es
+
+FREEZE FOR BANFF DEVELOPMENT with no nd280AnalysisTools
+
+AnalysisLoop: 
+ - remove commented lines. 
+ - Call ana().InitializeBase() after ana.Initialize()
+
+AnalysisAlgorithm
+ - Set the initial analysisPoint as kConstructor. 
+ - Don0t allow calls to UseAnalysis after Initialize
+ - Proper ordering in analysis points enum, starting by kConstructor. 
+ - Add pure virtual method InitializeBase
+
+
+
+\section highlandCore_v2r15_history Version v2r15
+
+Freeze information:
+   - Freeze Date: Wed Dec 28 13:29:02 2016
+   - Freeze User: acervera
+   - Freeze Host: portcervera.ific.uv.es
+
+VersionManager: make it more rational and user friendly. A production version has a nd280 and oaAnalysis version, and not a low and high version as before. 
+
+
+\section highlandCore_v2r17_history Version v2r17
+
+Freeze information:
+   - Freeze Date: Tue Feb  7 21:16:30 2017
+   - Freeze User: acervera
+   - Freeze Host: macintosh-64b9e8d35af0.local
+
+AnalysisLoop: 
+
+Add  solution to bug 1425. The check on the accum level to be saved is only done at the toy level. Then if any of the toys 
+has to be saved the whole event is saved in FillMicroTrees. With this changes the toys seem to be distribute correctly around the default, 
+and the results do not depend on the min accum level to save parameter 
+
+
+
+\section highlandCore_v2r19_history Version v2r19
+
+Freeze information:
+   - Freeze Date: Wed Mar  1 15:59:59 2017
+   - Freeze User: acervera
+   - Freeze Host: macintosh-64b9e8d35af0.local
+
+OutputManager:
+- replace GetCurrentTree() method by _current_tree such that it is a bit faster, mainly related with the var type checking
+- optimize the variable type checking, related to bug 1341
+
+
+
+\section highlandCore_v2r21_history Version v2r21
+
+Freeze information:
+   - Freeze Date: Sat Apr 22 15:59:09 2017
+   - Freeze User: alexander
+   - Freeze Host: alexandrs-mbp.home
+
+An intermediate freeze in order to test systematics tuning for NuMu
+
+AnalysisAlgorithm.cxx AnalysisAlgorithm.hxx 
+added the call to Initialize/FinalizeToy of the selection
+
+*/

@@ -1,0 +1,10 @@
+# -*- makefile -*-
+# 
+# A makefile fragment used by CMT to build the ROOT dictionary files.
+#
+
+${CONSTITUENT}_output = $(dict)
+
+${CONSTITUENT} :: $(filter %LinkDef.special_rootcint,${OBJS})
+	@echo "------> ${CONSTITUENT} ok"
+

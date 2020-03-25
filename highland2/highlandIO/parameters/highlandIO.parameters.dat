@@ -1,0 +1,78 @@
+
+Save the Geometry (TGeoManager)   (ONLY FOR MiniTree)
+ < highlandIO.FlatTree.SaveGeometry = 0 > 
+
+Ignore true vertices with no true tracks
+ < highlandIO.oaAnalysis.RemoveTrueVerticesWithNoTrueParticles  = 1 >
+
+Whether to enable the CT4/CT5 POT correction, and the DQ
+corrections. These must be applied when creating the flat
+tree, so that POT counting is correct. Applying the same
+corrections in baseAnalysis when using FlatTree files as 
+input will have no effect. IT IS STRONGLY RECOMMENDED THAT
+YOU KEEP THESE CORRECTIONS ENABLED!
+
+ < highlandIO.FlatTree.EnableMomRangeCorrection        = 0 >
+ 
+
+Enable/disable filling subdetector variables
+
+ < highlandIO.FlatTree.SaveSubdet2Info     = 1 >	
+ < highlandIO.FlatTree.SaveSubdet1Info     = 1 >	
+
+
+Preselection based on track start position
+
+ < highlandIO.MiniTree.TrackStart.Preselection = 0 >         
+
+ < highlandIO.MiniTree.TrackStart.MinX    = -80. >         
+ < highlandIO.MiniTree.TrackStart.MaxX    =  20. >
+ < highlandIO.MiniTree.TrackStart.MinY    = 370. >         
+ < highlandIO.MiniTree.TrackStart.MaxY    = 470. >
+ < highlandIO.MiniTree.TrackStart.MinZ    = -300 >         
+ < highlandIO.MiniTree.TrackStart.MaxZ    = 1000 >
+
+Preselection based on beam TOF
+
+ < highlandIO.MiniTree.Beam.TOFPreselection = 0 >            
+
+ < highlandIO.MiniTree.Beam.MinTOF    = 170. >         
+ < highlandIO.MiniTree.Beam.MaxTOF    = 250. >
+
+
+Preselection based on truth
+
+  < highlandIO.MiniTree.Truth.WithRecoPreselection = 0 >
+  < highlandIO.MiniTree.Truth.IncludeTrueDaughters = 0 >
+
+Preselection based on subdetector components 
+
+ < highlandIO.FlatTree.UseSubdet2_1    = 1 >	
+ < highlandIO.FlatTree.UseSubdet2_2    = 1 >	
+ < highlandIO.FlatTree.UseSubdet2_3    = 1 >	
+ < highlandIO.FlatTree.UseSubdet1_1    = 1 >	
+ < highlandIO.FlatTree.UseSubdet1_2    = 1 >	
+
+ < highlandIO.FlatTree.UseSubdet2_1outOfBunch    = 0 >
+ < highlandIO.FlatTree.UseSubdet2_2outOfBunch    = 0 >
+ < highlandIO.FlatTree.UseSubdet2_3outOfBunch    = 0 >
+ < highlandIO.FlatTree.UseSubdet1_1outOfBunch    = 0 >
+ < highlandIO.FlatTree.UseSubdet1_2outOfBunch    = 0 >
+
+Preselection based on true interaction type
+
+ < highlandIO.FlatTree.TrueVertex.NuNC        = 1 >
+ < highlandIO.FlatTree.TrueVertex.AntiNuNC    = 1 >
+ < highlandIO.FlatTree.TrueVertex.NumuCC      = 1 >
+ < highlandIO.FlatTree.TrueVertex.AntiNumuCC  = 1 >
+ < highlandIO.FlatTree.TrueVertex.NueCC       = 1 >
+ < highlandIO.FlatTree.TrueVertex.AntiNueCC   = 1 >
+
+Preselection based on true interaction detector
+
+ < highlandIO.FlatTree.TrueVertex.Subdet2_1    = 1 >	
+ < highlandIO.FlatTree.TrueVertex.Subdet2_2    = 1 >	
+ < highlandIO.FlatTree.TrueVertex.Subdet2_3    = 1 >	
+ < highlandIO.FlatTree.TrueVertex.Subdet1_1    = 1 >	
+ < highlandIO.FlatTree.TrueVertex.Subdet1_2    = 1 >	
+

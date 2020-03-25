@@ -1,0 +1,29 @@
+# -*- makefile -*-
+# 
+# A makefile fragment used by CMT to build an EXTERNAL library.
+
+# This fragment is intended to run a user script which in turn will
+# run a normal "configure;make;make install" on some external library
+# (e.g. CLHEP or GEANT4).  
+
+# The fragment will execute a shell script found in the ../src/
+# directory.  The script should compile the library when it is run "sh
+# <scriptname> compile <package> <tag>" where <package> is the current
+# package root directory, and <tag> is the current architecture tag.
+# When the script is run as "sh <scriptname> clean <package> <tag>",
+# the imported source should be cleaned.  This is usually done with
+# "make distclean"
+
+# An example of use in the requirements file is 
+#    "document external CLHEP compile_script"
+
+$(${CONSTITUENT}_stamps) :: ${FULLNAME}
+	@echo "Compiling ${CONSTITUENT}" 
+	bash ${FULLNAME} compile $(PACKAGE_ROOT) $(tag)
+	touch $(${CONSTITUENT}_stamps)
+
+${CONSTITUENT}clean :: 
+	bash ${FULLNAME} clean $(PACKAGE_ROOT) $(tag)
+	rm $(${CONSTITUENT}_stamps) || true
+
+clean :: ${CONSTITUENT}clean

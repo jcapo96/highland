@@ -1,0 +1,960 @@
+/*! \page DrawingTools All you need to know about the DrawingTools
+
+  - \ref  drawingtools_intro
+  - \ref  drawingtools_start
+  - \ref  drawingtools_dump
+  - \ref  drawingtools_plots
+  - \ref  drawingtools_datasample
+  - \ref  drawingtools_exp
+  - \ref  drawingtools_conf   
+  - \ref  drawingtools_printevents
+
+\section drawingtools_intro Introduction
+
+\c DrawingTools is a highland2 class which can be instanciated from a ROOT session to inspect the output file of a highland2 job and easily understand your analysis. 
+The DrawingTools has methods to <b> dump information about your analysis</b>:
+ - Which selection(s) was run (see \ref drawingtools_dumpsel "here")
+ - Which are the available systematics (see \ref drawingtools_dumpsyst "here")
+ - Which systematics were enabled and with how many toy experiments (see \ref drawingtools_dumpconf "here")
+ - How many POT was processed (see \ref drawingtools_dumppot "here")
+ - Which variables are available in the micro-trees and what they are (see \ref drawingtools_explainvar "here")
+ - and more (click \ref drawingtools_dump "here" to see all available methods) 
+
+In this way you may know at any time how a given highland2 output file was built. 
+
+But the main functionality of the DrawingTools, at its name suggests, are the <b> tools for drawing</b>. 
+Indeed, the DrawingTools provide all kind of methods to understand the selection and the systematics:
+ - Draw 1D and 2D distributions, with uniform or variable binning, using a stacked histogram with a breakdown in different categories 
+   (true reaction type, topology, particle type, neutrino type, etc), with or without systematic errors (see \ref drawingtools_basic "here")
+ - Draw the signal efficiency and purity, or the ratio of distributions, as a function of any variable in the tree (see \ref drawingtools_ratios "here")
+ - Understand the evolution of the selection (#events, efficiency, purity) after each cut (see \ref drawingtools_vscut "here")
+ - Compare data with MC with automatic normalization by POT or by area (see \ref drawingtools_comp "here" and \ref drawingtools_datasample "here")
+ - Combine in a coherent manner different run periods for data and MC with proper POT normalization (see \ref drawingtools_exp "here")
+ - Draw the size of the systematic error (total or for individual sources) as a function of any variable (see \ref drawingtools_err "here")
+
+
+\section drawingtools_start Setting up the DrawingTools  
+
+If you haven't done so yet, you should do under the cmt directory of your top level analysis package:
+
+\code
+source setup.sh
+\endcode
+
+such that root knows about all important classes in the framework. 
+Then you can open a root session and create a DrawingTools instance with a root file as input:
+
+\code
+root -l 
+root [0] DawingTools draw("file.root");
+\endcode
+
+In this way the DrawingTools will be configured properly using information in the \c config tree (selection name, cut names, variables description, systematics, corrections, etc).
+By default the "T2K" plotting style is chosen. If you don't want to use it you can create the DrawingTools instance with a false as second argument
+
+\code
+root [1] DawingTools draw("file.root",false);
+\endcode
+
+You can inmediately have a quick look at the \ref drawingtools_dumpcuts "cuts" that were applied, at the available \ref drawingtools_dumpcateg "categories" for color code drawing, etc. 
+This file is only used to congigure the DrawingTools. Now if you want to do plots you should either open a root file (could be the same) or create 
+a DataSample intance with a root file as input. This is recomended, since in that case you can easily handle multiple samples (see \ref drawingtools_multi):
+
+\code
+root [2] DataSample data("data.root");
+root [3] DataSample mc("mc.root");
+\endcode
+
+
+\section drawingtools_dump Print information on the screen: systematics, cuts, categories, variables ...
+
+ - \ref drawingtools_explainvar
+ - \ref drawingtools_dumpcorr
+ - \ref drawingtools_dumpsyst
+ - \ref drawingtools_dumpconf
+ - \ref drawingtools_dumpsel
+ - \ref drawingtools_dumpcuts
+ - \ref drawingtools_dumpcateg
+ - \ref drawingtools_dumppot
+
+
+\subsection drawingtools_explainvar Information about variables in the tree
+
+These are the available methods: 
+
+\snippet DrawingToolsBase.hxx DrawingToolsBase_vars
+
+The following line in the root session
+
+\code
+root [4] draw.ExplainVar("accum_level")
+\endcode
+
+produces this output on the screen: 
+
+\code
+Variable name..... accum_level
+Stored in tree.... default
+Type of variable.. Vector of integer
+Size of variable: 
+  1st dimension... 1 (fixed size)
+Documentation..... The number of the first cut that was failed.
+highland supports running multiple toys (for evaluating systematics), so the index in this vector is the toy index.
+If you only have one toy (normal), then you can use accum_level or accum_level[] to access the correct number.
+\endcode
+
+\subsection drawingtools_dumpcorr List of corrections applied
+
+The list of corrections applied in the current output file can be dumped as follows:
+
+\code
+root [5] draw.DumpCorrections()
+ -------- List of Corrections  -----------------------------------
+  #: name                      enabled         applied in input    
+ -----------------------------------------------------------------
+  0: pileup_corr               1               0                   
+  1: tpcdedx_data_corr         1               0                   
+  2: tpcdedx_mc_corr           1               0                   
+  3: tpcexpecteddedx_corr      1               0                   
+  4: ignorerightecal_corr      1               0                   
+  5: dq_corr                   1               0                   
+ -----------------------------------------------------------------
+\endcode
+
+
+where <c> applied in input</c> means that the input file already had the correction. This will be always false when running over oaAnalysis files, while it will 
+be true in general when running over a FlatTree. When the correction is applied in input it will appear as disabled (not to apply it twice). 
+
+\subsection drawingtools_dumpsyst List of available systematics
+
+The list of available systematics can be shown as follows: 
+
+\code
+root [6] draw.DumpSystematics()
+ -------- List of Systematics  --------------------
+  #: name                      type             NPar
+ --------------------------------------------------
+  0: kBFieldDist               variation          1
+  1: kMomScale                 variation          1
+  2: kMomResol                 variation          3
+  3: kTpcPid                   variation        104
+  4: kFgdPid                   variation          4
+  5: kChargeConf               weight            30
+  6: kTpcClusterEff            weight             2
+  7: kTpcTrackEff              weight             2
+  8: kTpcFgdMatchEff           weight             6
+  9: kFgdTrackEff              weight            14
+ 10: kFgdHybridTrackEff        weight            24
+ 11: kMichel                   weight             8
+ 12: kPileUp                   weight             7
+ 13: kFgdMass                  weight             2
+ 14: kOOFV                     weight            18
+ 15: kSIPion                   weight             3
+ 16: kSandMu                   weight             1
+ 17: kFluxWeightNu             weight            25
+ 18: kFluxWeightAntiNu         weight            25
+ --------------------------------------------------
+\endcode
+
+Those are the systematics added to the SystematicManager (in the DefineSystematics methods) and not the systematics actually run, since those must be enabled 
+in a specific confifuration, as shown below. The systematic type (variation or weight) and the number of systematic parameters are shown. 
+
+\subsection drawingtools_dumpconf List of configurations
+
+A configuration is defined by the list of enabled systematics in a given analysis. The list of configurations can be printed: 
+
+\code
+root [7] draw.DumpConfigurations()
+ -------- List of Configurations  ----------------------------------
+  #: name                      NToys  enabled    NSyst   RandomSeed
+ -------------------------------------------------------------------
+  0: default                       1        1        0           -1
+ -------------------------------------------------------------------
+\endcode
+
+There will be a tree with the same name as the configuration in the output file. In this case only the default configuration (allways pressent) was run, with 0 systematics, 
+and no random seed (-1). We can print information about a particular configuration:
+
+\code
+root [8] draw.DumpConfiguration("default")
+*********** Configuration: default *************
+ enabled:     1
+ NToys:       1
+ NSyst:       0
+ Random seed: -1
+\endcode
+
+We can repeat the same operations with an output file created with the "all_syst" configuration enabled (baseAnalysis.Configurations.EnableAllSystematics = 1 
+in baseAnalysis.parameters.dat). In this particular example 9 systematics where enabled in baseAnalysis.parameters.dat, and 100 toy experiments were run:
+
+\code
+root [9] draw.DumpConfigurations()
+ -------- List of Configurations  ----------------------------------
+  #: name                      NToys  enabled    NSyst   RandomSeed
+ -------------------------------------------------------------------
+  0: default                       1        1        0           -1
+  1: all_syst                    100        1        9            1
+ ------------------------------------------------------------------- 	
+\endcode
+
+\code
+root [10] draw.DumpConfiguration("all_syst")
+*********** Configuration: all_syst *************
+ enabled:     1
+ NToys:       100
+ NSyst:       9
+ Random seed: 1
+ -------- List of VariationSystematics ------------
+  #: name                      pdf             NPar
+ --------------------------------------------------
+  0: kMomScale                 unknown         1   
+  1: kTpcPid                   unknown         104 
+ --------------------------------------------------
+ -------- List of WeightSystematics ---------------
+  #: name                      pdf             NPar
+ --------------------------------------------------
+  0: kChargeConf               unknown         30  
+  1: kTpcTrackEff              unknown         2   
+  2: kMichel                   unknown         8   
+  3: kPileUp                   unknown         7   
+  4: kFgdMass                  unknown         2   
+  5: kOOFV                     unknown         18  
+  6: kSIPion                   unknown         3   
+ --------------------------------------------------
+\endcode
+
+In this case the list of systematics enabled in the configuration has been printed. Notice that the \c pdf (Probability Density Function) is 
+labeled as unknown. This is becouse currently the random numbers for toy experiment variations are thrown externally, 
+so individual systematics do not know its PDF. This will be changed in the future, such that we can know from the output file which pdf was used. 
+
+\subsection drawingtools_dumpsel List of selections
+
+The user can print on  the screen the list of available selections:
+
+\code
+root [11] draw.DumpSelections()
+-------- List of Selections  --------------------------------------------------------------------------------------------
+  #: name                      title                                    enabled    force break     index in accum_level  
+-------------------------------------------------------------------------------------------------------------------------
+  0: kTrackerNumuCC            inclusive numuCC selection               1          0               0                     
+-------------------------------------------------------------------------------------------------------------------------
+\endcode
+
+In this particular case only one selection was available and enabled (we have run the numuCCAnalysis). <c>force break</c> with 0 value means 
+that the selection is not stopped when a cut is not pass. This is the standard behavior in highland2 (contrary to running directly in psyche) because 
+we are in general interested in studiying the effect of the different cuts. This behaviour can be modified by changing the input argument in the 
+selection constructor. For example, in highland2/numuCCAnalysis/vXrY/src/numuCCAnalysis.cxx, we find the line:
+
+\code
+    sel().AddSelection("kTrackerNumuCC", "inclusive numuCC selection",     new numuCCSelection(false)); // true/false for forcing break
+\endcode
+
+To stop the selection when a cut is not passed we should change \c false by \c true.
+The last field printed on the screen <c>index in accum_level</c> is the index of this selection in the \c accum_level array. When there are several selections 
+in the same analysis the index will be different for each of them such that we can do plots for events that pass a given cut of a given selection.
+
+\subsection drawingtools_dumpcuts List of steps and cuts in a selection
+
+The available methods to dump information about steps or cuts in a selection are:
+
+\snippet DrawingToolsBase.hxx DrawingToolsBase_DumpSteps
+
+In the example below, the numuCCAnalysis was run, which contains a single selection with no branches. In this case we don't have to give any argument to the methods:
+
+\code
+root [12] draw.DumpSteps()
+-------------------------------------------------------------------
+      Steps for selection 'kTrackerNumuCC'  with no branches
+-------------------------------------------------------------------
+  #: type       title                     break  branches  
+-------------------------------------------------------------------
+  0: cut        event quality             1      0 
+  1: cut        > 0 tracks                1      0 
+  2: action     find leading tracks       0      0 
+  3: action     find vertex               0      0 
+  4: action     fill_summary              0      0 
+  5: cut        quality+fiducial          1      0 
+  6: action     find veto track           0      0 
+  7: cut        veto                      0      0 
+  8: action     find oofv track           0      0 
+  9: cut        External FGD1             0      0 
+ 10: cut        muon PID                  0      0 
+-------------------------------------------------------------------
+
+root [13] draw.DumpCuts()
+-------------------------------------------------------------------
+      Cuts for selection 'kTrackerNumuCC'  with no branches
+-------------------------------------------------------------------
+  #: type       title                     break  branches  
+-------------------------------------------------------------------
+  0: cut        event quality             1      0 
+  1: cut        > 0 tracks                1      0 
+  2: cut        quality+fiducial          1      0 
+  3: cut        veto                      0      0 
+  4: cut        External FGD1             0      0 
+  5: cut        muon PID                  0      0 
+-------------------------------------------------------------------
+\endcode
+
+
+For more complicated analysis (with several selections and/or branches) we should specify the selection and the branch.
+
+\subsection drawingtools_dumpcateg List of event/track categories
+
+As mentioned above each event has a list of categories associated, which are in general related with the true properties of the event. For example 
+one can plot the momentum distribution of the muon candidate with different colors for each particle type (stacked histogram). In this way we can see how many of 
+our selected muons are in fact true muons. To do so the user have to specify the "particle" category in the corresponding DrawingTools method. There are other categories as 
+true reaction type, detector in which the true interaction happened, etc. The list of categories or info about a specific category can be accessed using the following methods:
+
+\snippet DrawingToolsBase.hxx DrawingToolsBase_categ
+
+The list of categories:
+
+\code
+root [14] draw.DumpCategories()
+-------- Available track categories -------
+ - particle
+ - parent
+ - gparent
+ - primary
+ - nutype
+ - detector
+ - target
+ - reaction
+ - reactionCC (=1 when reaction<4 || reaction==9 for 2p2h)
+ - reactionnofv
+ - reactionsand
+ - reactionsandCC
+ - topology
+ - topology_no1pi
+ - topology_withpi0
+ - topology_ccpizero
+ - mectopology
+
+-------- Track categories for FGD2 (if defined) -------
+ - fgd2<one_of_the_previous>
+
+-------- Track categories for antinu (if defined) -------
+ same names as previous
+
+-------------------------------------------
+\endcode
+
+
+As mentioned above, there is also a method to print the available types for a given category, including the details (color, code) for each type:
+
+\code
+root [14] draw.DumpCategory("reaction")
+-------- Types for 'reaction' category -------
+ - CCQE (code 0, color 2)
+ - 2p2h (code 9, color 874)
+ - RES (code 1, color 3)
+ - DIS (code 2, color 4)
+ - COH (code 3, color 7)
+ - NC (code 4, color 6)
+ - anti-#nu_{#mu} (code 5, color 31)
+ - #nu_{e} (code 6, color 65)
+ - out FGD FV (code 7, color 1)
+ - other (code 999, color 48)
+ - no truth (code -1, color 92)
+-------------------------------------------
+\endcode
+
+\subsection drawingtools_dumppot POT information
+
+Information about the POT corresponding to the data being analyses can be accessed with several methods. The simplest options are: 
+
+\snippet DrawingToolsBase.hxx DrawingToolsBase_POT
+
+These are the available methods using DataSample or Experiment:
+
+\snippet DrawingTools.hxx DrawingTools_POT
+
+
+This is one example for a single T2K-ND280 MC file:
+
+\code
+root [15] DataSample mc("mc.root")
+root [16] draw.DumpPOT(mc)
+Initial POT........... 5e+17
+|-- Bad Beam.......... 0
+|-- Bad ND280......... 0
+|-- Total Good POT.... 5e+17
+  |-- @ 0KA........... 0
+  |-- @ 200KA......... 0
+  |-- @ 250KA......... 0
+  |-- @ Other power... 0
+\endcode
+
+\subsection drawingtools_dumppur Purities
+
+\code
+  // Print the purities for each type in the specified category and for a given selection cut
+  void PrintPurities(TTree* tree, const std::string& categ,  const std::string& cut);
+\endcode
+
+Produces the following output on the screen:
+
+\code
+root [15] draw.PrintPurities(default,"reaction","accum_level>5")
+  Purities 
+  Category reaction
+  Cut      accum_level>5
+  Events   50283.6
+ ------------------------------------------ 
+                CCQE   44.2077 % (22229.2 events)
+                2p2h         0 % (0 events)
+                 RES   22.4987 % (11313.2 events)
+                 DIS   20.7072 % (10412.3 events)
+                 COH   2.84522 % (1430.68 events)
+                  NC    3.2865 % (1652.57 events)
+      anti-#nu_{#mu}  0.577795 % (290.536 events)
+             #nu_{e}  0.295568 % (148.622 events)
+          out FGD FV   5.53933 % (2785.37 events)
+               other 0.0467397 % (23.5024 events)
+            no truth         0 % (0 events)
+ ------------------------------------------ 
+\endcode
+
+In this particular case the 2p2h category has 0 events becaouse the job was run on production 5 files.
+
+If your microtree has more than one branch or selection, replace accum_level as explained in the next paragraph.
+
+\section drawingtools_plots  Different plotting functions: 1D, 2D, efficiencies, systematics, data-mc comparisons, etc
+
+The DrawingTools have the following drawing functionality:
+
+  - \ref  drawingtools_basic
+  - \ref  drawingtools_ratios
+  - \ref  drawingtools_vscut
+  - \ref  drawingtools_err
+  - \ref  drawingtools_toys
+  - \ref  drawingtools_comp
+  - \ref  drawingtools_datasample
+  - \ref  drawingtools_exp
+
+The functions shown below are in the class DrawingToolsBase. 
+
+In the follwing examples it is used a microtree with just one branch and one selection. For extending to a general case just replace:
+for microtrees with more than one branch OR more than one selection but without any branches:
+  for functions on the truth tree:   accum_level --> accum_level[branchID or selectionID]
+  for functions on the default tree: accum_level --> accum_level[][branchID or selectionID] (the first empty [] is for the toy experiment)
+for microtrees with more than one selection AND more than one branches:
+  for functions on the truth tree:   accum_level --> accum_level[selectionID][branchID]
+  for functions on the default tree: accum_level --> accum_level[][selectionID][branchID] (the first empty [] is for the toy experiment)
+
+
+There are methods to draw single 1D or 2D distributions, provided the variable(s), the binning, the category to be plotted and the cut:
+
+\subsection drawingtools_basic Draw single distributions
+
+\code
+  // Draw a single variable "var" in given tree with the specified binning. A cut can be applied using variables in the tree. 
+  // The stacked histogram colors will refer to the specified category. If no category is specified only the total will be plotted. 
+  // A normalization factor can be applied to the histogram contents. By default errors are scaled when thenormalization factor is not 1.  
+  void Draw(TTree* tree, const std::string& var, int nx, double xmin, double xmax, const std::string& categ="all", 
+	    const std::string& cut="", const std::string& root_opt="", const std::string& opt="", double norm=1,bool scale_errors=true);
+
+  // The same for a 2D histogram
+  void Draw(TTree* tree, const std::string& var, int nx, double xmin, double xmax, int ny, double ymin, double ymax, 
+	    const std::string& categ="all", const std::string& cut="", const std::string& root_opt="", const std::string& opt="", double norm=1,bool scale_errors=true);
+
+\endcode
+
+For example, a typical 1D distribution is: 
+
+\code
+root [16] draw.SetTitleX("muon candidate momentum (MeV/c)")
+root [17] draw.Draw(default,"selmu_mom",50,0,5000,"topology","accum_level>5")
+\endcode
+
+\image html selmu_mom_topology.png
+
+The syntax for drawing 2D plots follows ROOT's convention. The string you pass as the \c var
+option should be of the form
+
+\code
+"y_var:x_var"
+\endcode
+
+You can read this as plot \c y_var as a function of \c x_var. 
+As an example of 2D distribution: 
+
+\code
+root [18] draw.SetTitleX("muon candidate cos(theta)")
+root [19] draw.SetTitleY("muon candidate momentum (MeV/c)")
+root [20] draw.Draw(default,"selmu_mom:selmu_costheta",10,0,1,50,0,5000,"all","accum_level>5","colz")
+\endcode
+
+
+\image html selmu_mom_vs_costheta.png
+
+\subsection drawingtools_cut The 'cut' argument
+
+The \c cut argument will normally just be used to select events passing a given cut, such as
+
+\code
+"accum_level>2"
+\endcode
+
+However, this can be any cut string that ROOT supports. You can reference any variable
+stored in the micro-tree, so could do something like this to only look at events passing
+the first 3 cuts and that have a momentum greater than 300 MeV (assuming your momentum
+variable is called \c selmu_mom).
+
+\code
+"accum_level>2 && selmu_mom>300"
+\endcode
+
+The same applies to the \c var argument, where you can combine multiple variables into a 
+single one. 
+
+
+\subsection drawingtools_vector Vector and matrix variables
+
+If you have saved vector variables in your output tree, for example to save a direction
+as a 3D array, you can access the components of the vector using the following syntax:
+
+\code
+"dir[0]"
+\endcode
+
+The argument in square brackets denotes the element of the vector you are accessing. You
+can combine vector variables and 2D plots to create, for example, 2D distributions of 
+where interactions occur, using
+
+\code
+"pos[1]:pos[0]"
+\endcode
+
+which will create an X-Y plot. To make this pretty, you should pass "COLZ" as the \c root_opt
+argument when callign Draw().
+
+You can also store matrix variables (with two indices) and 3D matrix variables (with three indices). 
+The way of plotting those variables is similar to vectors, but you should specify the appropriate number of indices. 
+
+Imagine you have the position of all tpc segements in your muon candidate stored as matrix variable (selmu_tpc_pos), in which the first index corresponds to a given TPC and the second index to the 
+component of the position. If you want to plot the y position of the first TPC you should use:
+
+\code
+"selmu_tpc_pos[0][1]"
+\endcode
+
+If on the contrary you want to plot the y position for all tpc segments:
+
+\code
+"selmu_tpc_pos[][1]"
+\endcode
+
+where the empty brackets is interpreted by ROOT and "all" components. A similar format is used for 3D matrix variables. You can use combinations as:  
+
+\code
+"var[][][2]"
+"var[1][][2]"
+"var[][1][2]"
+"var[1][1][2]"
+\endcode
+
+
+\subsection drawingtools_ratios Draw ratios, efficiencies, purities and significances
+
+These are the available methods, both for uniform and variable binning: 
+
+\snippet DrawingToolsBase.hxx DrawingToolsBase_eff_ratio
+
+For example we can draw the selection efficiency using the \c truth tree. 
+In this example the denominator will contain all true numu CC events while the numerator will contain all true numu CC events that are selected:
+
+\code
+root [18] draw.SetTitleX("true muon momentum (MeV/c)")
+root [19] draw.SetTitleY("numu CC selection efficiency")
+root [20] draw.DrawEff(truth,"truemu_truemom",50,0,5000,"accum_level>5","reactionCC==1")
+\endcode
+
+\image html numuCC_eff.png 
+
+And the selection purity using the \c default tree. In this case we use the same method but exchange the cut order. 
+The denominator will contain all selected events while the numerator will contsin all selected events that are true numu cc.
+
+\code
+draw.SetTitleX("muon candidate momentum (MeV/c)")
+draw.SetTitleY("numu CC selection purity")
+draw.DrawEff(default,"selmu_mom",50,0,5000,"reactionCC==1","accum_level>5")
+\endcode
+
+\image html numuCC_pur.png 
+
+\subsection drawingtools_vscut Draw number of events, efficiency and purity as a function of the cut
+
+These are the available methods:
+
+\snippet DrawingToolsBase.hxx DrawingToolsBaseVsCutsMethods
+
+All those methods exist also for DataSample. There are other methods, which take two DataSamples:
+
+\snippet DrawingTools.hxx DrawingToolsVsCutsMethods
+
+And here some examples:
+
+\code
+root [21] draw.DrawEventsVSCut(default)
+\endcode
+
+\image html events_vs_cut.png
+
+
+As you can see the first two cuts have no effect because we only saved in the micro-tree events with accum_level>2 (SetMinAccumLevelToSave).
+We can remove those cuts from the plot as follows:
+
+\code
+root [22] draw.DrawEventsVSCut(default,"",2)
+\endcode
+
+what means that only cuts starting from cut number 2 (quality+fiducial) will be shown:
+
+\image html events_vs_cut_fromcut2.png
+
+
+
+\code
+root [23] draw.SetTitleY("numu CC selection purity")
+root [24] draw.DrawPurVSCut(default,"reactionCC==1")
+\endcode
+
+\image html numuCC_pur_vs_cut.png
+
+
+\code
+root [25] draw.SetTitleY("numu CC selection efficiency")
+root [26] draw.DrawEffVSCut(truth,"reactionCC==1")
+\endcode
+
+\image html numuCC_eff_vs_cut.png
+
+The example below needs a DataSample to handle simultaneously the default and truth trees. More information about \ref drawingtools_datasample "DataSample" can be found below
+
+\code
+root [27] DataSample mc("mc.root")
+root [28] draw.SetTitleY("")
+root [29] draw.DrawEffPurVSCut(mc,"reactionCC==1")
+\endcode
+
+\image html numuCC_effpur_vs_cut.png
+
+\subsection drawingtools_err Drawing statistical and systematic errors
+
+A detailed description of systematic errors and how to draw them can be found an the \ref systematics "systematics" page. 
+Here we just list the available drawing methods. 
+
+To plot relative or absolute errors as a faction of any variable:
+
+\snippet DrawingTools.hxx DrawingToolsDrawErrors
+
+We can select statistical errors, systematics or both using the appropriate options (see the \ref drawingtools_options "Options for Drawing methods"). 
+If no option is given statistical errors will be plotted. 
+We can also draw the covariance matrix:
+
+\snippet DrawingTools.hxx DrawingToolsDrawCovMatrix
+
+\subsection drawingtools_toys Toy experiments plots
+
+In addition to the methods above to draw systematic errors there are methods to check the distribution of toy experiments:
+
+\snippet DrawingToolsBase.hxx DrawingToolsBaseDrawToyMethods
+
+
+\subsection drawingtools_comp Comparison between two data samples
+
+In this case either you open two root files containg the output of two different analyses for two data samples (data.root, mc.root), and copy simultaneously in memory the micro-trees 
+we want a use to compare, or use DataSample, which handles multiple data samples for you (see \ref drawingtools_datasample "below")
+
+\code
+
+  // 1D comparison for variable "var". The normalization factor is relevant now
+  void Draw(TTree* tree1, TTree* tree2, const std::string& var, int nx, double xmin, double xmax, 
+       const std::string& categ="all", const std::string& cut="", const std::string& root_opt="", const std::string& opt="", double norm=1, 
+
+  // 2D comparison for variable "var"
+  void Draw(TTree* tree1, TTree* tree2, const std::string& var, int nx, double xmin, double xmax, int ny, double ymin, double ymax, 
+       const std::string& categ="all", const std::string& cut="", 
+       const std::string& root_opt="", const std::string& opt="", double norm=1, bool scale_errors=false);
+
+  // Ratio between the two data samples  with the same cut
+  void DrawRatio(TTree* tree1, TTree* tree2, const std::string& var, int nx, double xmin, double xmax, 
+       const std::string& cut="",  const std::string& root_opt="", const std::string& opt="", const std::string& leg="", double norm=1);
+
+  // Ratio between the two data samples with different cuts
+  void DrawRatioTwoCuts(TTree* tree1, TTree* tree2, const std::string& var, int nx, double xmin, double xmax, 
+       const std::string& cut1, const std::string& cut2,  
+       const std::string& root_opt="", const std::string& opt="", const std::string& leg="", double norm=1);
+\endcode
+
+
+\subsection drawingtools_datasample Using DataSample to easily handle multiple data samples
+
+All functions above are also available using DataSample as input instead of a single tree. For example for a data-MC comparison:
+
+\code
+  void Draw(DataSample& sample1, DataSample& sample2, const std::string& var, int nx, double xmin, double xmax, 
+       const std::string& categ="all", const std::string& cut="", 
+       const std::string& root_opt="", const std::string& opt="",bool scale_errors=false, double norm=1, bool pot_norm=true);
+\endcode
+
+where sample1 and sample 2 will be created using two different micro-tree files (output of highland analyses):
+
+\code
+  DataSample sample1("sample1.root");
+  DataSample sample2("sample2.root");
+\endcode 
+
+In this case the normalization factor will be computed automatically (unless we specify the contrary in the last argument) from the header tree in both DataSample. 
+Those extended functions are part of DrawingTools, which inherits from DrawingToolsBase. The code and figure below show an example:
+
+\code
+root [1] DrawingTools draw("data.root")
+root [2] DataSample mc("mc.root")
+root [3] DataSample data("data.root")
+root [4] draw.SetTitleX("muon candidate momentum (MeV/c)")
+root [5] draw.Draw(data,mc,"selmu_mom",50,0,5000,"topology","accum_level>5")
+\endcode
+
+\image html selmu_mom_datamc_topology.png
+
+Now we list all available methods for samples comparison:
+
+\code
+  // Draw a single distribution of "var" for sample1 and sample2 superimposed. The total is shown for sample1 (usually data)
+  // while the breakdown in types for the specified category (categ) is shown for the second sample (usually MC)
+  // By default POT normalization is used, altho a scalling factor for the second sample can be introduced (norm). In that case
+  // the last argument (pot_norm) should be false
+  void Draw(DataSample& sample1, DataSample& sample2, const std::string& var, int nx, double xmin, double xmax, 
+       const std::string& categ="all", const std::string& cut="", 
+       const std::string& root_opt="", const std::string& opt="", double norm=1, bool scale_errors=false, bool pot_norm=true);
+
+  // The same for a 2D distribution
+  void Draw(DataSample& sample1, DataSample& sample2, const std::string& var, int nx, double xmin, double xmax, int ny, double ymin, double ymax,
+      const std::string& categ="all", const std::string& cut="", 
+      const std::string& root_opt="", const std::string& opt="", double norm=1, bool scale_errors=false, bool pot_norm=true);
+
+  // Draw the ratio between sample1 and sample2 as a function of "var" provided a different cut for each of the samples
+  // The same comments about normalization apply to this method. In this case a legent can be added since we might be 
+  // interested in plotting several rations in the same canvas
+  void DrawRatioTwoCuts(DataSample& sample1, DataSample& sample2, const std::string& var, int nx, double xmin, double xmax, 
+       const std::string& cut1, const std::string& cut2,  
+       const std::string& root_opt="", const std::string& opt="", const std::string& leg_name="", double norm=1, bool pot_norm=true);
+
+  // Draw the ratio between sample1 and sample2 as a function of "var" provided the same cut for both samples
+  void DrawRatio(DataSample& sample1, DataSample& sample2, const std::string& var, int nx, double xmin, double xmax, 
+       const std::string& cut="",  
+       const std::string& root_opt="", const std::string& opt="", const std::string& leg_name="", double norm=1, bool pot_norm=true);
+\endcode
+
+The plot below shows the data/MC ratio as a function of the muon candidate momentum for different cuts. Here we also learn how to change the legend position to 
+the bottom-left ("bl") corner:
+
+\code
+root [9] draw.SetLegendPos("bl")
+root [9] draw.SetTitleX("muon candidate momentum (MeV/c)")
+root [8] draw.SetTitleY("data/MC ratio")
+root [6] draw.DrawRatio(data,mc,"selmu_mom",10,0,5000,"accum_level>5","","","after all cuts")
+root [7] draw.DrawRatio(data,mc,"selmu_mom",10,0,5000,"accum_level>4","same","","before PID cut")
+root [7] Draw.DrawRatio(data,mc,"selmu_mom",10,0,5000,"accum_level>2","same","","before quality+fiducial cut")
+\endcode
+
+Data MC comparison plots can be also done using the Experiment class (see below).
+
+\image html selmu_mom_datamc_ratio.png
+
+\subsection drawingtools_exp Using Experiment to easily handle multiple data taking periods
+
+The Experiment class allows to make data-MC comparison plots with separated data-MC 
+sample pairs for each data taking period,  taking into account the proper POT normalization between data and MC for each run. 
+
+We can define an Experiment as a collection of SampleGroup's, where each sample group would correspond to a different 
+data taking period. A SampleGroup would contain several samples (DataSample), one for real data and several for MC 
+("magnet", corresponding to interactions in the detector, including the magnet, and "sand", corresponding to interactions in the material sourrounding the detector, etc).
+The code below creates an Experiment, suitable for T2K-ND280 data:
+
+\snippet exp.C Experiment example
+
+Once the Experiment is defined plots can be made:
+
+\code
+  // Data-MC comparison plots using a vector of pairs of data and MC samples (Experiment), properly normalised to each other.  
+  void Draw(Experiment& exp, const std::string& var, int nx, double xmin, double xmax, 
+       const std::string& categ="all", const std::string& cut="", const std::string& root_opt="", const std::string& opt="",bool scale_errors=false);
+
+  // Data-MC comparison plots using a single pair of data and MC samples from the Experiment properly normalised to each other.  
+  void Draw(Experiment& exp, const std::string& groupName, const std::string& var, int nx, double xmin, double xmax, 
+       const std::string& categ="all", const std::string& cut="", const std::string& root_opt="", const std::string& opt="",bool scale_errors=false);
+
+  // Data-MC comparison plots using a single pair of data and MC samples, and a single MC sample (i.e. only "magnet" or "sand") properly normalised to each other.  
+  void Draw(Experiment& exp, const std::string& groupName, const std::string& mcSampleName, const std::string& var, int nx, double xmin, double xmax, 
+       const std::string& categ="all", const std::string& cut="", const std::string& root_opt="", const std::string& opt="",bool scale_errors=false);
+\endcode
+
+
+In the later two functions, groupName and mcSampleName can take the value "all". For example 
+
+\code
+root [6]  draw.Draw(exp,"run2w","sand","selmu_mom",50,0,5000,"reaction","accum_level>5")
+\endcode
+
+would plot Run 2 water for data and the corresponding sand muon MC only properly normalized, while
+
+\code
+root [7]  draw.Draw(exp,"all","sand","selmu_mom",50,0,5000,"reaction","accum_level>5")
+\endcode
+
+would plot all data runs and the corresponding sand muon MC only properly normalized for each run.
+
+\section drawingtools_conf Configuration for plots: binning, options, style, ...
+
+  - \ref  drawingtools_binning
+  - \ref  drawingtools_options
+  - \ref  drawingtools_style
+  - \ref  drawingtools_arrows 
+
+\subsection drawingtools_binning Variable binning 
+
+All functions above for which binning should be specified have the corresponding function with variable binning. In that case 
+
+\code
+int nx, double xmin, double xmax 
+\endcode
+
+should be substituded by
+
+\code
+int nx, double* xbins 
+\endcode
+
+
+and
+
+\code
+int nx, double xmin, double xmax , int ny, double ymin, double ymax 
+\endcode
+
+should be substituded by
+
+\code
+int nx, double* xbins, int ny, double* ybins 
+\endcode
+
+For example:
+
+\code
+root [8] draw.SetTitleX("muon candidate momentum (MeV/c)")
+root [9] draw.SetTitleY("# entries / (100 MeV/c)")
+root [10] double pbins[15] = {0, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 1250, 1500, 2000, 3000, 5000};
+root [11] draw.Draw(data,mc,"selmu_mom",14,pbins,"topology","accum_level>5")
+\endcode
+
+produces the following plot:
+
+\image html selmu_mom_datamc_topology_varbin.png
+
+By default, to keep a nice plot appearence, bin contents are normalized to the bin width. 
+If we want disable that feature we should use the option "NOVARBIN":
+
+\code
+root [12] draw.SetTitleY("# entries")
+root [13] draw.Draw(data,mc,"selmu_mom",14,pbins,"topology","accum_level>5",1,"","NOVARBIN")
+\endcode
+
+\image html selmu_mom_datamc_topology_novarbin.png
+
+\subsection drawingtools_options Options for Drawing methods
+
+Most functions described above take the following arguments: 
+
+ - \b root_opt: this is the standard ROOT plotting option. Options such as "same", "e1", ..., should be specified here
+ - \b opt: this is the DrawingTools option. They are described below.
+ - \b leg: In some cases you can include a legend in the plots. If you use the root_opt "same" you can superimposed several plots with different legends
+
+The list of DrawingTools options can be printed on the screen with the command:
+
+\code
+root [14] draw.ListOptions()
+\endcode
+
+
+The available options are defined in the DrawingUtils.cxx file: 
+
+\snippet DrawingUtils.cxx DrawingToolsOptions
+
+Explaination of a specific option can be printed as follows:
+
+\code
+root [13] draw.ExplainOption("PUR")
+PUR:                The purity is printed on the screen
+\endcode
+
+Notice that several options can be combined. For example "ST SYS" will plot error bars as the sum in quadrature of statistical and systematic errors. 
+
+\subsection drawingtools_style Command line style options
+
+You can change the plot appearence by changing several attributes, such that the position of the legend, the X and Y labels, etc. 
+Once a given attribute is set it  will have effect on all subsequent plots.  
+These are the available methods:
+
+\snippet DrawingToolsBase.hxx DrawingToolsCommandLineOptions
+
+
+\subsection drawingtools_arrows Cut lines and regions
+
+Cut lines can be drawn over previously-drawn histograms. 
+There are functions for drawing horizontal or vertical lines (with an optional arrow indicating the direction fo the cut), 
+as well as cut regions for 2D plots (with the option for only drawing certain sides of the box, should the cut be "open"). 
+By default the cut lines are constrained to stay within the boundary of the current axes. 
+If a legend has already been drawn on the current pad, it is re-drawn so it is on top of the cut line).
+
+The available methods to draw cut lines and regions are listed below:
+
+\snippet DrawingToolsBase.hxx DrawingToolsBaseDrawCutLineMethods
+
+For example we can plot the muon candidate MIP likelihood before the PID cut and add an arrow to show which cut is made:
+
+\code
+root [14] draw.SetTitleX("muon candidate MIP likelihood")
+root [15] draw.Draw(data,mc,"selmu_likemip",50,0,1,"particle","accum_level>4")
+root [16] draw.DrawCutLineVertical(200,true,"r")
+\endcode
+
+\image html cutarrow.png
+
+\section drawingtools_printevents Create file with event numbers for a given selection 
+
+There are function to extract the the event numbers for a given selection, which can be very useful to create skimmed files:
+
+\code
+  // Print the event number of a specific selection
+  void PrintEventNumbers(TTree* tree, const std::string& cut, const std::string& file="", int refana=-1);
+  void PrintEventNumbers(DataSample& sample, const std::string& cut, const std::string& file, int refana=-1);
+\endcode
+
+When calling the following function: 
+
+\code
+root [14] draw.PrintEventNumbers(default,"mu_mom>100 && mu_mom<200","events.list")
+\endcode
+
+the file events.list is produced with the following content:
+\code
+90200000,0,607
+90200000,0,918
+90200000,0,2142
+90200000,0,2716
+90200000,0,3312
+90200000,0,3546
+90200000,0,4746
+90200000,0,6095
+90200000,0,6187
+\endcode
+
+where the first number is the run, the second subrun and the third the event number. 
+
+*/
+
+  

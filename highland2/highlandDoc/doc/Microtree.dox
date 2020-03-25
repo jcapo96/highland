@@ -1,0 +1,197 @@
+/*!
+\page microtree How to analyse events with the micro-tree and the DrawingTools
+
+This page documents how to analyse the information stored in the micro-tree produced
+by your analysis executable. The example commands assume you have an output file called \c microtree.root from running
+your analysis macro.
+
+ - \ref hlamicro_concepts
+ - \ref hlamicro_output
+ - \ref hlamicro_setup
+ - \ref hlamicro_basic
+ - \ref hlamicro_cuts
+ - \ref hlamicro_pot
+ - \ref hlamicro_experiment
+ - \ref hlamicro_drawingtools
+
+\section hlamicro_concepts Main concepts
+
+The micro-tree files can be analysed either in an interactive ROOT session, or using a
+simple ROOT macro. The complicated plotting logic is taken care of through the 
+DrawingTools, DataSample and Experiment classes, which can be used directly in your ROOT 
+session. 
+
+In basic terms, the DataSample class represents a single data or MC sample.  It handles reading in the correct information
+from a micro-tree file, and the DrawingTools class handles plotting that information. The Experiment class allows combining several 
+data and MC samples, taking into account the correct normalization between them. This is specially useful for treating in a coherent way 
+several data taking periods.
+
+Detailed info on how to create and use the DrawingTools, DataSample and Experiment classes can be found in the \ref DrawingTools "DrawingTools" page.
+
+\section hlamicro_output The TTree's in the output file
+
+The ouput root files contain \c header and \c config trees which hold information
+relevant to the analysis that was performed, including POT information, the name of the cuts and actions that were
+applied, the meaning of each variable in the micro-tree, and more. These trees are read in automatically when you instantiate the
+DrawingTools in your macro. There are functions in the "DrawingTools" (click \ref drawingtools_dump "here")
+which allows you to dump on the screen useful information about cuts, variables, etc. 
+
+The main trees in the output file are the \c default and \c truth trees. The \c default tree contains all selected events (the ones that passed a given cut, ussualy 
+specified in the \ref hlaadv_parameters "parameters file"). This is the tree used to optimise the selection cuts, to make selection plots and to compute or plot the purity of the selection. 
+The main reason for having a separate tree, call \c truth, is to allow the efficiency computation. The \c default tree does not contain all true signal events, 
+because it will be too big. The preselection for that tree is only based in reconstructed quantities (selection cuts). Instead, to compute true signal efficiencies 
+we need all true signal events to be present in the output tree. The \c truth tree fullfils this condition. Since, in general, this tree will contain many events, only a 
+reduced set of variables (the ones needed to compute the efficiency) is stored in that tree. 
+
+\section hlamicro_setup Before you start
+
+Before analysing events, you MUST source setup.sh in your analysis' \c cmt directory.
+Doing this does some ROOT magic so that it "knows" about the classes we will be using.
+This means that you don't have to load any libraries in order to use the DrawingTools, 
+DataSample and Experiment classes - ROOT will automatically know about them.
+
+\section hlamicro_basic Drawing a basic distribution
+
+The below macro is all that is needed to make a simple plot, showing the momentum of
+tracks that passed the first 3 cuts of an analysis. The plot will be drawn as a stacked
+histogram, broken down by the true particle associated with the selected reconstructed
+track.
+
+Note the unusual syntax for specifying the number of cuts that must be passed! See the
+\ref hlamicro_cuts section for more.
+
+\code
+{
+  DrawingTools draw("microtree.root");
+  DataSample mc("microtree.root");
+  draw.Draw(mc, "mom", 50, 0, 5000, "particle", "accum_level>2");
+}
+\endcode
+
+You can either type to code between the braces into an interactive ROOT session, or save 
+the code (including the braces!) as a macro file (say, \c momentum.C), and then run
+\c root \c momentum.C.
+
+\section hlamicro_cuts Cut information
+
+Cut names are stored in the output .root file, and more specifically into the "config" tree . You can see the list of cuts by typing
+
+\code
+  draw.DumpCuts()
+\endcode
+
+
+Utility functions are provided to plot the
+event reduction, efficiency and purity of the sample as a function of the cut.
+
+\code
+{
+  DrawingTools draw("microtree.root");
+  DataSample mc("microtree.root");
+
+  // event reduction
+  draw.DrawEventsVSCut(mc);
+  
+  // true muon selection purity
+  std::string signal = "particle==13";  
+  draw.DrawPurVSCut(mc, signal);
+
+  // true numu CCQE selection efficiency
+  // using the truth tree
+  std::string numuCCQE = "nu_truereac == 1";  
+  draw.DrawEffVSCut(mc, signal);
+}
+\endcode
+
+Normally, you will want to plot histograms of the events that passed certain cuts.
+The syntax for this was mentioned above, and is repeated here as the last argument to the 
+DrawingTools::Draw() function:
+
+\code
+  draw.Draw(mc, "mom", 50, 0, 5000, "particle", "accum_level>2");
+\endcode
+
+\c accum_level is the variable that stores the accumulated number of cuts passed by
+events in the micro-tree. Events that
+passed the event quality cut would be selected with \c accum_level>0". One way to think 
+about the numbering is that you would select the events that \b failed cut 4 by specifying
+\c accum_level==4. So to select events that \b passed cut 4, you need to do 
+\c accum_level>4.
+
+highland2 supports analyses with \b multiple \b branches (i.e. having
+multiple distinct selection criteria - say, an analysis that has CC0pi, CC1pi and
+CCNpi branches), and is stored as an array. If you have multiple branches you need to specify 
+the branch you want to plot. 
+For example: 
+
+\code
+  draw.Draw(mc, "mom", 50, 0, 5000, "particle", "accum_level[][0]>2");
+\endcode
+
+The first number (0) is the branch to look
+at - if your analysis only has 1 branch, then this will always be zero! The second 
+number (after the \c > sign) is the number of cuts that must be passed. 
+
+If no branches were defined, there will be only one branch. In that case  \c accum_level[][0]>2 
+and \c accum_level>2 have the same effect. 
+
+highland2 also supports analyses with \b multiple \b selections 
+(each of which may have several branches), and is stored as an array. If you have multiple selections you need to specify 
+the selection you want to plot. 
+For example: 
+
+\code
+  draw.Draw(mc, "mom", 50, 0, 5000, "particle", "accum_level[][0][0]>2");
+\endcode
+
+will do the plot for branch 0 (third index) in selection 0 (second index). 
+
+\section hlamicro_pot POT information
+
+POT information for both data and MC files can be accessed through the DataSample.
+
+\code
+{
+  DrawingTools draw("microtree.root");
+  DataSample mc("microtree.root");
+  draw.DumpPOT(mc);
+}
+
+// Gives following output for a T2K ND280 file:
+Initial POT........... 5e+17
+|-- Bad Beam.......... 0
+|-- Bad ND280......... 0
+|-- Total Good POT.... 5e+17
+  |-- @ 0KA........... 0
+  |-- @ 200KA......... 0
+  |-- @ 250KA......... 0
+  |-- @ Other power... 0
+\endcode
+
+There is also the option to automatically calculate the POT ratio between two samples.
+This is used to automatically scale MC files to data POT when plotting
+them on the same canvas.
+
+\code
+{
+  DrawingTools draw("microtree1.root");
+  DataSample mc1("microtree1.root");
+  DataSample mc2("microtree2.root");
+
+  double ratio = draw.GetPOTRatio(mc1, mc2);
+}
+\endcode
+
+\section hlamicro_experiment Handling multiple data periods with the Experiment class
+
+The Experiment class allows to make data-MC comparison plots with separated data-MC sample pairs for each data taking period, 
+taking into account the proper POT normalization between data and MC for each run. Detailed information can be found \ref drawingtools_exp "here".
+
+\section hlamicro_drawingtools All you need to know about the DrawingTools
+
+The DrawingTools class allows you to do all kind of analysis plots. For a detailed description of all available functions and options click 
+\ref DrawingTools "here".
+
+
+*/
+

@@ -1,0 +1,30 @@
+D0=$PWD
+cd SOURCE_DIR
+for D1 in {psyche,highland2}
+do
+  if [ ! -d $D1 ]; then
+    continue
+  fi
+  cd $D1
+  for D2 in *
+  do
+    if [ ! -d $D2 ]; then
+      continue
+    fi
+    D3=$(echo $D2 | tr "[a-z]" "[A-Z]")
+    D4=${D3}ROOT
+    export ${D4}=SOURCE_DIR/$D1/$D2
+  done
+  cd ..
+done
+cd $D0
+
+#export CMAKE_MODULE_PATH=/hep/sw
+export CMAKE_PREFIX_PATH=$ROOTSYS
+
+export PATH=$ROOTSYS/bin:SOURCE_DIR/bin:$PATH
+
+export HIGHLANDPATH=SOURCE_DIR
+
+export DYLD_LIBRARY_PATH=SOURCE_DIR/lib:$ROOTSYS/lib:$DYLD_LIBRARY_PATH
+export LD_LIBRARY_PATH=SOURCE_DIR/lib:$ROOTSYS/lib:$LD_LIBRARY_PATH

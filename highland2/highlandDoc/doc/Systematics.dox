@@ -1,0 +1,671 @@
+/*!
+\page systematics Propagating and drawing systematic errors (WORK IN PROGRESS!!)
+
+
+This page is a tutorial explains everything related with systematic errors in highland: 
+  
+ - \ref syst_concepts
+ - \ref syst_implementation
+ - \ref syst_data
+ - \ref syst_configuration
+ - \ref syst_running
+ - \ref syst_prop 
+ - \ref syst_var 
+ - \ref syst_eff 
+ - \ref syst_norm 
+ - \ref syst_propmath
+ - \ref syst_microtree 
+ - \ref syst_drawing
+ - \ref syst_drawing_summary
+ - \ref syst_validation
+
+*************************************************
+\section syst_concepts Main concepts
+*************************************************
+
+Propagating a systematic error means propagating the effect of a given parameter affecting our selection to the final number of selected events. For example, we know that the momentum scale 
+has an uncertainty. What is the effect of that uncertainty on the number of events passing all selection cuts and in a given kinematic range (momentum, angle, both, etc) ?
+In general, this can't be done analytically and numerical methods are required. 
+
+There are two type of systematic errors in highland: variations and weights. Systematic variations modify the event properties, such as 
+the momentum, the deposited energy, etc. Weights only afect the final weight of the event in our sample, but leave the whole event untouched. 
+Thus after applying a systematic variation the event selection needs to be redone. This is not the case for the systematic weights. 
+
+Some systematics could be propagated both as a weight or as a variation, while others can only be propagated in one way. Systematics that affect a continues property of the event 
+(momentum resolution, momentum scale, particle identification variables, etc) must be implemented as variations.
+Systematic that affect a binary property of the event (charge confusion, tracking efficiencies, etc) 
+can be implemented both as weights or variations. And systematics that affect only the event normalization (detector mass, pile up, etc) can only be implemented as weights. 
+
+
+
+*************************************************  
+\section syst_implementation Implementing a new systematic
+*************************************************
+
+The propagation of specific systematics is implemented in the psycheSystematics package, in the src directory. There are a couple of files per systematic (.hxx, .cxx). 
+The systematic source parameters (the ones we want to propagate to the final number of selected events) are under the subfolder data. Only well tested and general use systematics should be 
+under psycheSystematics. Systematics that are only used by a given highland analysis package must be under that package. 
+
+
+Each systematic propagation is defined by a class inheriting from both EventVariationBase or EventWeightBase, and from BinnedParams. 
+Inheritance from BinnedParams takes care of reading the data file where the source systematic errors are stored. It also has a method GetBinValues to get the 
+systematics parameters for a given bin (momentum, number of hits, angles, etc, depending on the systematic). 
+
+Inheritance from EventVariationBase or EventWeightBase  takes care of the propagation. 
+Each EventVariationBase should implement the mandatory method Apply while each EventWeightBase should implement the mandatory method ComputeWeight.
+For variation systematics implementing the method UndoVariation is highly recommended since this would result in a more efficient way of propagating the systematic
+(avoids reseting the entire event after each toy experiment).
+
+*************************************************
+\section syst_data Systematic source data
+*************************************************
+
+The systematic source data is under psycheSystematics/vXrY/data. There is a file .dat for each of the systematic parameters. There are several file formats depending on the systematic 
+parameter. The file format can be deduced from the enum type value that takes BinnedParams() constructor in the constructor of the individual systematic propagation classes 
+(under psycheSystematics/vXrY/src):
+
+
+\snippetdoc BinnedParams.hxx BinnedParamsTypes
+
+Efficiency-like weight systematics need the values for data and MC control samples (with errors) and also the nominal for the MC analysis sample
+
+*************************************************
+\section syst_configuration Creating a configuration with the appropriate systematic errors 
+*************************************************
+
+First the different propagation methods must be added to the EventVariationManager or EventWeightManager in the DefineSystematics() method of the analysis algorithm. 
+For example in baseTrackerAnalysis/vXrY/src/baseTrackerAnalysis.cxx we find
+
+\snippet baseTrackerAnalysis.cxx baseTrackerAnalysis_varsyst
+
+for variation systematics. Similarely for weight systematics:
+
+\snippet baseTrackerAnalysis.cxx baseTrackerAnalysis_weightsyst
+
+But the user could add new systematics in the DefineSystematics() method of his analysis package
+Then several configurations with different systematics enabled are defined. For example in baseTrackerAnalysis.cxx we find in the DefineConfigurations() method 
+
+\code
+      AddConfiguration(conf(), bfield_syst, ntoys, randomSeed, new baseToyMaker(randomSeed));
+      conf().EnableSystematic(kBFieldDist,bfield_syst);
+\endcode
+
+which defines the "bfield_syst" configuration with only the "kBFieldDist" systematic enabled, with ntoy toy experiments and an specific randomSeed. 
+The random seed allows making the same exact throws when running several jobs. The baseToyMaker instance provided at the end, is a class inheriting 
+from ToyMakerB, which tells the system how toy experiments should be created based on the random throws.
+
+There is also a configuration with all systematics:
+\snippet baseTrackerAnalysis.cxx baseTrackerAnalysis_all_syst
+
+Again, the user can define his own configurations in the DefineConfigurations() method of his analysis package. 
+
+*************************************************
+\section syst_running How to run a job with systematic errors
+*************************************************
+
+To run a job with systematic errors you should make sure that the proper options are set in baseAnalysis.parameters.dat, baseTrackerAnalysis.parameters.dat or any other parameters 
+file you may be using. Systematics should be run on a MC file.
+
+The parameters files in the baseAnalysis package (baseAnalysis/vXrY/parameters/baseAnalysis.parameters.dat) and 
+baseTrackerAnalysis package (baseTrackerAnalysis/vXrY/parameters/baseTrackerAnalysis.parameters.dat) allows enabling/disabling the different systematics that are common for many analyses.
+The user can enable either one or several configurations with a single systematic or enable a 
+configuration with several systematics.
+
+This is the part of baseAnalysis.parameters.dat related with systematics
+
+\snippet baseAnalysis.parameters.dat baseAnalysis.parameters.dat_systematics
+
+As you can see there are no systematics being run (NumberOfToys=0) but one of the event weights, the Flux weight, is switched on. 
+This is because this weight must be applied as a correction by default. 
+
+The default baseTrackerAnalysis.parameters.dat file is: 
+
+\include baseTrackerAnalysis.parameters.dat
+
+By default all event variations and weights are switched off except PileUp. As for the Flux weight in baseAnalysis, the \ref nd280syst_pileup "PileUp"
+weight correction is always applied by default to MC events.  
+
+With this default parameters files, the output file produced will contain a single micro-tree called "default", with two weight corrections applied, Flux and PileUp. 
+
+
+To enable systematics the number of toys must be larger than 1 (at least 100 to get meaningful results) and at least one configuration with systematics
+included must be switchen on. Changing the parameters below enables a single configuration with the momentum resolution switched on and 1000 toys. This will produce an additional tree
+named "momresol_syst" in the output file:
+
+In baseAnalysis.parameters.dat:
+
+\code
+ < baseAnalysis.Systematics.NumberOfToys = 1000 >
+ 
+ < baseAnalysis.Configurations.EnableSingleVariationSystConfigurations = 1 >
+\endcode
+
+In baseTrackerAnalysis.parameters.dat:
+
+\code
+ < baseTrackerAnalysis.Systematics.EnableMomRes            = 1 >
+\endcode
+
+
+
+To enable several systematics in the same configuration:
+
+
+In baseAnalysis.parameters.dat
+
+\code
+ < baseAnalysis.Systematics.NumberOfToys = 1000 >
+
+ < baseAnalysis.Configurations.EnableAllSystematics = 1 >	
+\endcode
+
+In baseTrackerAnalysis.parameters.dat we should switch on several systematics. For example:
+
+\code
+ < baseTrackerAnalysis.Variations.EnableBFieldDist        = 1 >
+ < baseTrackerAnalysis.Variations.EnableMomScale          = 1 >
+
+ < baseTrackerAnalysis.Weights.EnableTPCClusterEff        = 1 >
+ < baseTrackerAnalysis.Weights.EnableTPCTrackEff          = 1 >
+\endcode
+
+
+In this example the all_syst micro-tree will appear in the output root file with several systematics enabled:  
+BField distortions, momentum scale, TPC cluster efficciency and TPC tracking efficiency. Plus PileUp and Flux that were already enabled.   
+
+Systematics and configurations that are defined in specific analysis packages will be controlled using the parameters file of those packages. 
+
+
+*************************************************
+\section syst_prop Systematic error propagation
+*************************************************
+
+Propagating the systematics consists in studying the effect of the inaccuracies in the data-MC differences on the final number of selected events 
+(integrated or in bins of a given observable).  
+Ideally, one should study the effect of varying basic parameters in the MC (such as the gas density or pressure in the TPC, or the light speed in 
+scintillators) in order to take properly into account the correlations between all systematic parameters. 
+Sometimes this is possible, as in the following cases:
+- The model of pion secondary interactions (SI) is only approximate in the MC. The uncertainties on pion SI cross-sections must be properly propagated, 
+  as they will alter the event topology and kinematics, and therefore the selection. 
+- The density of the FGD1 detector, which affects directly the FGD1 mass and therefore the neutrino interaction rate, is not known with infinite 
+precision. Thus, its uncertainty must be taken into account and propagated to the final number of selected events. 
+
+However, this procedure is in general very complicated, as it requires a very detailed knowledge of the detector and all physics processes involved, in both 
+data and MC. Thus, in practice, some derived parameters (such as reconstruction efficiencies or the mean and resolution for some reconstructed observables) 
+which affect directly the event selection can be computed for data and MC and used to propagate the systematic uncertainties. 
+
+As mentioned above, one of the effects of an imperfect MC can be a difference in the reconstruction efficiency, both at track and event level, which, in 
+general, will affect directly the number of events passing the selection cuts. For example, dissimilarities in the TPC or FGD tracking efficiency or in the 
+TPC-FGD matching efficiency in data and MC will result in a different number of events passing the track multiplicity cuts in the two samples. 
+In the same way, the efficiency of selecting a sand or cosmic muon as the muon candidate (these are examples of event-level reconstruction efficiencies) 
+might be different in data and MC. 
+
+MC imperfections can also produce a different mean and resolution of reconstructed observables with respect to data, as in the case of the momentum scale 
+and resolution. 
+As will be discussed below, if the TPC gas density is not the same in data and MC there will be dissimilarities in the space point resolution, resulting in 
+a different momentum resolution. The gas density could also have an effect on the mean and resolution of the mean energy loss of charged particles passing 
+through the TPCs, which would alter the effect of the TPC PID cuts.  
+If an observable is reconstructed with a different mean or resolution in data and MC, two effects may arise:
+
+- As some cuts depend on the value of the reconstructed observable, their effect can change. 
+  For example, the TPC and FGD PID cuts select muon and proton-like tracks by using the pull values for different hypotheses. 
+  A different pull mean or width in data and MC will result in a different effect of the TPC and FGD PID cuts.
+- The variation of a reconstructed observable can produce a migration of events from one bin to another in differential distributions. 
+  For example, the muon and proton candidate momentum distributions in the MC will be altered by the momentum scale, momentum resolution and magnetic field 
+  distortion systematics. 
+
+
+Several methods, depending on the nature of the uncertainties, have been used to propagate the systematics: 
+
+- <b>efficiency-like method</b>: used for propagating the systematics associated with track-level reconstruction 
+  efficiencies;
+- <b>reconstructed observable variation method</b>: used to propagate the systematics associated with 
+  differences in mean or resolution for some reconstructed observables;
+- <b>normalisation method</b>:  used to propagate all event-level efficiency uncertainties, the pion SI and 
+  FGD mass systematics.
+
+As will be explained below, systematics using the reconstructed observable variation method are propagated repeating the selection several times for 
+different variations of the observable. In the other two methods only an event weight is applied at the end of the selection to the nominal selection. 
+
+In all cases a Probability Density Function (pdf) must be assumed (a gaussian in general). 
+
+
+
+*************************************************
+\section syst_eff Propagation of efficiency-like systematics
+*************************************************
+
+\snippetdoc SystematicUtils.cxx SystematicUtils_eff-like
+
+*************************************************
+\section syst_var Propagation of reconstructed observable variation systematics
+*************************************************
+
+The reconstructed observable variation method applies to variables which might have different mean or resolution in data and MC. 
+In general, the observable value is varied in this way:
+
+\[
+x^{\prime} = x + \Delta x + \delta \cdot \sigma_{\Delta x}
+\]
+where \f$x\f$ is the original value of the observable; \f$\Delta x\f$ is the correction that should be applied to the MC to match the mean value in the data, 
+\f$\sigma_{\Delta x}\f$ is the statistical uncertainty on \f$\Delta x\f$ and \f$\delta\f$ is the variation in number of standard deviations. 
+
+The different cases will be discussed separately in the corresponding sections. 
+In all cases the event selection is run again on the new observable. 
+
+
+*************************************************
+\section syst_norm Propagation of normalization systematics
+*************************************************
+
+If the systematic uncertainty is associated with the total event normalisation the event is 
+re-weighted according to the variation suggested by the systematic error studies, in accordance with:
+
+\anchor eq_normsyst
+\f[
+W = W_0 (1 + \delta \cdot \sigma_W)
+\f]
+\latexonly
+\noindent
+\endlatexonly
+where \f$W\f$ is the weight to be applied to the MC due to the systematics, \f$W_0\f$ is the nominal weight in the absence of systematics 
+(it is different from 1 if some corrections have been applied), \f$\sigma_W\f$ is the systematic error on the normalisation and \f$\delta\f$ is the 
+variation in number of standard deviations. 
+Since a single normalization factor per event is applied, the event selection does not have to be redone.
+
+*************************************************
+\section syst_propmath Mathematics for the covariance matrix
+*************************************************
+
+\snippetdoc SystematicTools.cxx SystematicTools_cov
+
+*************************************************
+\section syst_microtree Systematics variables in microtree
+*************************************************
+
+\snippetdoc AnalysisLoop.cxx AnalysisLoop_syst
+
+
+Other variables, since are common for all events are in the config tree:
+
+ - \b CONF._toys.weights[t][p]: Toy experiment weight for  toy t and systematic parameter p. It has two indices.
+ - \b CONF._toys.variations[t][p]: Toy experiment variation for  toy t and systematic parameter p. It has two indices.
+
+*************************************************
+\section syst_drawing Drawing systematic errors
+*************************************************
+
+Once we have a highland root file with systematics in we can start doing plots. Inside the file there will be a micro-tree for each configuration enabled, for example momres_syst.  
+The default tree is always present. After opening the root file you can see which trees are available
+
+\code
+root [1] .ls
+TFile**         mc.root
+ TFile*         mc.root
+  KEY: TTree    config;3           config
+  KEY: TTree    default;3          default
+  KEY: TTree    momresol_syst;3    momresol_syst
+  KEY: TTree    truth;3            truth
+  KEY: TTree    header;1           header
+\endcode
+
+In this case only the momresol_syst micro-tree is available, apart of the standard trees. 
+
+After creating a DrawingTools instance 
+the first thing you should do is to check which systematics are enabled in a particular configuration (micro-tree)
+
+\code
+root [1] DrawingTools draw("mc.root")
+root [2] draw.DumpConfiguration("momresol_syst")
+*********** Configuration: momresol_syst *************
+ enabled:     1
+ NToys:       1
+ NSyst:       1
+ Random seed: 1
+ -------- List of VariationSystematics ------------
+  #: name                      pdf             NPar
+ --------------------------------------------------
+  0: kMomResol                 gaussian        3   
+ --------------------------------------------------
+ -------- List of WeightSystematics ---------------
+  #: name                      pdf             NPar
+ --------------------------------------------------
+ --------------------------------------------------
+\endcode
+
+We can see above that in the momresol_syst configuration only kMomResol systematic (with 3 systematic parameters for prod5) is enabled.
+No matter which systematics are enabled you can see which systematics were available (added to the SystematicsManager in the DefineSystematics method)
+
+\code
+root [3] draw.DumpSystematics()
+ -------- List of Systematics  --------------------
+  #: name                      type             NPar
+ --------------------------------------------------
+  0: kBFieldDist               variation          1
+  1: kMomScale                 variation          1
+  2: kMomResol                 variation          3
+  3: kTpcPid                   variation        104
+  4: kFgdPid                   variation          4
+  5: kChargeConf               weight            30
+  6: kTpcClusterEff            weight             2
+  7: kTpcTrackEff              weight             2
+  8: kTpcFgdMatchEff           weight             6
+  9: kFgdTrackEff              weight            14
+ 10: kFgdHybridTrackEff        weight            24
+ 11: kMichel                   weight             8
+ 12: kPileUp                   weight             7
+ 13: kFgdMass                  weight             2
+ 14: kOOFV                     weight            18
+ 15: kSIPion                   weight             3
+ 16: kSandMu                   weight             1
+ 17: kFluxWeightNu             weight            25
+ 18: kFluxWeightAntiNu         weight            25
+ --------------------------------------------------
+\endcode
+
+
+The type and the number of parameters for each systematic are indicated
+
+The first plot we can do is a distribution of the relative systematic error as a function of any variable in the micro-tree. 
+For example as a function of the muon candidate momentum for all events passing the numuCC selection. 
+
+\code
+draw.DrawRelativeErrors(momresol_syst,"selmu_mom",10,0,5000,"accum_level>5","","SYS")
+\endcode
+
+\image html momres_relsyst.jpg
+
+
+Similarly the absolute error can be ploted. 
+
+\code
+draw.DrawErrors(momresol_syst,"selmu_mom",10,0,5000,"accum_level>5","","SYS")
+\endcode
+
+\image html momres_abssyst.jpg
+
+
+We can attached systematic error bars to a distribution
+
+\code
+draw.Draw(momresol_syst,"selmu_mom",10,0,5000,"all","accum_level>5","","SYS")
+\endcode
+
+\image html momres_withsyst.jpg
+
+
+where error bars are only systematics. We have used the root option "e2" in order to make the error bars visible. The total error would be plotted as follows
+
+\code
+draw.Draw(momresol_syst,"selmu_mom",10,0,5000,"accum_level>5","","SYS ST")
+\endcode
+
+
+The error can also be plotted when using color plots for a given category using the option "ETOT". In this case the error bar is always a rectangle:
+
+\code
+draw.Draw(momresol_syst,"selmu_mom",10,0,5000,"reaction","accum_level>5","","SYS ETOT")
+\endcode
+
+\image html momres_withsyst_categ.jpg
+
+We can now include some weight systematics in our example. Since weight systematics do not modify the event properties and 
+each of them is stored in a different variable in the output tree (weight_syst[i]).
+we can enable all of them and then plot them independently. 
+The SandMuons systematic is disabled since it should be run over a sand muons file. 
+So we can use this setup in the parameters file.
+
+
+\code
+
+--- Systematics ------------
+
+Enable/disable configurations with a single systematic (when EnableSingleWeightSystConfigurations = 1)
+and enable systematics in the "all_syst" configuration (when EnableAllSystematics = 1)
+
+ < baseAnalysis.Systematics.EnableSIPion            = 1 >	
+ < baseAnalysis.Systematics.EnableSIProton          = 0 >	
+
+ < baseAnalysis.Systematics.EnableFluxNeutrino      = 1 >	
+ < baseAnalysis.Systematics.EnableFluxAntiNeutrino  = 0 >	
+
+
+Number of toy experiments
+ < baseAnalysis.Systematics.NumberOfToys = 100 >
+
+The Random Seed. When throwing toys we want the same random numbers for all jobs. Thus, the random seed should be the same in all cases (and different from 0 !!!!)
+
+     0 --> A pure random seed is generated based on time
+ not 0 --> A fix random seed is used 
+
+ < baseAnalysis.Systematics.RandomSeed = 1 >
+
+
+Whether to apply a zero variation or the random variation. Zero variation is normally used to apply systematic corrections but not systematic errors. 
+The number of toys should be one in that case
+
+ < baseAnalysis.Systematics.ZeroVariation = 0 >
+
+--- Configurations ------------
+
+Create configurations with a single systematic ( a configuration for each systematic selected above)
+
+ < baseAnalysis.Configurations.EnableSingleVariationSystConfigurations = 0 >
+ < baseAnalysis.Configurations.EnableSingleWeightSystConfigurations    = 0 >
+
+Enable/disable the configuration with all systematics (or the ones selected above)
+
+ < baseAnalysis.Configurations.EnableAllSystematics = 1 >	
+
+
+--- Systematics ------------
+
+The single systematics configuration (when EnableSingle...SystConfigurations = 1)
+or the all systematics configuration (when EnableAllSystematics = 1)
+need to be enabled in baseAnalysis parameter file
+
+TPC-FGD related, observable variation systematics
+ < baseTrackerAnalysis.Systematics.EnableBFieldDist        = 0 >
+ < baseTrackerAnalysis.Systematics.EnableMomScale          = 0 >
+ < baseTrackerAnalysis.Systematics.EnableMomRes            = 0 >
+ < baseTrackerAnalysis.Systematics.EnableMomRangeRes       = 0 >
+ < baseTrackerAnalysis.Systematics.EnableTPCPID            = 0 >
+ < baseTrackerAnalysis.Systematics.EnableFGDPID            = 0 >
+
+TPC-FGD related, efficiency-like systematics (i.e. weight systematics)
+ < baseTrackerAnalysis.Systematics.EnableTPCClusterEff     = 1 >
+ < baseTrackerAnalysis.Systematics.EnableTPCTrackEff       = 1 >
+ < baseTrackerAnalysis.Systematics.EnableChargeConf        = 1 > i.e. TPC Charge ID efficiency
+ < baseTrackerAnalysis.Systematics.EnableTPCFGDMatchEff    = 1 >
+ < baseTrackerAnalysis.Systematics.EnableFGDTrackEff       = 0 > (not in TN212)
+ < baseTrackerAnalysis.Systematics.EnableFGDHybridTrackEff = 1 >
+ < baseTrackerAnalysis.Systematics.EnableMichelEleEff      = 1 >
+
+Other detectors related
+ < baseTrackerAnalysis.Systematics.EnableECalEMResol          = 0 >
+ < baseTrackerAnalysis.Systematics.EnableECalEMScale          = 0 >
+ < baseTrackerAnalysis.Systematics.EnableTPCECalMatchEff      = 0 >
+ < baseTrackerAnalysis.Systematics.EnableTPCP0DMatchEff       = 0 >
+ < baseTrackerAnalysis.Systematics.EnableFGDECalMatchEff      = 0 >
+ < baseTrackerAnalysis.Systematics.EnableFGDECalSMRDMatchEff  = 0 >
+ < baseTrackerAnalysis.Systematics.EnableECalTrackEff         = 0 >
+ < baseTrackerAnalysis.Systematics.EnableToFResol             = 0 >
+
+Background related, normalizazion systematics
+ < baseTrackerAnalysis.Systematics.EnableOOFV              = 1 >
+ < baseTrackerAnalysis.Systematics.EnableSandMu            = 0 >
+ < baseTrackerAnalysis.Systematics.EnablePileUp            = 1 >
+
+MC modeling related, normalizazion systematics
+ Pion SI is in baseAnalysis
+ < baseTrackerAnalysis.Systematics.EnableFGDMass           = 1 >
+\endcode
+
+
+These are the trees in the output file
+
+\code
+root [1] .ls
+TFile**         mc_weights.root
+ TFile*         mc_weights.root
+  KEY: TTree    all_syst;11        all_syst
+  KEY: TTree    config;11          config
+  KEY: TTree    default;11         default
+  KEY: TTree    truth;11           truth
+  KEY: TTree	NRooTrackerVtx;11  NRooTrackerVtx
+  KEY: TTree    header;1           header
+\endcode
+
+Now we can see the list of systematics enabled in the all_syst configuration:
+
+\code
+root [1] DrawingTools draw("mc_weightsyst.root")
+root [2] draw.DumpConfiguration("all_syst")
+*********** Configuration: all_syst *************
+ enabled:     1
+ NToys:       100
+ NSyst:       11
+ Random seed: 1
+ -------- List of VariationSystematics ------------
+  #: name                      pdf             NPar
+ --------------------------------------------------
+ -------- List of WeightSystematics ---------------
+  #: name                      pdf             NPar
+
+  0: ChargeIDEff               gaussian        7   
+  1: TpcClusterEff             gaussian        4   
+  2: TpcTrackEff               gaussian        6   
+  3: TpcFgdMatchEff            gaussian        4   
+  4: FgdHybridTrackEff         gaussian        48  
+  5: MichelEleEff              gaussian        16  
+  6: PileUp                    gaussian        20  
+  7: FgdMass                   gaussian        2   
+  8: OOFV                      gaussian        25  
+  9: SIPion                    gaussian        3   
+ 10: FluxWeightNu              gaussian        25  
+ --------------------------------------------------
+\endcode
+
+We can plot the relative error for all weight systematics together
+
+\code
+draw.DrawRelativeErrors(all_syst,"selmu_mom",10,0,5000,"accum_level>5","","SYS")
+\endcode
+
+\image html allweightsyst.jpg
+
+Or for some of them, for example OOFV (8) and FGD mass (7):
+
+\code
+ draw.DrawRelativeErrors(all_syst,"selmu_mom",10,0,5000,"accum_level>5","","SYS WS7 WS8")
+\endcode
+
+\image html someweightsyst.jpg
+
+
+Finally we can put all systematics together by switching on the variation systematics in the baseTrackerAnalysis parameters file.
+
+\code
+root [1] DrawingTools draw("mc_allsyst.root")
+root [2] draw.DumpConfiguration("all_syst")
+*********** Configuration: all_syst *************
+ enabled:     1
+ NToys:       100
+ NSyst:       16
+ Random seed: 1
+ -------- List of VariationSystematics ------------
+  #: name                      pdf             NPar
+
+  0: BFieldDist                uniform         1   
+  1: MomScale                  gaussian        1   
+  2: MomResol                  gaussian        10  
+  3: TpcPid                    gaussian        88  
+  4: FgdPid                    gaussian        8   
+ --------------------------------------------------
+ -------- List of WeightSystematics ---------------
+  #: name                      pdf             NPar
+
+  0: ChargeIDEff               gaussian        7   
+  1: TpcClusterEff             gaussian        4   
+  2: TpcTrackEff               gaussian        6   
+  3: TpcFgdMatchEff            gaussian        4   
+  4: FgdHybridTrackEff         gaussian        48  
+  5: MichelEleEff              gaussian        16  
+  6: PileUp                    gaussian        20  
+  7: FgdMass                   gaussian        2   
+  8: OOFV                      gaussian        25  
+  9: SIPion                    gaussian        3   
+ 10: FluxWeightNu              gaussian        25  
+ --------------------------------------------------
+\endcode
+
+*************************************************
+\section syst_drawing_summary Drawing options for systematics
+*************************************************
+
+These is the list of options for drawing different systematics:
+
+ - \b SYS: plot all systematics together 
+ - \b SSYS: plots variation systematics only
+ - \b WSYS: plots weight systematics only
+ - \b WSYS \b WS1 \b WS3: plots weight systematics 1 and 3 only. One can specified any number of weight systematics
+ - \b WSYS \b NWS1 \b NWS3: plots all weight systematics except 1 and 3. One can exclude any number of weight systematics
+ - \b SYS \b WS1 \b WS3: plots all variation systematics and weight systematics 1 and 3 only
+
+Notice that individual variation systematics cannot be drawn separately. To do so one should enable a single variation systematic in a given configuration.  
+
+*************************************************
+\section syst_validation Validation of systematic error propagation
+*************************************************
+
+How can we be sure that highland is treating correctly the toy experiments for variation systematics ?
+And how can we be sure that the implementation of a give systematic propagation is correct. 
+
+
+The first question can be answer using the \ref drawingtools_toys "DrawToys" functionality of the DrawingTools. The following line draws the distribution of the number of events 
+selected in the 2500-3000 momentum bin for the 10 toy experiments in the "momresol_syst" configuration. This is the bin with abnormal large error shown above. 
+The height of each entry in that plot corresponds to the PDF (gaussian in this case) probability for each of the toys. This is the ana_weight variable in the microtree.  
+
+\code
+root [67] draw.DrawToys(momresol_syst,"selmu_mom>2500 && selmu_mom<3000 && accum_level>5")
+\endcode
+
+\image html drawentries.jpg
+
+The mean of this plot (83.4) is the number of selected events in that momentum bin, and corresponds to the value in the momentum distribution shown above. 
+The RMS (4.83) is the systematic error and corresponds to the error bar of the momentum distribution shown above, although it can be better checked looking at the absolute error plot. 
+
+This only demonstrates the consistency of the different plots in highland. But how can we checked that the momentum resolution error is correctly propagated to the number of selected events 
+(in other words, is the MomentumResolSystematics.cxx correct ?). 
+
+This particular systematics has two effects, i) the migration to neighboring bins due to the change in the variable we are plotting (the systematic varies the same variable we are plotting) and 
+ii) the effect on the selection cuts: the muon candidate can change, the PID is affected by the change in momentum, etc. 
+
+To check the first we can look at the relative error plot. We realize that as expected the effect of the systematic is larger at large momentum, 
+since the resolution is worst and the momentum bins have the same size. We can increase/decrease the number of bins an check that the relative error increases/decreases. 
+We could even compute analytically the error we expect for a given momentum bin given the resolution at that bin and its width. 
+
+
+On the other hand the second effect is very tiny as we can see by plotting the distribution of toys with no momentum cuts:
+
+\code
+root [83] draw.DrawToys(momresol_syst,"accum_level>5")
+\endcode
+
+\image html drawentries_noprange.jpg
+ 
+
+The effect is at the per mil level (1.8/2334). 
+
+One should also compare the relative momentum plots with those in technical note 152. 
+
+
+For some weight systematics one would expect a direct connection between the systematic source (numbers in the baseAnalysis/src/systcmatics/data/\*.dat files) 
+and the relative systematic error:
+
+1. FGDMass, which should be around 0.0067 both in the .dat file and in the plot 
+2. PileUp, which depends on the run period but should be around 0.001 both in the .dat file and in the plot 
+3. TPCFGDMatchEff, which depends on momentum and track multilicity, but for a single selected track above 200 MeV/c should be around 0.0001 both in the .dat file and in the plot
+4. TPCTrackEff, which should be around 0.004 both in the .dat file and in the plot in topologies with a single track selected
+
+*/

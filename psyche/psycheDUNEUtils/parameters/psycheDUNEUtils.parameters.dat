@@ -1,0 +1,19 @@
+------- Proton SI -------
+ 
+--- Specify the step length for propagation
+ < psycheDUNEUtils.SI.StepSize = 0.1 > //mm
+ 
+--- Specify the value of momentum change that will lead to save the step
+ < psycheDUNEUtils.SI.StepMom = 10 > //MeV
+ 
+ --- Specify the value of the cross-section relative uncertainty
+ < psycheDUNEUtils.ProtonSI.XSec.Uncertainty = 0.1 > 
+
+------- Geometry -------
+
+--- Use the default geometry file even if the input file contains geometry
+ < psycheDUNEUtils.Geometry.UseDefaultGeometry = 1 >
+
+--- Use the ROOT geometry to overrride the harcoded values in detectorDefinition (DetDef namespace)
+ < psycheDUNEUtils.Geometry.DetectorDefinitionFromROOTGeometry = 0 >
+

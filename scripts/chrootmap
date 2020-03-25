@@ -1,0 +1,24 @@
+for f in $1/*.rootmap
+do
+  D1=$(basename "$f" .rootmap)
+  sed s/$D1/libhighland/g $1/$D1.rootmap > $1/$D1.rootmap2
+  mv -f $1/$D1.rootmap2 $1/$D1.rootmap
+done
+
+
+
+#prefix=lib
+#
+#for f in $1/*.pcm
+#do
+  # remove the extension
+#  D1=$(basename "$f" _rdict.pcm)
+
+  # remove the prefix lib from
+#  D2=${D1/#$prefix}
+#  mv $f ${D2}_Dict_rdict.pcm
+#  echo $f ${D2}_Dict_rdict.pcm
+#done
+
+
+

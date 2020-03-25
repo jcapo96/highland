@@ -1,0 +1,347 @@
+/*! \page highland2/baseAnalysisHistory History for the highland2/baseAnalysis Package 
+
+\section baseAnalysis_v0r1_history Version v0r1
+
+Freeze information:
+   - Freeze Date: Thu Sep 18 10:09:34 2014
+   - Freeze User: acervera
+   - Freeze Host: neutrinos8.local
+
+First freeze of this package, which corresponds to a psyche release
+
+CHANGES WITH RESPECT baseAnalysis in OLD HIGHLAND
+
+- src/systematics directory moved to psyche/psycheSystematics
+- src/corrections directory moved to highland2/highlandCorrections
+- src/utils directory movbed mainly to psyche/psycheUtils
+- src/extensions directory removed. Extensions are not abvailable for the moment until we have a clear strategy
+- use new way of adding and filling variables and trees, and of enabling systematics
+  Add configurations by index and systematics by index. Systematics have no name for the moment. 
+  Enable systematics in each configuration by index
+- Add momentum related systematic that vary the proton alternate momentum. This is temporarily here and should be moved somewhere else
+- Add baseToyMaker: It does gaussian toys for all systematics except for the bfield distorsions, which uses a 
+  uniform distribution
+
+
+
+\section baseAnalysis_v0r3_history Version v0r3
+
+Freeze information:
+   - Freeze Date: Tue Oct  7 23:02:52 2014
+   - Freeze User: acervera
+   - Freeze Host: Anselmo-Cerveras-MacBook-Pro.local
+
+- add options for disabling all corrections, plus other to control other corrections that were hard coded 
+- adopt to the recent changes in psyche BaseDataClasses
+
+
+\section baseAnalysis_v0r5_history Version v0r5
+
+Freeze information:
+   - Freeze Date: Sat Oct 11 00:31:26 2014
+   - Freeze User: acervera
+   - Freeze Host: Anselmo-Cerveras-MacBook-Pro.local
+
+Changes related with corrections
+
+- control the production being used via the versionUtils and a parameter in the 
+  parameters file. For the moment this is only used to change the corrections.
+- enable corrections by default, since they have been validated
+
+
+\section baseAnalysis_v0r7_history Version v0r7
+
+Freeze information:
+   - Freeze Date: Mon Nov 17 17:26:34 2014
+   - Freeze User: acervera
+   - Freeze Host: portanselmo.ific.uv.es
+
+
+Fully validated	version	of FlatTree creation, Selection and Systematics.
+It will	be used	to create first	official FlatTrees.
+
+
+Systematics
+- Alt systematics: change the propagation to consider all tpc tracks not necessarily in FV
+- modify this systematics to take into account the fact that the Bfield refit momentum has a sign that correspond to the charge, put a condition depending on the production on use
+- Don't apply systematics by default
+
+Categories
+- make it up-to-date with highland: more efficient way to get the topology etc some bugs fixes: e.g. proper treatment of primary kaons
+- add topology2 and mectopology
+
+Corrections
+- Move IgnoreRightEcal correction data to highlandCorrections. 
+- parameter to control forcing apply corrections
+
+Versioning
+- Save software version for baseAnalysis
+- allow overwritting the production used for corrections, systematics, bunching, etc 
+  via a parameter in baseAnalysis. By default production is chosen automatically based on the 
+  input file software version
+
+MicroTrees
+- add counter branches to compute a posteriori the counter of the analysis samples
+
+
+
+\section baseAnalysis_v0r9_history Version v0r9
+
+Freeze information:
+   - Freeze Date: Sun Nov 30 13:54:32 2014
+   - Freeze User: acervera
+   - Freeze Host: Macintosh-64b9e8d35af0.local
+
+
+Release for the highland to highland2 migration tutorial on Dec 1st 2014.
+Selections give the same results for oaAnalysis and FlatTrees
+Systematics give slighly different results (Under investigation). Not crucial for tutorial
+
+Main changes:
+
+- update to changes in psyche related to variable size arrays
+- make the definition of an analysis more user fiendly. Corrections, Systematics and Configurations are now defined in different methods, 
+- Correct bug in association between micro-trees and RooTrackerVtx  tree 
+
+More in detail:
+
+- move Categoriesutils to a new package highlandUtils
+- Use members in VersioninUtils to control independenty the production for 
+  corrections, systematics and bunching
+- make the definition of an analysis more user fiendly. Corrections, Systematics and Configurations are now defined in different methods, 
+  such that the user knows what should be done in each method:
+  * DefineCorrections(): adds the corrections to the CorrectionManager
+  * DefineSystematics(): adds the systematics to the SystematicManager
+  * DefineConfigurations(): add the configurations to the ConfigurationManager, with the appropriate systematics in each configuration
+- Also change DefineSelection() by DefineSelections(), since several selections can be added for a single analysis
+- Also change the name of some methods: AnalysisVar is substituded by ToyVar to make it clearer. 
+  * InitializeAnalysis --> InitializeToy
+  * FinalyseAnalysis --> FinalizeToy
+  * AddAnalysisVar --> AddToyVar
+  * FillAnalysisVar --> FillToyVar
+  * FillAnalysisVarsInMicroTrees --> FillToyVarsInMicroTrees
+
+- Use the RooVtxEntry from the OutputManager instead of the data member in AnalysisAlgorithm since there are conflicts when including an algorithm in another algorithm, since they use 
+  a different instance of the same base class and then there are two different counters for the truth and standard microtrees. 
+  By using the OutputManager, which is the same for both, this problem is solved
+
+MiroTrees
+
+- The entry in the RooVtxTree has now a better name RooVtxEntry, which matches the one in the DataClasses. 
+- The index of a specific vertex for that RooVtxEntry is called now RooVtxIndex. 
+- adopt the naming convation of highland (sufficiently discussed) for the neutrino true variables
+
+
+
+\section baseAnalysis_v0r11_history Version v0r11
+
+Freeze information:
+   - Freeze Date: Wed Dec 10 18:40:45 2014
+   - Freeze User: acervera
+   - Freeze Host: Macintosh-64b9e8d35af0.local
+
+- Add ability to set a random seed for the ToyMaker from the parameters file. Use TRandom instead of TRandom3
+- add antinu flux parameter
+- add the possibility to run flux systematics for nu and antinumu, 
+  change the order of some weight systematics to match the 
+  same order done in psyche. This is usefull when we use the same seed for 
+  random throws and we want to compare highland2 and psyche. 
+- adapt to  flux changes in psyche
+
+
+
+
+\section baseAnalysis_v0r13_history Version v0r13
+
+Freeze information:
+   - Freeze Date: Wed Jan  7 17:10:21 2015
+   - Freeze User: acervera
+   - Freeze Host: portanselmo.ific.uv.es
+
+
+- Do not apply flux weight to sand muons
+- Add ability to set zero variation for the toy experiment (only one). 
+  This is used to apply systematic corrections but not errors 
+- initialize all pointer members to NULL in the 
+  baseAnalysis constructor, so not have underfined behavior 
+- change TRandom to TRandom3 since TRandom should not be used for any statistical study
+
+
+
+\section baseAnalysis_v0r15_history Version v0r15
+
+Freeze information:
+   - Freeze Date: Tue Jan 27 17:44:24 2015
+   - Freeze User: acervera
+   - Freeze Host: Macintosh-64b9e8d35af0.local
+
+- adapt to changes in psyche
+- Create a box with the appropriate type (susing MakeBox) for each of the enabled selections (first delete them). 
+- move InitilizeToy method to AnalysisAlgorithm
+- Use the new methods in the OutputManager to deal with the RooVtxEntry. 
+  The OutputManager knows now when a RooTrackerVtx tree entry has been already saved or not
+- change OOFVTrack => MainTrack
+
+
+\section baseAnalysis_v0r17_history Version v0r17
+
+Freeze information:
+   - Freeze Date: Wed Feb 18 10:29:33 2015
+   - Freeze User: acervera
+   - Freeze Host: Macintosh-64b9e8d35af0.local
+
+- Sometimes the same true vertex is assigned to the candidate in another bunch, most likely because of a delayed track. In this case 
+  we save in the true vertex the higher accum level. This should solve bug 1010
+- Add default mainpage.dox so that package  can be referenced from another one in doxygen using \ref
+- Add MC momentum resolution smearing,  off by default
+- fill truth category reactionCC for color drawing
+
+
+\section baseAnalysis_v1r1_history Version v1r1
+
+Freeze information:
+   - Freeze Date: Tue Mar 31 19:02:15 2015
+   - Freeze User: acervera
+   - Freeze Host: Macintosh-64b9e8d35af0.local
+
+Major freeze with many changes in psyche 
+to allow selection depending systematics, and performance optimization
+
+
+\section baseAnalysis_v1r3_history Version v1r3
+
+Freeze information:
+   - Freeze Date: Thu Apr 30 16:06:13 2015
+   - Freeze User: acervera
+   - Freeze Host: Macintosh-64b9e8d35af0.local
+
+- remove definition and filling of variables for categories in the truth tree:
+  now is automatically done in AnalysisLoop/AnalysisAlgorhitm for all the defined categories
+  (as for the default tree)
+- Schedule for adding RooTrackerVtx and fill RooVtxEntry, RooVtxIndex, and TruthVertexID (now toy vars) in FillToyVarsInMicroTrees. 
+  In this way if any of the toys in any of the configurations 
+  has the proper accum level the RooVtxTracker entry will be saved. This solves bug 998 
+  Don't fill the RooTrackerVtx tree here, but schedule the vertex to be saved. In that way filling is more transparent and is done in a single place
+
+
+
+\section baseAnalysis_v1r5_history Version v1r5
+
+Freeze information:
+   - Freeze Date: Mon Jun 22 19:28:29 2015
+   - Freeze User: acervera
+   - Freeze Host: Macintosh-64b9e8d35af0.local
+
+- Add SIProton And MomRangeResol systematics
+- Add dependency on psycheIO when the MiniTreeConverter is
+- Add the MiniTreeConverter
+
+
+\section baseAnalysis_v1r7_history Version v1r7
+
+Freeze information:
+   - Freeze Date: Wed Jul  1 10:49:17 2015
+   - Freeze User: acervera
+   - Freeze Host: Macintosh-64b9e8d35af0.local
+
+Release motivated by baseAnalysis splitting
+ - move tracker related stuff to new package baseTrackerAnalysis. Keep here only what is common to p0d and tracker analyses
+
+
+\section baseAnalysis_v1r9_history Version v1r9
+
+Freeze information:
+   - Freeze Date: Sat Aug  1 11:43:32 2015
+   - Freeze User: acervera
+   - Freeze Host: Macintosh-64b9e8d35af0.local
+
+- Use tuned13av1.1 by default, which has files for run6. They were taken from
+  http://www.t2k.org/beam/NuFlux/FluxRelease/13arelease/tunedflux13av1.1_june
+- split EnableSingleSystConfigurations in two parameters, one for weight systematics and another for variation systematics
+- each configuration has now a diferent toy maker, which is provided as argument in the constructor
+- use the TrueVertex in the ToyBoxB when the Vertex is not set
+- Change variables names as suggested in bug 1144
+  vertex_det       -> selvtx_det
+  vertex_pos      -> selvtx_pos
+  vertex_truepos -> selvtx_truepos
+  nu_vertex_truepos -> truevtx_pos 
+
+
+
+\section baseAnalysis_v1r11_history Version v1r11
+
+Freeze information:
+   - Freeze Date: Wed Sep 23 17:17:27 2015
+   - Freeze User: acervera
+   - Freeze Host: portanselmo.ific.uv.es
+
+
+- attept to solve bugs 1183, 1149 and 1169 by moving most code in the analyses constructors to their Initialize methods. 
+  At the moment only the package version and the UseAnalysis functionality is kept in the constructors
+- use the new HighlandMiniTreeConverter such that the correct AnaSpillB type is created
+
+
+
+\section baseAnalysis_v1r13_history Version v1r13
+
+Freeze information:
+   - Freeze Date: Fri Jan  8 13:19:08 2016
+   - Freeze User: acervera
+   - Freeze Host: Macintosh-64b9e8d35af0-2.local
+
+- If a true vertex does not exist (e.g. can happen that reco vertex is not yet available
+  at this step of the selection) then store the accum_level to all true vertices
+  of the bunch -> i.e. this basically corresponds to the fact that event as a whole passed some cuts)
+- added a zero_variation configuration, grabs the enabled systematics from all_syst 
+  but runs only one toy with zero variation, in this way one gets a separate tree that 
+  can be used to study/use the corrections applied by the systematics (wieght ones through 
+  weight_syst/weight_syst_total weights)
+- since baseAnalysis provides/controls configurations for downstream packages,  use the corresponding
+  parameters so not to read param file in each downstream analysis
+- correct bug affecting cases in which not all selections are enabled. The size of the AnaTrueVertex::AccumLevel vector must match the number of enabled 
+  selections and not the total number of selections
+- FillTruthTreeCategories(vtx, det, IsAntinu);  ---> anaUtils::FillCategories(&vtx, det, IsAntinu, input().GetSpill().GetIsSandMC());
+  such that sand muons are taken into account also in truth tree. This should solve bug 1237
+
+
+
+\section baseAnalysis_v1r15_history Version v1r15
+
+Freeze information:
+   - Freeze Date: Fri Feb  5 12:30:21 2016
+   - Freeze User: acervera
+   - Freeze Host: portanselmo.ific.uv.es
+
+no changes with respect to previous version.
+Just increase version number (v2) for development version
+
+
+\section baseAnalysis_v2r1_history Version v2r1
+
+Freeze information:
+   - Freeze Date: Sun Mar  6 18:15:44 2016
+   - Freeze User: acervera
+   - Freeze Host: Macintosh-64b9e8d35af0-2.local
+
+major reorganization with new packages and  changes in event model class names
+
+- udapt to changes in base packages
+
+baseAnalysis.cxx/.hxx:
+- Move versiong stuff here since Versioning.hxx it has been moved to psycheUtils to avoid dependency of highlandCore on nd280AnalysisTools
+- Implement the pure virtual methods DefineInputConverters and DefineProduction
+- CheckFillTruthTree(const AnaTrueVertex& vtx) and FillTruthTree(const AnaTrueVertex& vtx) are now pure virtual methods in baseAnalysis and not in AnalysisAlgorithm, which being 
+ general should not depend on derived data classes. 
+- Implement getSpill, GetBunch and GetEvent methods which return a casted version, to be used in top level algorithms instead of input().GetSpill(), etc. 
+- Implement MakeEvent method
+- overwride the method box( ) such that it returns a ToyBoxTracker. To be changed since 
+  baseAnalysis is not supposed to be for tracker analyses
+- replace TruthVertexID by more general ID, which is a data member of AnaTruObjectB
+
+baseToyMaker: Add an individual random generator for each systematic such that adding/removing systematics in the manager does not affect the results.
+  Each random generator will have a different random seed, given by the systematic index + an offset controled by the input seed. 
+  The systematic index is the more stable thing we can use for the seed. There is a parameter baseAnalysis.Systematics.IndividualRandomGenerator 
+  to switch on this new fuctionality. Keep it off by default in order not to affect the validation. It will be switched on right before the freeze
+
+
+*/

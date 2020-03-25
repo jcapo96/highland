@@ -1,0 +1,157 @@
+/*!
+\page overview An overview of the concepts: event model and data classes, corrections, systematics, configurations, event loop, ... 
+
+This page outlines the main concepts of the HighLAND framework.
+
+ - \ref over_workflow
+ - \ref over_dataclasses
+ - \ref over_corrections
+ - \ref over_systematics
+ - \ref over_config
+ - \ref over_configsyst
+ - \ref over_loop
+
+\section over_workflow General workflow
+
+The basic workflow for using the HighLAND framework is:
+ - Start with an input file (in general a root file) for which a converter exist.
+ - Run an analysis executable that performs cuts on the input data, and creates an output 
+   file containing one or several \ref microtree "micro-trees" of the results.
+ - Use the \ref DrawingTools "DrawingTools" or run a short ROOT macro to inspect the \ref microtree "micro-tree" file.
+
+\section over_dataclasses DataClasses - the representation of event information
+
+Internally, the HighLAND framework doesn't use the same representation of the
+data as the original analysis files. Instead, a subset of the information is extracted and converted
+into some data classes, which all start with the \c Ana* prefix. The purpose of this is twofold, 
+to reduce the processing time, by only using the minimal amount of information necessary, and 
+to make the analysis independent of the input format. The data classes are defined in three levels:
+
+ - CoreDataClasses.hxx/.cxx in psyche/psycheCore, defines the basic infraestructure that is needed by psyche for 
+   the event selection and the systematics propagation. These are very simple classes needed by psycheCore machinery: 
+   basically AnaSpillC, AnaBunchC, AnaEventC, AnaRecObjectC and AnaTrueObjectC. 
+ - BaseDataClasses.hxx/.cxx in psyche/psycheEventModel, this is a real event model used by specific psyche selections 
+   and systematics. It contains classes as AnaParticleB, AnaVertexB, AnaTrueParticleB, etc
+ - DataClasses.hxx/.cxx in highland2/highlandEventModel, extends the BaseDataClasses adding some more information 
+   that could be relevant for the development of some analyses 
+
+There is a third set of files,  DataClassesIO.hxx/.cxx, in highlandIO, that contains the methods needed to dump into the \ref flattree "FlatTree" the information 
+contained in the DataClasses (and hence BaseDataClasses and CoreDataClasses). 
+
+\includedoc EventModel.dox
+
+The above structure is the one defined in the BaseDataClasses (hence the B suffix in all classes, it means \c Base). 
+The \c Original particle mentioned above is a pointer to another instance of the same particle, but before applying corrections or systematics. 
+This defines three levels of AnaSpillB, the raw, corrected and final. AnaParticleB's in the final  AnaSpillB will have a pointer to the corresponding particle 
+in the corrected AnaSpillB. And AnaParticleB's in the corrected AnaSpillB will have a pointer to the unmodified particle in the raw AnaSpillB. 
+
+The various \c Ana* objects are filled by the InputConverter's in psycheIO and highlandIO. The appropriate converter is found automatically depending on the input file
+(for root files each converter looks for a specific tree).
+
+As mentioned previously, the \c Ana* objects only contain a subset of the information
+found in the original analysis files. This means that they may not contain all the information
+you want in order to perform your analysis. It is possible to extend the existing 
+data classes to contain the information you specifically need for your analysis. For example, DataClasses.hxx (under highlandEventModel) contains
+extensions of BaseDataClasses.hxx (under psycheEventModel). In the same way you can build your own extended data classes from the ones in DataClasses.hxx
+
+
+
+\section over_corrections Corrections
+
+After the information in the input file has been read in, it is possible to 
+"manipulate" that information using Corrections. 
+
+Corrections change the input data to rectify a problem in the MC or in the real data. Imagine for example that the energy deposited by a particle
+in a given sub-detector is overestimated in the MC by about 5%, and that this effect depends on the particle type (6% for muons and 4% for electrons).
+We could introduce a correction for the MC, which would scale the deposited energy by 0.94 for true muons and by 0.96 for true electrons. In this way
+we make sure that any cut using the deposited energy will have the same effect in data and MC, avoiding the corresponding systematic.
+
+Corrections are only applied once per spill.
+
+\section over_systematics Systematics
+
+After corrections have been applied it is possible to 
+"manipulate" again the information using Systematics. In this case the purpose is different: we want to test several values of 
+a given detector property and check the impact on the number of selected events. This allows propagating systematic errors numerically. 
+
+There are two types of Systematics: variations and weights. <b>Systematic variations</b> are applied before the event selection and they modify 
+the event properties, as Corrections do. In fact both corrections and systematics where represented by the same class, 
+InputVariation, in the first version of the highland framwork. The other type of systematics are the <b> systematic weights</b>, which only vary the total weight of the event in our sample. 
+Those systematics are applied after the event selection.
+
+In the above example about the deposited energy, the correction introduced cannot be perfectly known. The 4% and 6% mentioned have an error (i.e. 0.5%). This error should be propagated as
+a systematic. A given number of toy experiments will be run with different values of the scaling parameter for the deposited energy (i.e. for muons 0.93, 0.935, 0.95, ..., following
+a gaussian distribution with mean 0.94 and sigma 0.005). If a cut on the deposited energy (or a variable using it)
+is applied the number of selected events could differ depending on the scaling applied.
+The RMS of the number of selected events for all toy experiments represents the systematic error induced by the deposited energy scaling.
+
+Detailed info about systematics can be found \ref systematics "here".
+
+\section over_config Analysis configurations
+
+The user can run several analyses in parallel minimising the acces to disk. 
+Those parallel analyses are call configurations. Although this might be extended in the future, currenly 
+configurations only allow you to specify which systematics errors will be propagated, the number of toy experiments 
+and the random seed. Detailed info can be found \ref over_configsyst "below" and also \ref systematics "here".
+
+A tree for each configuration is produced in the output file. By default a single configuration (called "default") is run, producing
+a single tree (with name default). This tree does not have any systematics enabled and hence it represents the nominal selection. 
+
+\section over_configsyst Applying systematics as "configurations" and "toy experiments"
+
+As explained above, the effect of systematics error sources is propagated numerically to the final number of selected events 
+by making multiple "throws" (toy experiments) of the systematic source parameter. The
+HighLAND framework provides a simple interface for specifying how many throws
+to make for each systematic variation. For example imagine we want a configuration with name "momresol_conf" with only one systematic enabled,
+the momentum resolution event variation. 
+
+
+\code
+      // Add the class that performs momentum resolution variation to the event variation manager
+      evar().AddEventVariation(momresol_syst_index, "MomResol", new MomentumResolSystematics());
+
+      // Add to the configuration manager a configuration called "momresol_conf", with a given number of toy experiments (ntoys), random seed (randomSeed)
+      // and a ToyMaker to create the toy experiments	
+      conf().AddConfiguration(momresol_conf_index, "momresol_conf", ntoys, randomSeed, new baseToyMaker(randomSeed));
+
+      // Enable the momresol systematic (provided its index) in this configuration 
+      conf().EnableEventVariation(momresol_syst_index, momresol_conf_index);
+\endcode
+
+The class baseToyMaker is defined in the baseAnalysis Package. For more detailed information about systematics visit the \ref systematics "systematics" page.
+
+\section over_loop The event loop
+
+The framework handles configurations and toy experiments in an efficient manner, and only needs
+to read in the event once. The general loop structure looks like (see also the figure in <a href="index.html"> the front page </a>):
+
+<ul>
+ <li>Loop over events in the input file (entries in the input root file)
+  <ul>
+   <li>Convert to internal DataClasses format (recreates the Spill structure) </li>
+   <li>Apply corrections</li>
+   <li>Loop over Bunches in the Spill
+    <ul>    	 
+     <li>Loop over configurations
+      <ul>
+       <li>Loop over toy experiments
+        <ul>
+         <li>Apply event variations </li>
+         <li>Loop over selections
+          <ul>       
+           <li>Apply event selection cuts</li>
+           <li>Apply event weights</li>
+          </ul>       
+         <li>Fill output trees</li>
+        </ul>
+       </li>
+      </ul>
+     </li>
+    </ul>
+   </li>
+  </ul>
+ </li>
+</ul>
+
+*/
+
