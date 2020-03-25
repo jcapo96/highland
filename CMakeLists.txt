@@ -24,7 +24,7 @@ file(MAKE_DIRECTORY "${CMAKE_SOURCE_DIR}/bin")
 file(MAKE_DIRECTORY "${CMAKE_SOURCE_DIR}/lib")
 file(MAKE_DIRECTORY "${CMAKE_BINARY_DIR}/dict")
 
-set (DATAMCDIR data)
+set (DATAMCDIR mc)
 set (LARSOFTREADERDIR "${CMAKE_SOURCE_DIR}/highland2/LArSoftReader")
 
 #-------------------------------------------------------
