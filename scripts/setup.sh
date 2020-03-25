@@ -18,13 +18,13 @@ if [[ ${HOSTNAME} =~ "fnal" ]] ; then
          # set the larsoft products folder
          larsoft_products=/cvmfs/larsoft.opensciencegrid.org/products
          
-         Compiler=Linux64bit+3.10-2.17
-         compiler2=Linux64bit+3.10-2.17-e17-prof
+         compiler=Linux64bit+3.10-2.17
+         compiler2=Linux64bit+3.10-2.17-e19-prof
          
          # tell the system where ROOT is
          export ROOTSYS=$larsoft_products/root/$root_dir/$compiler2
          
-         export LD_LIBRARY_PATH=$larsoft_products/gcc/$gcc_dir/$compiler/lib64:$larsoft_products/gcc/$gcc_dir/$compiler/lib64:$larsoft_products/tbb/$tbb_dir/$compiler2/lib64:$LD_LIBRARY_PATH         
+         export LD_LIBRARY_PATH=$larsoft_products/gcc/$gcc_dir/$compiler/lib64:$larsoft_products/gcc/$gcc_dir/$compiler/lib:$larsoft_products/gcc/$gcc_dir/$compiler/lib64:$larsoft_products/tbb/$tbb_dir/$compiler2/lib:$LD_LIBRARY_PATH         
          export PATH=$larsoft_products/cmake/$cmake_dir/$compiler/bin/:$larsoft_products/gcc/$gcc_dir/$compiler/bin/:$PATH
          
 else
