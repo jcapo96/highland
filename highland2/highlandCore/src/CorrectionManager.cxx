@@ -37,7 +37,6 @@ void CorrectionManager::ApplyCorrections(AnaSpillC& spill) {
   }
 }
 
-
 //***********************************************************
 void CorrectionManager::DisableAllCorrections() {
   //***********************************************************
@@ -47,7 +46,6 @@ void CorrectionManager::DisableAllCorrections() {
     (*it)->Disable();
   }
 }
-
 
 //***********************************************************
 void CorrectionManager::AddCorrection(Int_t index, const std::string& name, CorrectionBase* corr) {
@@ -81,9 +79,6 @@ void CorrectionManager::AddCorrection(Int_t index, const std::string& name, Corr
   }
   else{
     _corrections.push_back(corr);
-    //    CorrectionBase* corr2 = new((*_objects)[_NObjects++]) CorrectionBase(*corr);
-        CorrectionBase* corr2 = new CorrectionBase(*corr);
-    (void)corr2;
   }
 }
 
@@ -97,7 +92,6 @@ CorrectionBase* CorrectionManager::GetCorrection(const std::string& name) {
   }
   return NULL;
 }
-
 
 //***********************************************************
 bool CorrectionManager::IsEnabled(const std::string& name) {
@@ -124,7 +118,6 @@ void CorrectionManager::DisableCorrection(const std::string& name) {
   CorrectionBase* corr = GetCorrection(name);
   if (corr) corr->Disable();
 }
-
 
 //***********************************************************
 CorrectionBase* CorrectionManager::GetCorrection(Int_t index) {
@@ -160,7 +153,6 @@ void CorrectionManager::DisableCorrection(Int_t index) {
   if (corr) corr->Disable();
 }
 
-
 //********************************************************************
 void CorrectionManager::ReadCorrections(const std::string& file, bool input){
   //********************************************************************
@@ -192,7 +184,6 @@ void CorrectionManager::Reset(){
 
   _corrections.resize(NMAXCORRECTIONS);
   _corrections.assign(_corrections.size(),NULL);  
-
 }
 
 //********************************************************************
