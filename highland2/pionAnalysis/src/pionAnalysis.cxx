@@ -16,7 +16,7 @@
 
 #include "baseToyMaker.hxx"
 
-/*
+/**
   A highland Analysis inherits in ultimate instance from AnalysisAlgorithm. 
   In this particular case an intermediate class baseAnalysis is used, 
   which does all the work that is common for DUNE analysis 
