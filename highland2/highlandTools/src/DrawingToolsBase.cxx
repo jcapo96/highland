@@ -3337,7 +3337,7 @@ void DrawingToolsBase::PrintEventNumbers(TTree* tree, const std::string& cut, co
   // Copy the entries we are interested into another tree
   char* tmpFilename= new char;
   strcpy(tmpFilename,"/tmp/XXXXXX");
-  mktemp (tmpFilename);
+  mkstemp (tmpFilename);
   TFile *tmpFile = new TFile(tmpFilename, "RECREATE");
   TTree *tmpTree = tree->CopyTree(cutp.c_str());
   int run, subrun, evt;
