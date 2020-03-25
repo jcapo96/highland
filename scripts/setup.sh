@@ -25,7 +25,7 @@ if [[ ${HOSTNAME} =~ "fnal" ]] ; then
          export ROOTSYS=$larsoft_products/root/$root_dir/$compiler2
          
          export LD_LIBRARY_PATH=$larsoft_products/gcc/$gcc_dir/$compiler/lib64:$larsoft_products/gcc/$gcc_dir/$compiler/lib:$larsoft_products/gcc/$gcc_dir/$compiler/lib64:$larsoft_products/tbb/$tbb_dir/$compiler2/lib:$LD_LIBRARY_PATH         
-         export $larsoft_products/cmake/$cmake_dir/$compiler/bin/:$larsoft_products/gcc/$gcc_dir/$compiler/bin/:$PATH
+         export PATH=$larsoft_products/cmake/$cmake_dir/$compiler/bin/:$larsoft_products/gcc/$gcc_dir/$compiler/bin/:$PATH
          
 else
    export ROOTSYS=/hep/sw/root-6.12.06/myroot
