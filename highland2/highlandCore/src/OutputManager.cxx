@@ -1383,7 +1383,7 @@ void OutputManager::FillVectorVar(Int_t index, Int_t var, Int_t indx){
   // fill the variable
   try {
     (_tree_vars_int_vector[_current_tree][index])->Fill(indx,var);
-  } catch (OutOfBounds) {
+  } catch (const OutOfBounds&) {
     std::cout << "WARNING: Tried to fill variable " << GetVarName(index) << " outside vector size. Index was: " << indx << std::endl;
   }
 }
@@ -1399,7 +1399,7 @@ void OutputManager::FillVectorVar(Int_t index, Float_t var, Int_t indx){
   // fill the variable
   try {
     (_tree_vars_float_vector[_current_tree][index])->Fill(indx,var);
-  } catch (OutOfBounds) {
+  } catch (const OutOfBounds&) {
     std::cout << "WARNING: Tried to fill variable " << GetVarName(index) << " outside vector size. Index was: " << indx << std::endl;
   }
 }
@@ -1415,7 +1415,7 @@ void OutputManager::FillVectorVar(Int_t index, Double_t var, Int_t indx){
   // fill the variable
   try {
     (_tree_vars_double_vector[_current_tree][index])->Fill(indx,var);
-  } catch (OutOfBounds) {
+  } catch (const OutOfBounds&) {
     std::cout << "WARNING: Tried to fill variable " << GetVarName(index) << " outside vector size. Index was: " << indx << std::endl;
   }
 }
@@ -1431,7 +1431,7 @@ void OutputManager::FillVectorVar(Int_t index, const std::string& var, Int_t ind
   // fill the variable
   try {
     (_tree_vars_char_vector[_current_tree][index])->Fill(indx,var.c_str());
-  } catch (OutOfBounds) {
+  } catch (const OutOfBounds&) {
     std::cout << "WARNING: Tried to fill variable " << GetVarName(index) << " outside vector size. Index was: " << indx << std::endl;
   }
 }
@@ -1447,7 +1447,7 @@ void OutputManager::FillMatrixVar(Int_t index, Int_t var, Int_t indx1, Int_t ind
   // fill the variable    
   try {
     (_tree_vars_int_matrix[_current_tree][index])->Fill(indx1,indx2,var);
-  } catch (OutOfBounds) {
+  } catch (const OutOfBounds&) {
     std::cout << "WARNING: Tried to fill variable " << GetVarName(index) << " outside matrix size. Indices were: " << indx1 << ", " << indx2 << std::endl;
   }
 }
@@ -1463,7 +1463,7 @@ void OutputManager::FillMatrixVar(Int_t index, Float_t var, Int_t indx1, Int_t i
   // fill the variable    
   try {
     (_tree_vars_float_matrix[_current_tree][index])->Fill(indx1,indx2,var);
-  } catch (OutOfBounds) {
+  } catch (const OutOfBounds&) {
     std::cout << "WARNING: Tried to fill variable " << GetVarName(index) << " outside matrix size. Indices were: " << indx1 << ", " << indx2 << std::endl;
   }
 }
@@ -1479,7 +1479,7 @@ void OutputManager::FillMatrixVar(Int_t index, Double_t var, Int_t indx1, Int_t 
   // fill the variable    
   try {
     (_tree_vars_double_matrix[_current_tree][index])->Fill(indx1,indx2,var);
-  } catch (OutOfBounds) {
+  } catch (const OutOfBounds&) {
     std::cout << "WARNING: Tried to fill variable " << GetVarName(index) << " outside matrix size. Indices were: " << indx1 << ", " << indx2 << std::endl;
   }
 }
@@ -1495,7 +1495,7 @@ void OutputManager::Fill3DMatrixVar(Int_t index, Int_t var, Int_t indx1, Int_t i
   // fill the variable    
   try {
     (_tree_vars_int_3Dmatrix[_current_tree][index])->Fill(indx1,indx2,indx3,var);
-  } catch (OutOfBounds) {
+  } catch (const OutOfBounds&) {
     std::cout << "WARNING: Tried to fill variable " << GetVarName(index) << " outside 3D matrix size. Indices were: " << indx1 << ", " << indx2 << ", " << indx3 << std::endl;
   }
 }
@@ -1511,7 +1511,7 @@ void OutputManager::Fill3DMatrixVar(Int_t index, Float_t var, Int_t indx1, Int_t
   // fill the variable    
   try {
     (_tree_vars_float_3Dmatrix[_current_tree][index])->Fill(indx1,indx2,indx3,var);
-  } catch (OutOfBounds) {
+  } catch (const OutOfBounds&) {
     std::cout << "WARNING: Tried to fill variable " << GetVarName(index) << " outside 3D matrix size. Indices were: " << indx1 << ", " << indx2 << ", " << indx3 << std::endl;
   }
 }
@@ -1527,7 +1527,7 @@ void OutputManager::Fill3DMatrixVar(Int_t index, Double_t var, Int_t indx1, Int_
   // fill the variable    
   try {
     (_tree_vars_double_3Dmatrix[_current_tree][index])->Fill(indx1,indx2,indx3,var);
-  } catch (OutOfBounds) {
+  } catch (const OutOfBounds&) {
     std::cout << "WARNING: Tried to fill variable " << GetVarName(index) << " outside 3D matrix size. Indices were: " << indx1 << ", " << indx2 << ", " << indx3 << std::endl;
   }
 }
