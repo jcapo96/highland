@@ -835,7 +835,7 @@ AnaBeam::AnaBeam(const AnaBeam& beam):AnaBeamB(beam){
   }
 
   PDGs.clear();
-  for (int i=0; i<beam.PDGs.size(); i++)
+  for (UInt_t i=0; i<beam.PDGs.size(); i++)
     PDGs.push_back(beam.PDGs[i]);
   
 }
@@ -860,7 +860,7 @@ void AnaBeam::Print() const{
   std::cout << "nTracks:          " << nTracks << std::endl;
 
   std::cout << "PDGs:             ";
-  for (int i=0;i<PDGs.size();i++) std::cout << PDGs[i] << " ";
+  for (UInt_t i=0;i<PDGs.size();i++) std::cout << PDGs[i] << " ";
   std::cout << std::endl;
 
 }

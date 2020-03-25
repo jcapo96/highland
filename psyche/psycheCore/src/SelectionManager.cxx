@@ -186,7 +186,7 @@ void SelectionManager::DumpSelections() {
 
   UInt_t index=0;
 
-  for (int i=0;i<_eventSelections.size();i++){
+  for (UInt_t i=0;i<_eventSelections.size();i++){
     SelectionBase* sel = _eventSelections[i];    
     if (sel->IsEnabled()){
       sprintf(out,"%3d: %-25s %-40s %-10d %-10d %-13d %-20d %-22d", i, sel->Name().c_str(),  sel->Title().c_str(), 

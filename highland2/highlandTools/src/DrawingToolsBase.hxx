@@ -914,7 +914,8 @@ public :
   TH1* GetLastHisto() {
     std::cout << "If it crashes you should maybe use GetLastStackTotal instead.\n";
     if (_saved_histos.back()) return _saved_histos.back();
-    else std::cout << "No histos found. You can try GetLastStackTotal \n"; return NULL; 
+    else std::cout << "No histos found. You can try GetLastStackTotal \n";
+    return NULL; 
   }
 
   /// Get the total from the most recently-drawn stacked histogram.
