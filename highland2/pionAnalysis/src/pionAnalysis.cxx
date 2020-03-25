@@ -16,7 +16,7 @@
 
 #include "baseToyMaker.hxx"
 
-/*
+/**
   A highland Analysis inherits in ultimate instance from AnalysisAlgorithm. 
   In this particular case an intermediate class baseAnalysis is used, 
   which does all the work that is common for DUNE analysis 
@@ -353,6 +353,13 @@ void pionAnalysis::DefineMicroTrees(bool addBase){
 
   AddVarFixVF(  output(), seltrk_pida2,     "pida2", 3);
   AddVarFixVI(  output(), seltrk_pdg,       "recon pdg", 3);
+
+  //new variables added for reproducing Jake/Fraceska plots
+  AddVar3VF(       output(), seltrk_CNNscore,        "candidate reconstructed CNN score");
+  AddVarMaxSize3MF(output(), seltrk_dau_CNNscore,    "candidate daughters reconstructed CNN score",seltrk_ndau,100);
+  AddVarMaxSizeVF( output(), seltrk_dau_chi2_prot,   "candidate daughters chi2 proton",            seltrk_ndau,100);
+  AddVarMaxSizeVF( output(), seltrk_dau_chi2_ndf,    "candidate daughters chi2 ndf",               seltrk_ndau,100);
+  AddVarMaxSizeVF( output(), seltrk_dau_vtxdistance, "candidate daguhters distance to vtx",        seltrk_ndau,100);
 }
 
 //********************************************************************
@@ -484,6 +491,8 @@ void pionAnalysis::FillMicroTrees(bool addBase){
     Int_t ndau = (Int_t)box().MainTrack->Daughters.size();
     std::vector<AnaRecObjectC*>& daughters = box().MainTrack->Daughters;
     
+    std::vector<double> distance = pionSelUtils::ComputeDistanceToVertex(box().MainTrack);
+
     for (Int_t i=0;i<std::min((Int_t)100,ndau); ++i){
       
       AnaParticle* dau = static_cast<AnaParticle*>(daughters[i]);
@@ -501,6 +510,11 @@ void pionAnalysis::FillMicroTrees(bool addBase){
       output().FillMatrixVarFromArray(seltrk_dau_hit_dedx,      dau->dEdx[2],          NMAXHITSPERPLANE);
       output().FillMatrixVarFromArray(seltrk_dau_hit_dqdx_raw,  static_cast<const AnaParticle*>(dau->Original->Original->Original)->dQdx[i],   NMAXHITSPERPLANE);  
       output().FillMatrixVarFromArray(seltrk_dau_hit_resrange,  dau->ResidualRange[2], NMAXHITSPERPLANE);
+
+      output().FillMatrixVarFromArray(seltrk_dau_CNNscore,      dau->CNNscore,         3); 
+      output().FillVectorVar(seltrk_dau_chi2_prot,          dau->Chi2Proton);
+      output().FillVectorVar(seltrk_dau_chi2_ndf,           dau->Chi2ndf);
+      output().FillVectorVar(seltrk_dau_vtxdistance,(Float_t)distance[i]);
 
       Float_t *dau_binned_dedx[3];
       for(int i = 0; i < 3; i++)
@@ -606,7 +620,8 @@ void pionAnalysis::FillMicroTrees(bool addBase){
     for(int i = 0; i < 3; i++)
       delete binned_dedx[i];
 
-    
+    //Jake/Franceska variables
+    output().FillVectorVarFromArray(seltrk_CNNscore,       box().MainTrack->CNNscore,3);
            
     // Properties of the true particle associated to the candidate
     if (box().MainTrack->GetTrueParticle()){
