@@ -90,7 +90,7 @@ endforeach(file0)
                            DEPENDENCIES ${ROOT_LIBRARIES})
   list(APPEND dict_list ${LARSOFTREADERDIR}/src/2ndproduction/data/LArSoftReaderProjectSource.cxx dict/LArSoftReaderProjectDict.cxx)
 #  list(APPEND dict_src ${CMAKE_BINARY_DIR}/dict/LArSoftReaderProjectDict.cxx)
-  INSTALL(FILES "${CMAKE_BINARY_DIR}/libLArSoftReader_rdict.pcm" DESTINATION ${CMAKE_SOURCE_DIR}/lib RENAME LArSoftReader_Dict_rdict.pcm)
+  INSTALL(FILES "${CMAKE_BINARY_DIR}/libLArSoftReader_rdict.pcm" DESTINATION ${CMAKE_SOURCE_DIR}/lib)
   INSTALL(FILES "${CMAKE_BINARY_DIR}/libLArSoftReader.rootmap"   DESTINATION ${CMAKE_SOURCE_DIR}/lib)
 
 #-------------------------------------------------------------
