@@ -27,7 +27,6 @@ file(MAKE_DIRECTORY "${CMAKE_BINARY_DIR}/dict")
 set (DATAMCDIR mc)
 set (LARSOFTREADERDIR "${CMAKE_SOURCE_DIR}/src/highland2/LArSoftReader")
 
-
 #-------------------------------------------------------
 #------- External packages -----------------------------
 #-------------------------------------------------------
