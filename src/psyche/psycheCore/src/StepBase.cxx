@@ -14,6 +14,30 @@ StepBase::StepBase(){
 }  
 
 //****************************************************
+StepBase::StepBase(const StepBase& step){
+//****************************************************
+
+  _title = step.Title();
+  _type  = step.Type();
+  _break = step.Break();
+  _index = step.Index();
+  _nextSteps.clear();
+  _branchUniqueIDs.clear();
+  _disabledInBranch.clear(); 
+
+  _nextSteps       = step.GetNextSteps();
+  
+  for (UInt_t i=0;i<step.GetBranchUniqueIDs().size();i++)
+    AddBranchUniqueID(step.GetBranchUniqueIDs()[i]);
+  
+  const std::vector<UInt_t>& IDs = step.GetBranchUniqueIDs();
+  for (UInt_t j=0;j<IDs.size();j++){
+    if (step.IsDisabledInBranch(IDs[j]))
+      DisableInBranch(IDs[j]);
+  }
+}
+
+//****************************************************
 void StepBase::CopyStep(const StepBase& step, Int_t branchID){
 //****************************************************
 

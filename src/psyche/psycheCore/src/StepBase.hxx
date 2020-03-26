@@ -35,6 +35,8 @@ class StepBase{
   StepBase();
   virtual ~StepBase(){}
 
+  StepBase(const StepBase& obj);
+  
   //-----------------------------------------------------
   /// MANDATORY FUNCTIONS !!! 
 

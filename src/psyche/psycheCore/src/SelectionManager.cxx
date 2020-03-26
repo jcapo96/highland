@@ -149,15 +149,15 @@ void SelectionManager::ReadSelections(const std::string& file){
   
   // Read the selections from the clones array in the input file
   ReadTreeVector(file);
-  return;
+  //  return;
 
-  /*
-  for (int i=0;i<_NObjects;i++){
-    SelectionBase* sel = (SelectionBase*)(*_objects)[i];    
-    _eventSelections.push_back(sel);
-
+  for (UInt_t i=0;i<_eventSelections.size();i++){
+    SelectionBase* sel = _eventSelections[i];
+      
     // For backwards compatibility. It needs to fill the _rootStep using the firstSteps vector in old micro-trees 
     // TODO. Will be removed at some point
+
+    // TODO. Workarround to save the _rootStep in the root file
     sel->InitializeRootStepFromFirstSteps();
 
     if (sel->IsEnabled()){
@@ -170,7 +170,6 @@ void SelectionManager::ReadSelections(const std::string& file){
       _nEnabledSelections++;
     }
   }
-  */
   //  int nselections[NMAXBRANCHES]={0};
 
 }

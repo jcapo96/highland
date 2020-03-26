@@ -105,11 +105,17 @@ void SelectionBase::InitializeRootStepFromFirstSteps(){
 
   // For backwards compatibility. It fills the _rootStep using the firstSteps vector in old micro-trees  
   // Don't do anything when rootStep is aready filled (from a new micro-tree)
+
+  // TODO. Workarround to save the _rootStep in the root file
+  _rootStep = new StepBase(_rootStep2);
+  
+  /*
   if (_rootStep->GetNextSteps().size() <_firstSteps.size()){
     _rootStep->AddBranches(_firstSteps.size());
     for (UInt_t i=0;i<_firstSteps.size();i++)
       _rootStep->AddNextStep(_firstSteps[i],i);
   }
+  */
 }
 
 //********************************************************************
@@ -128,6 +134,9 @@ void SelectionBase::Initialize(){
   // validate the selection. The program will exit if the selection is not correct
   Validate();
 
+  // TODO. Workarround to save the _rootStep in the root file
+  _rootStep2 = *_rootStep;
+  
   // Mark this selection as initialized
   _initialized=true;
 }
@@ -1181,13 +1190,11 @@ std::vector<StepBase*> SelectionBase::GetStepsInBranchWithDummy(const std::vecto
     std::vector<StepBase*> steps;
 
     // three different cases
-
     steps.push_back(_rootStep);
 
     // 1. No steps were added yet, return an empty vector
     if ( _rootStep->GetNextSteps().size() ==0) return steps;
     else if ( _rootStep->GetNextSteps().size() ==1) _rootStep->GetNextSteps(steps);
-
 
     StepBase::BranchStatus status= StepBase::BranchOK;
     for (UInt_t i=0;i<branch.size();i++){

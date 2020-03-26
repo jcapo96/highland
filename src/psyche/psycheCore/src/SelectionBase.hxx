@@ -526,6 +526,9 @@ protected:
 
   /// The top level dummy step
   StepBase* _rootStep; //!
+
+  // TODO. Workarround to save the _rootStep in the root file
+  StepBase _rootStep2; 
     
   /// Association between a branch unique ID (entry in vector) and branch alias
   std::vector<std::string> _branchAlias;  
