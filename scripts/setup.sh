@@ -1,42 +1,61 @@
 export MAKEFLAGS=-j8 QUICK=1
 
+# environment for IFIC's machines
 if [[ ${HOSTNAME} =~ "neutrinos" ]] ; then
-   export ROOTSYS=/data4/NEXT/software/scisoft/root/v6_18_04/Linux64bit+2.6-2.12-e17-prof
-   export PATH=/data4/NEXT/software/scisoft/cmake/v3_14_3/Linux64bit+2.6-2.12/bin:/data4/NEXT/software/scisoft/gcc/v7_3_0/Linux64bit+2.6-2.12/bin:$PATH
-   export LD_LIBRARY_PATH=/data4/NEXT/software/scisoft/tbb/v2019_3/Linux64bit+2.6-2.12-e17-prof/lib:/data4/NEXT/software/scisoft/gcc/v7_3_0/Linux64bit+2.6-2.12/lib64:$LD_LIBRARY_PATH
+    products_dir=/data4/NEXT/software/scisoft
+
+    gcc_version=v7_3_0         
+    root_version=v6_18_04         
+    tbb_version=v2019_3
+    cmake_version=v3_14_3
+    
+    gcc_compiler=Linux64bit+2.6-2.12
+    root_compiler=Linux64bit+2.6-2.12-e17-prof                
+    tbb_compiler=Linux64bit+2.6-2.12-e17-prof
+    cmake_compiler=Linux64bit+2.6-2.12
+# environment for CERN and FERMILAB's machines
 elif [[ ${HOSTNAME} =~ "fnal" ]] || [[ ${HOSTNAME} =~ "lxplus" ]] ; then
-         # set the gcc dir
-         gcc_dir=v8_2_0         
-         # set the root dir
-         root_dir=v6_18_04d         
-         # set the tbb dir
-         tbb_dir=v2019_3
-         # set the cmake dir
-         cmake_dir=v3_9_6
-         
-         # set the larsoft products folder
-         larsoft_products=/cvmfs/larsoft.opensciencegrid.org/products
-         
-         compiler=Linux64bit+3.10-2.17
-         compiler2=Linux64bit+3.10-2.17-e19-prof
-         
-         # tell the system where ROOT is
-         export ROOTSYS=$larsoft_products/root/$root_dir/$compiler2
-         
-         export LD_LIBRARY_PATH=$larsoft_products/gcc/$gcc_dir/$compiler/lib64:$larsoft_products/gcc/$gcc_dir/$compiler/lib:$larsoft_products/gcc/$gcc_dir/$compiler/lib64:$larsoft_products/tbb/$tbb_dir/$compiler2/lib:$LD_LIBRARY_PATH         
-         export PATH=$larsoft_products/cmake/$cmake_dir/$compiler/bin/:$larsoft_products/gcc/$gcc_dir/$compiler/bin/:$PATH
-         
+
+    products_dir=/cvmfs/larsoft.opensciencegrid.org/products
+
+    gcc_version=v8_2_0         
+    root_version=v6_18_04d         
+    tbb_version=v2019_3
+    cmake_version=v3_9_6
+    
+    gcc_compiler=Linux64bit+3.10-2.17
+    root_compiler=Linux64bit+3.10-2.17-e19-prof                  
+    tbb_compiler=Linux64bit+3.10-2.17-e19-prof
+    cmake_compiler=Linux64bit+3.10-2.17
+elif [[ ${HOSTNAME} =~ "Anselmo" ]] ; then
+# environment for Anselmo's laptop
+    root_dir=/hep/sw/root-6.12.06/myroot
 else
-   export ROOTSYS=/hep/sw/root-6.12.06/myroot
+    echo "ENVIRONMENT NOT AVAILABLE FOR THIS MACHINE !!! ADD APPROPRIATE ENVIRONMENT TO scripts/setup.sh" 
+    return
 fi
 
-export PATH=$ROOTSYS/bin:$PATH
-export CMAKE_MODULE_PATH=$ROOTSYS
-export CMAKE_PREFIX_PATH=$ROOTSYS
+
+if [[ ${HOSTNAME} =~ "neutrinos" ]] || [[ ${HOSTNAME} =~ "fnal" ]] || [[ ${HOSTNAME} =~ "lxplus" ]] ; then
+    export gcc_dir=$products_dir/gcc/$gcc_version/$gcc_compiler
+    export tbb_dir=$products_dir/tbb/$tbb_version/$tbb_compiler
+    export root_dir=$products_dir/root/$root_version/$root_compiler
+    export cmake_dir=$products_dir/cmake/$cmake_version/$cmake_compiler
+        
+    export LD_LIBRARY_PATH=$gcc_dir/lib64:$gcc_dir/lib:$tbb_dir/lib:$LD_LIBRARY_PATH         
+    export PATH=$cmake_dir/bin/:$gcc_dir/bin/:$PATH
+fi
 
 
+# tell the system where ROOT is
+export ROOTSYS=$root_dir
+
+export PATH=$ROOTSYS/bin:$PATH    
 export DYLD_LIBRARY_PATH=$ROOTSYS/lib:$DYLD_LIBRARY_PATH
 export   LD_LIBRARY_PATH=$ROOTSYS/lib:$LD_LIBRARY_PATH
+
+export CMAKE_MODULE_PATH=$ROOTSYS
+export CMAKE_PREFIX_PATH=$ROOTSYS
 
 
 export HIGHLAND_PACKAGE_HIERARCHY=pionAnalysis:baseAnalysis:highlandTools:psycheSelections:highlandIO:highlandCorrections:highlandUtils:LArSoftReader:highlandEventModel:highlandCore:psycheIO:psycheDUNEUtils:psycheUtils:psycheEventModel:psycheCore
