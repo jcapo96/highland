@@ -1,4 +1,5 @@
 #include <ManagerBase.hxx>
+#include <TFile.h>
 #include <stdio.h>
 #include <iostream>
 
@@ -34,6 +35,8 @@ void ManagerBase::ReadTreeVector(const std::string& file){
   // the current file
   _fileName = file;
 
+  if (!TFile::Open(file.c_str())) return;
+  
   // Add the file to the chain
   if (_chain) delete _chain;
   _chain = new TChain(_treeName.c_str());

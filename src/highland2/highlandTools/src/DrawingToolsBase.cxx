@@ -249,8 +249,10 @@ void DrawingToolsBase::Reset(){
 void DrawingToolsBase::ReadConfig(const std::string& file) {
 //********************************************************************
 
+  if (!TFile::Open(file.c_str())) return;
+  
   _config_file = file;
-
+  
   ReadCategories(file);
   ReadSelections(file);
   ReadDocStrings(file);
@@ -3740,6 +3742,8 @@ void DrawingToolsBase::DrawVariations(const std::string& name, Int_t ipar, int n
 void DrawingToolsBase::DumpOriginalSoftwareVersion(const std::string& file, bool all) {
 //*********************************************************
 
+  if (!TFile::Open(file.c_str())) return;
+  
   // Use the file used to create the DrawingTools if no file is specified
   std::string file2 = file;
   if (file=="") file2 = _config_file;
@@ -3796,6 +3800,8 @@ void DrawingToolsBase::DumpSoftwareVersions(const std::string& file){
 void DrawingToolsBase::DumpFileInfo(const std::string& file) {
 //*********************************************************
 
+  if (!TFile::Open(file.c_str())) return;
+  
   // And read the new ones from the file
   TChain* chain = new TChain("config");
   chain->AddFile(file.c_str());
