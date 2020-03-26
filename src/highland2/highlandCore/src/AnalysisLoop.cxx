@@ -882,7 +882,7 @@ void AnalysisLoop::DefineConfigurations(){
 //********************************************************************
 
   // Add a default configuration with a single toy experiment
-  ana().conf().AddConfiguration(ConfigurationManager::default_conf, "default",1,1,new ZeroToyMaker());
+  ana().conf().AddConfiguration(ConfigurationManager::default_conf, ConfigurationManager::default_conf_name,1,1,new ZeroToyMaker());
 
   // Set "default" as the initial configuration, so that corrections can be applied.
   ana().conf().SetCurrentConfigurationIndex(ConfigurationManager::default_conf);

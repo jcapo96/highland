@@ -848,11 +848,11 @@ public :
   //! [DrawingToolsBase_ops]
   
   //! [DrawingToolsBase_vars]
-  /// Explain the meaning of a variable stored in a tree. If no tree name is provided the "default" tree is used
-  void ExplainVar(std::string name, std::string tree_name = "default") {doc().ExplainVar(name, tree_name);}
+  /// Explain the meaning of a variable stored in a tree. If no tree name is provided the ConfigurationManager::default_conf_name tree is used
+  void ExplainVar(std::string name, std::string tree_name = ConfigurationManager::default_conf_name) {doc().ExplainVar(name, tree_name);}
 
-  /// List all the variables stored in a tree. If no tree name is provided the "default" tree is used
-  void ListVars(std::string tree_name = "default") {doc().ListVars(tree_name);}
+  /// List all the variables stored in a tree. If no tree name is provided the ConfigurationManager::default_conf_name tree is used
+  void ListVars(std::string tree_name = ConfigurationManager::default_conf_name) {doc().ListVars(tree_name);}
   //! [DrawingToolsBase_vars]
   
   /// Read the details of docstrings from a given file. The details will have been read automatically

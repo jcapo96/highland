@@ -1,7 +1,11 @@
 #include "ConfigurationManager.hxx"
+#include "Defaults.hxx"
 #include <DocStringManager.hxx>
 #include <sstream>
 #include <stdlib.h>
+
+// default configuration name
+std::string ConfigurationManager::default_conf_name = highland_defaults::tree_name;
 
 
 //********************************************************************
@@ -126,7 +130,7 @@ void ConfigurationManager::ReadConfigurations(const std::string& file){
       SetRefToyIndex(conf, toy_ref);
 
       // Current configuration is the last one
-      SetCurrentConfiguration("default");
+      SetCurrentConfiguration(ConfigurationManager::default_conf_name);
     }
   }
 }

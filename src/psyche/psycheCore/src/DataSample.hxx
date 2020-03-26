@@ -12,7 +12,7 @@
 /// A DataSample inherits from a Tree manager and therefore contains several trees
 /// - The "header" tree with POT and spill info
 /// - The "config" tree with info about the selection and the systematics
-/// - The "default" analysis tree with the analysis variables and the accum_level
+/// - The highland_defaults:tree_name analysis tree with the analysis variables and the accum_level
 /// - Other analysis trees with systematics
 /// It also inherits from Header, which holds POT info
 

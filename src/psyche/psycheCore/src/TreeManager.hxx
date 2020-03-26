@@ -18,7 +18,7 @@ public :
 
   TreeManager();
   virtual ~TreeManager();
-
+  
   //--------- Tree operations ------------
 
   /// Returns the map of trees
@@ -65,7 +65,7 @@ public :
 
   /// Check the existence of a tree provided the name
   bool HasTree(const std::string& tree_name);
-
+  
  protected:
 
   /// Root input or output file 

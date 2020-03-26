@@ -3,6 +3,7 @@
 #include <sstream>
 #include <iostream>
 #include <fstream>
+#include "Defaults.hxx"
 
 //********************************************************************
 SampleGroup::SampleGroup(const std::string& name){
@@ -169,7 +170,7 @@ Experiment::Experiment(const std::string& name){
 
   _name = name; 
   _filePath = "";
-  _tree="default";
+  _tree=highland_defaults::tree_name;
 }
 
 //**************************************************
@@ -178,7 +179,7 @@ Experiment::Experiment(const std::string& name, const std::string& file1, const 
 
   _name=name;
   _filePath = file1;
-  _tree="default";
+  _tree=highland_defaults::tree_name;
   _sampleGroups["group"] = SampleGroup("group", file1, file2);
 }
 
@@ -188,7 +189,7 @@ Experiment::Experiment(const std::string& name, DataSample* s1, DataSample* s2) 
 
   _name=name;
   _filePath = "";  
-  _tree="default";
+  _tree=highland_defaults::tree_name;
   _sampleGroups["group"] = SampleGroup("group", s1, s2);
 }
 
@@ -196,7 +197,7 @@ Experiment::Experiment(const std::string& name, DataSample* s1, DataSample* s2) 
 Experiment::Experiment(const std::string& name, const std::string& configfile) {
 //**************************************************
     _name = name;
-    _tree="default";
+    _tree=highland_defaults::tree_name;
 
 
     _dataFiles.clear();

@@ -1,4 +1,5 @@
 #include "TreeManager.hxx"
+#include "Defaults.hxx"
 #include <TDirectory.h>
 #include <TList.h>
 #include <sstream>
@@ -125,8 +126,8 @@ void TreeManager::ReadFile(const std::string& file){
     _trees_nonull.push_back(_trees[tree_index]);
   }
 
-  // Set as current tree the "default"
-  SetCurrentTree("default");
+  // Set as current tree the highland_defaults::tree_name
+  SetCurrentTree(highland_defaults::tree_name);
 }
 
 

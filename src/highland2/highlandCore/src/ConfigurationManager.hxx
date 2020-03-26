@@ -162,7 +162,8 @@ public :
     enumConfLast_ConfigurationManager    
   };
 
-
+  static std::string default_conf_name;
+  
  protected:
 
   /// current toy index
