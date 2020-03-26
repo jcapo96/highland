@@ -1,5 +1,5 @@
 D0=$PWD
-cd SOURCE_DIR
+cd SOURCE_DIR/src
 for D1 in {psyche,highland2}
 do
   if [ ! -d $D1 ]; then
@@ -13,7 +13,7 @@ do
     fi
     D3=$(echo $D2 | tr "[a-z]" "[A-Z]")
     D4=${D3}ROOT
-    export ${D4}=SOURCE_DIR/$D1/$D2
+    export ${D4}=SOURCE_DIR/src/$D1/$D2
   done
   cd ..
 done

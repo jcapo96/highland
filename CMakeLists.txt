@@ -25,7 +25,8 @@ file(MAKE_DIRECTORY "${CMAKE_SOURCE_DIR}/lib")
 file(MAKE_DIRECTORY "${CMAKE_BINARY_DIR}/dict")
 
 set (DATAMCDIR mc)
-set (LARSOFTREADERDIR "${CMAKE_SOURCE_DIR}/highland2/LArSoftReader")
+set (LARSOFTREADERDIR "${CMAKE_SOURCE_DIR}/src/highland2/LArSoftReader")
+
 
 #-------------------------------------------------------
 #------- External packages -----------------------------
@@ -49,13 +50,13 @@ message("ROOT libraries: ${ROOT_LIBRARIES}")
 #----- include directories -----------------------------
 #-------------------------------------------------------
 
-file(GLOB highland_inc ${CMAKE_SOURCE_DIR}/*/*/src
+file(GLOB highland_inc ${CMAKE_SOURCE_DIR}/src/*/*/src
                        ${LARSOFTREADERDIR}/src/2ndproduction
                        ${LARSOFTREADERDIR}/src/2ndproduction/${DATAMCDIR}
                        ${CMAKE_BINARY_DIR}/dict
                        ${ROOT_INCLUDE_DIR})
 
-#file(GLOB highland_inc ${CMAKE_SOURCE_DIR}/*/*/src ${ROOT_INCLUDE_DIR})        
+#file(GLOB highland_inc ${CMAKE_SOURCE_DIR}/src/*/*/src ${ROOT_INCLUDE_DIR})        
 include_directories(${highland_inc})
 message("Include directories: ${INCLUDE_DIRECTORIES}")
 
@@ -63,7 +64,7 @@ message("Include directories: ${INCLUDE_DIRECTORIES}")
 #------- ROOT Dictionaries -----------------------------
 #-------------------------------------------------------
 
-file(GLOB dict_src ${CMAKE_SOURCE_DIR}/*/*/src/*_LinkDef.h)
+file(GLOB dict_src ${CMAKE_SOURCE_DIR}/src/*/*/src/*_LinkDef.h)
 
 foreach(file0 ${dict_src})
   string(FIND ${file0} "/"          pos_ini REVERSE)
@@ -76,7 +77,6 @@ foreach(file0 ${dict_src})
   list(APPEND dict_list ${dir}/${file3}.cxx dict/${file3}_Dict.cxx)
   list(APPEND dict_src ${CMAKE_BINARY_DIR}/dict/${file3}_Dict.cxx)
 
-#  INSTALL(FILES "${CMAKE_BINARY_DIR}/lib${file3}_rdict.pcm" DESTINATION ${CMAKE_SOURCE_DIR}/lib RENAME ${file3}_Dict_rdict.pcm)
   INSTALL(FILES "${CMAKE_BINARY_DIR}/lib${file3}_rdict.pcm" DESTINATION ${CMAKE_SOURCE_DIR}/lib)
   INSTALL(FILES "${CMAKE_BINARY_DIR}/lib${file3}.rootmap"   DESTINATION ${CMAKE_SOURCE_DIR}/lib)
 endforeach(file0)
@@ -108,12 +108,12 @@ add_custom_target(setup COMMAND ${CMAKE_SOURCE_DIR}/scripts/chsetup ${CMAKE_SOUR
 #-------- the library ----------------------------------
 #-------------------------------------------------------
 
-file(GLOB highland_src  ${CMAKE_SOURCE_DIR}/psyche/*/src/*.cxx 
-                        ${CMAKE_SOURCE_DIR}/highland2/highland*/src/*.cxx                                           
-                        ${CMAKE_SOURCE_DIR}/highland2/baseAnalysis/src/*.cxx
-                        ${CMAKE_SOURCE_DIR}/highland2/pionAnalysis/src/*.cxx
-                        ${CMAKE_SOURCE_DIR}/highland2/LArSoftReader/src/2ndproduction/LArSoft*.cxx
-                        ${CMAKE_SOURCE_DIR}/highland2/LArSoftReader/src/2ndproduction/${DATAMCDIR}/LArSoftReaderProjectSource.cxx)    
+file(GLOB highland_src  ${CMAKE_SOURCE_DIR}/src/psyche/*/src/*.cxx 
+                        ${CMAKE_SOURCE_DIR}/src/highland2/highland*/src/*.cxx                                           
+                        ${CMAKE_SOURCE_DIR}/src/highland2/baseAnalysis/src/*.cxx
+                        ${CMAKE_SOURCE_DIR}/src/highland2/pionAnalysis/src/*.cxx
+                        ${CMAKE_SOURCE_DIR}/src/highland2/LArSoftReader/src/2ndproduction/LArSoft*.cxx
+                        ${CMAKE_SOURCE_DIR}/src/highland2/LArSoftReader/src/2ndproduction/${DATAMCDIR}/LArSoftReaderProjectSource.cxx)    
 
 add_library(highland SHARED ${dict_src} ${highland_src} ) 
 target_link_libraries(highland ${ROOT_LIBRARIES})
@@ -123,7 +123,7 @@ INSTALL(TARGETS highland DESTINATION ${CMAKE_SOURCE_DIR}/lib)
 #-------------- executable -----------------------------
 #-------------------------------------------------------
 
-add_executable(pion.exe  ${CMAKE_SOURCE_DIR}/highland2/pionAnalysis/app/RunPionAnalysis.cxx)
+add_executable(pion.exe  ${CMAKE_SOURCE_DIR}/src//highland2/pionAnalysis/app/RunPionAnalysis.cxx)
 target_link_libraries(pion.exe ${ROOT_LIBRARIES} "${CMAKE_BINARY_DIR}/libhighland${CMAKE_SHARED_LIBRARY_SUFFIX}")
 INSTALL(TARGETS pion.exe DESTINATION ${CMAKE_SOURCE_DIR}/bin)
 
