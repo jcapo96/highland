@@ -1,0 +1,51 @@
+The ighland distribution contains the following: 
+
+- README: this file
+- CMakeLists.txt: file used by cmake to know how to compile and build executables
+- src: folder with the highland code
+- scripts: folder with some useful scripts
+
+The folders src and scripts are described below
+
+
+src
+----------------------
+
+Contains the source code of the highland framework, organized in two sets of packages, psyche and highland2
+
+
+scripts
+----------------------
+
+- INSTALL.sh: creates makefile, compiles and sets all environment variables. Ready to execute !!!!
+- cleanup.sh: removes everything created during compilation. It should be run from parent highland folder 
+
+- setup.sh: sets environment variables needed prior to compilation
+- setup_cmake.sh_template: template used to build a script that sets some environment variables 
+- chrootmap: used internaly by cmake
+- chsetup: used internally by cmake
+
+
+INSTALLATION
+----------------------
+
+To compile the code and set the environment just type:
+
+> source scripts/INSTALL.sh
+
+This needs to be done only the first time. If you change the code to recompile just do 
+
+> cmake --build build
+> cmake --install build
+
+Alternatively go inside the build folder and do:
+
+> make
+> make install
+
+
+EXECUTION
+-------------
+
+> pion.exe -v -o output.root input.root
+
