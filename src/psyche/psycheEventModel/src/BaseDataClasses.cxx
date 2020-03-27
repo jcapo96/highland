@@ -3,6 +3,7 @@
 #include "BaseDataClasses.hxx"
 #include "TMath.h"
 #include "BasicUtils.hxx"
+#include <math.h>
 
 //********************************************************************
 AnaSubdet1ParticleB::AnaSubdet1ParticleB(){
@@ -1069,9 +1070,9 @@ bool AnaVertexB::ComparePrimaryIndex(const AnaVertexB* t1, const AnaVertexB* t2)
     if (t2 != NULL) m2 = t2->PrimaryIndex;
 
     // set nan to be 999 so they are sorted last
-    if (m1 != m1) m1 = 999;
-    if (m2 != m2) m2 = 999;
-
+    if (isnan(m1)) m1 = 999;
+    if (isnan(m2)) m2 = 999;
+    
     // sort by PrimaryIndex
     if (m1 != m2 || ! t1 || ! t2) return m1 < m2;
 
