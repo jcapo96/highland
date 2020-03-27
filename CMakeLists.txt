@@ -22,6 +22,7 @@ message("CMAKE_BUILD_TYPE: ${CMAKE_BUILD_TYPE}")
 # ---- create folders ----------
 file(MAKE_DIRECTORY "${CMAKE_SOURCE_DIR}/bin")
 file(MAKE_DIRECTORY "${CMAKE_SOURCE_DIR}/lib")
+file(MAKE_DIRECTORY "${CMAKE_SOURCE_DIR}/include")
 file(MAKE_DIRECTORY "${CMAKE_BINARY_DIR}/dict")
 
 set (DATAMCDIR mc)
@@ -32,9 +33,10 @@ set (LARSOFTREADERDIR "${CMAKE_SOURCE_DIR}/src/highland2/LArSoftReader")
 #-------------------------------------------------------
 
 # Set where to look for external packages 
-#set (CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/") 
+set (CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/modules/") 
 
 message("CMAKE_MODULE_PATH source dir: ${CMAKE_MODULE_PATH}")
+
 
 # Look for the required libraries
 find_package(ROOT REQUIRED COMPONENTS Geom EG)
@@ -42,7 +44,7 @@ find_package(ROOT REQUIRED COMPONENTS Geom EG)
 include(${ROOT_USE_FILE})
 
 message("ROOT_USE_FILE: ${ROOT_USE_FILE}")
-message("ROOT include directories: ${ROOT_INCLUDE_DIR}")
+message("ROOT include directories: ${ROOT_INCLUDE_DIRS}")
 message("ROOT libraries: ${ROOT_LIBRARIES}")
 
 #-------------------------------------------------------
@@ -52,10 +54,8 @@ message("ROOT libraries: ${ROOT_LIBRARIES}")
 file(GLOB highland_inc ${CMAKE_SOURCE_DIR}/src/*/*/src
                        ${LARSOFTREADERDIR}/src/2ndproduction
                        ${LARSOFTREADERDIR}/src/2ndproduction/${DATAMCDIR}
-                       ${CMAKE_BINARY_DIR}/dict
-                       ${ROOT_INCLUDE_DIR})
+                       ${CMAKE_BINARY_DIR}/dict)
 
-#file(GLOB highland_inc ${CMAKE_SOURCE_DIR}/src/*/*/src ${ROOT_INCLUDE_DIR})        
 include_directories(${highland_inc})
 message("Include directories: ${INCLUDE_DIRECTORIES}")
 
@@ -92,19 +92,8 @@ endforeach(file0)
   INSTALL(FILES "${CMAKE_BINARY_DIR}/libLArSoftReader_rdict.pcm" DESTINATION ${CMAKE_SOURCE_DIR}/lib)
   INSTALL(FILES "${CMAKE_BINARY_DIR}/libLArSoftReader.rootmap"   DESTINATION ${CMAKE_SOURCE_DIR}/lib)
 
-#-------------------------------------------------------------
-
-# target to create dictionaries before libraries
-add_custom_target(highland_dicts ALL SOURCES ${dict_list})
-
-# target to change the library name in the rootmap files
-add_custom_target(ch_rootmap COMMAND ${CMAKE_SOURCE_DIR}/scripts/chrootmap ${CMAKE_BINARY_DIR})
-
-# target to create the setup script with all environment variables
-add_custom_target(setup COMMAND ${CMAKE_SOURCE_DIR}/scripts/chsetup ${CMAKE_SOURCE_DIR})
-
 #-------------------------------------------------------
-#-------- the library ----------------------------------
+#-------- the highland library -------------------------
 #-------------------------------------------------------
 
 file(GLOB highland_src  ${CMAKE_SOURCE_DIR}/src/psyche/*/src/*.cxx 
@@ -127,11 +116,47 @@ target_link_libraries(pion.exe ${ROOT_LIBRARIES} "${CMAKE_BINARY_DIR}/libhighlan
 INSTALL(TARGETS pion.exe DESTINATION ${CMAKE_SOURCE_DIR}/bin)
 
 #-------------------------------------------------------
+#----- highland includes -------------------------------
+#-------------------------------------------------------
+
+file(GLOB highland_inc2 ${CMAKE_SOURCE_DIR}/src/*/*/src/*.hxx
+                       ${LARSOFTREADERDIR}/src/2ndproduction/*.hxx
+                       ${LARSOFTREADERDIR}/src/2ndproduction/${DATAMCDIR}/*.hxx)
+
+foreach(file0 ${highland_inc2})
+   INSTALL(FILES ${file0} DESTINATION ${CMAKE_SOURCE_DIR}/include)
+endforeach(file0)
+
+#-------------------------------------------------------
+#------- custom targets --------------------------------
+#-------------------------------------------------------
+
+# target to create dictionaries before libraries
+add_custom_target(highland_dicts ALL SOURCES ${dict_list})
+
+# target to change the library name in the rootmap files
+add_custom_target(ch_rootmap COMMAND ${CMAKE_SOURCE_DIR}/scripts/chrootmap ${CMAKE_BINARY_DIR})
+
+# target to create the setup script with all environment variables
+add_custom_target(setup COMMAND ${CMAKE_SOURCE_DIR}/scripts/chsetup ${CMAKE_SOURCE_DIR})
+
+# target to install header files in the include folder
+add_custom_target(include ALL SOURCES ${highland_inc2} ${CMAKE_SOURCE_DIR})
+
+#-------------------------------------------------------
 #------- dependencies ----------------------------------
 #-------------------------------------------------------
 
-add_dependencies(pion.exe highland)
-add_dependencies(highland ch_rootmap)
-add_dependencies(ch_rootmap setup)
-add_dependencies(setup highland_dicts)
+add_dependencies(pion.exe       highland)
+add_dependencies(highland       ch_rootmap)
+add_dependencies(ch_rootmap     setup)
+add_dependencies(setup          highland_dicts)
+add_dependencies(highland_dicts include)
 
+
+#-------------------------------------------------------
+#------- other ------ ----------------------------------
+#-------------------------------------------------------
+
+#---Configure and install various files neded later and for clients -----------------------------
+include(HighlandConfiguration)

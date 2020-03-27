@@ -4,9 +4,9 @@ The ighland distribution contains the following:
 - CMakeLists.txt: file used by cmake to know how to compile and build executables
 - src: folder with the highland code
 - scripts: folder with some useful scripts
+- cmake: folder containing cmake scripts and modules
 
 The folders src and scripts are described below
-
 
 src
 ----------------------
