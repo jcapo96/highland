@@ -36,7 +36,7 @@ To compile the code and set the environment just type:
 This needs to be done only the first time. If you change the code to recompile just do 
 
 > cmake --build build
-> cmake --install build
+> cmake -P build/cmake_install.cmake 
 
 Alternatively go inside the build folder and do:
 
