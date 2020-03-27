@@ -1,3 +1,5 @@
+
+#------ set the ROOT folder for every package in highland  ------
 D0=$PWD
 cd SOURCE_DIR/src
 for D1 in {psyche,highland2}
@@ -19,9 +21,13 @@ do
 done
 cd $D0
 
-export PATH=SOURCE_DIR/bin:$PATH
+# ------ binary and library folders ---------
 
-export HIGHLANDPATH=SOURCE_DIR
+export PATH=SOURCE_DIR/bin:$PATH
 
 export DYLD_LIBRARY_PATH=SOURCE_DIR/lib:$DYLD_LIBRARY_PATH
 export   LD_LIBRARY_PATH=SOURCE_DIR/lib:SOURCE_DIR/build:$LD_LIBRARY_PATH
+
+# ------ where highland is installed ---------
+
+export HIGHLANDPATH=SOURCE_DIR
