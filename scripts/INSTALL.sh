@@ -17,14 +17,18 @@ if [ -d "build" ]; then
     return
 fi
 
-# creates the build directory
-mkdir build
-
 # set environment variables needed by cmake
 source scripts/setup.sh
 
-# create the Makefile inside the build folder
-cmake -S . -B build
+# creates the build directory
+mkdir build
+cd build
+
+# create the Makefile inside the build folder using the CMakeList.txt in the parent folder
+cmake ..
+
+# go back to the source folder
+cd ..
 
 # compile  (equivalent to "make" in most systems)
 cmake --build build
