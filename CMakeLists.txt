@@ -2,6 +2,22 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 3.0)
 PROJECT(HighLAND)
 
+
+# ---- create folders ----------
+file(MAKE_DIRECTORY "${CMAKE_SOURCE_DIR}/bin")
+file(MAKE_DIRECTORY "${CMAKE_SOURCE_DIR}/lib")
+file(MAKE_DIRECTORY "${CMAKE_SOURCE_DIR}/include")
+file(MAKE_DIRECTORY "${CMAKE_BINARY_DIR}/dict")
+
+#-------------------------------------------------------
+# ----- Options for reading LArSoft files --------------
+#-------------------------------------------------------
+
+set (LARSOFT_PRODUCTION PDSPProd2)
+set (LARSOFT_DATAMC_DIR mc)
+
+set (LARSOFTREADER_DIR "${CMAKE_SOURCE_DIR}/src/highland2/LArSoftReader/src/${LARSOFT_PRODUCTION}")
+
 #-------------------------------------------------------
 # ----- Set cmake options ------------------------------
 #-------------------------------------------------------
@@ -18,15 +34,6 @@ message("CMAKE binary dir: ${CMAKE_BINARY_DIR}")
 message("CMAKE compiler:   ${CMAKE_CXX_COMPILER}")
 message("CMAKE_CXX_FLAGS:  ${CMAKE_CXX_FLAGS}")
 message("CMAKE_BUILD_TYPE: ${CMAKE_BUILD_TYPE}")
-
-# ---- create folders ----------
-file(MAKE_DIRECTORY "${CMAKE_SOURCE_DIR}/bin")
-file(MAKE_DIRECTORY "${CMAKE_SOURCE_DIR}/lib")
-file(MAKE_DIRECTORY "${CMAKE_SOURCE_DIR}/include")
-file(MAKE_DIRECTORY "${CMAKE_BINARY_DIR}/dict")
-
-set (DATAMCDIR mc)
-set (LARSOFTREADERDIR "${CMAKE_SOURCE_DIR}/src/highland2/LArSoftReader")
 
 #-------------------------------------------------------
 #------- External packages -----------------------------
@@ -52,8 +59,8 @@ message("ROOT libraries: ${ROOT_LIBRARIES}")
 #-------------------------------------------------------
 
 file(GLOB highland_inc ${CMAKE_SOURCE_DIR}/src/*/*/src
-                       ${LARSOFTREADERDIR}/src/2ndproduction
-                       ${LARSOFTREADERDIR}/src/2ndproduction/${DATAMCDIR}
+                       ${LARSOFTREADER_DIR}
+                       ${LARSOFTREADER_DIR}/${LARSOFT_DATAMC_DIR}
                        ${CMAKE_BINARY_DIR}/dict)
 
 include_directories(${highland_inc})
@@ -74,7 +81,7 @@ foreach(file0 ${dict_src})
   root_generate_dictionary(dict/${file3}_Dict ${dir}/${file3}.hxx LINKDEF ${file0}  MODULE ${file3} DEPENDENCIES ${ROOT_LIBRARIES})
 
   list(APPEND dict_list ${dir}/${file3}.cxx dict/${file3}_Dict.cxx)
-  list(APPEND dict_src ${CMAKE_BINARY_DIR}/dict/${file3}_Dict.cxx)
+  list(APPEND dict_src  ${CMAKE_BINARY_DIR}/dict/${file3}_Dict.cxx)
 
   INSTALL(FILES "${CMAKE_BINARY_DIR}/lib${file3}_rdict.pcm" DESTINATION ${CMAKE_SOURCE_DIR}/lib)
   INSTALL(FILES "${CMAKE_BINARY_DIR}/lib${file3}.rootmap"   DESTINATION ${CMAKE_SOURCE_DIR}/lib)
@@ -83,12 +90,11 @@ endforeach(file0)
 #---------- root dictionaries for LArSoftReader --------------
 
   root_generate_dictionary(dict/LArSoftReaderProjectDict
-                                   ${LARSOFTREADERDIR}/src/2ndproduction/${DATAMCDIR}/LArSoftReaderProjectHeaders.h
-                           LINKDEF ${LARSOFTREADERDIR}/src/2ndproduction/${DATAMCDIR}/LArSoftReaderLinkDef.h
+                                   ${LARSOFTREADER_DIR}/${LARSOFT_DATAMC_DIR}/LArSoftReaderProjectHeaders.h
+                           LINKDEF ${LARSOFTREADER_DIR}/${LARSOFT_DATAMC_DIR}/LArSoftReaderLinkDef.h
                            MODULE LArSoftReader
                            DEPENDENCIES ${ROOT_LIBRARIES})
-  list(APPEND dict_list ${LARSOFTREADERDIR}/src/2ndproduction/data/LArSoftReaderProjectSource.cxx dict/LArSoftReaderProjectDict.cxx)
-#  list(APPEND dict_src ${CMAKE_BINARY_DIR}/dict/LArSoftReaderProjectDict.cxx)
+  list(APPEND dict_list ${LARSOFTREADER_DIR}/${LARSOFT_DATAMC_DIR}/LArSoftReaderProjectSource.cxx dict/LArSoftReaderProjectDict.cxx)
   INSTALL(FILES "${CMAKE_BINARY_DIR}/libLArSoftReader_rdict.pcm" DESTINATION ${CMAKE_SOURCE_DIR}/lib)
   INSTALL(FILES "${CMAKE_BINARY_DIR}/libLArSoftReader.rootmap"   DESTINATION ${CMAKE_SOURCE_DIR}/lib)
 
@@ -100,8 +106,8 @@ file(GLOB highland_src  ${CMAKE_SOURCE_DIR}/src/psyche/*/src/*.cxx
                         ${CMAKE_SOURCE_DIR}/src/highland2/highland*/src/*.cxx                                           
                         ${CMAKE_SOURCE_DIR}/src/highland2/baseAnalysis/src/*.cxx
                         ${CMAKE_SOURCE_DIR}/src/highland2/pionAnalysis/src/*.cxx
-                        ${CMAKE_SOURCE_DIR}/src/highland2/LArSoftReader/src/2ndproduction/LArSoft*.cxx
-                        ${CMAKE_SOURCE_DIR}/src/highland2/LArSoftReader/src/2ndproduction/${DATAMCDIR}/LArSoftReaderProjectSource.cxx)    
+                        ${LARSOFTREADER_DIR}/LArSoft*.cxx
+                        ${LARSOFTREADER_DIR}/${LARSOFT_DATAMC_DIR}/LArSoftReaderProjectSource.cxx)    
 
 add_library(highland SHARED ${dict_src} ${highland_src} ) 
 target_link_libraries(highland ${ROOT_LIBRARIES})
@@ -120,8 +126,8 @@ INSTALL(TARGETS pion.exe DESTINATION ${CMAKE_SOURCE_DIR}/bin)
 #-------------------------------------------------------
 
 file(GLOB highland_inc2 ${CMAKE_SOURCE_DIR}/src/*/*/src/*.hxx
-                        ${LARSOFTREADERDIR}/src/2ndproduction/*.hxx
-                        ${LARSOFTREADERDIR}/src/2ndproduction/${DATAMCDIR}/*.hxx)
+                        ${LARSOFTREADER_DIR}/*.hxx
+                        ${LARSOFTREADER_DIR}/${LARSOFT_DATAMC_DIR}/*.hxx)
 
 foreach(file0 ${highland_inc2})
    INSTALL(FILES ${file0} DESTINATION ${CMAKE_SOURCE_DIR}/include)
@@ -151,7 +157,7 @@ add_dependencies(highland_dicts include)
 
 
 #-------------------------------------------------------
-#------- other ------ ----------------------------------
+#------- other -----------------------------------------
 #-------------------------------------------------------
 
 #---Configure and install various files neded later and for clients -----------------------------
