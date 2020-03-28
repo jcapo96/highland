@@ -1,26 +1,12 @@
 export MAKEFLAGS=-j8 QUICK=1
 
-
 # automatically find the highland source directory
 export HIGHLANDPATH="$(cd -P -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd -P)"
 echo "HIGHLANDPATH=${HIGHLANDPATH}"
 
-# environment for IFIC's machines
-if [[ ${HOSTNAME} =~ "neutrinos" ]] ; then
-    products_dir=/data4/NEXT/software/scisoft
 
-    gcc_version=v7_3_0         
-    root_version=v6_18_04         
-    tbb_version=v2019_3
-    cmake_version=v3_14_3
-    
-    gcc_compiler=Linux64bit+2.6-2.12
-    root_compiler=Linux64bit+2.6-2.12-e17-prof                
-    tbb_compiler=Linux64bit+2.6-2.12-e17-prof
-    cmake_compiler=Linux64bit+2.6-2.12
-# environment for CERN and FERMILAB's machines
-elif [[ ${HOSTNAME} =~ "fnal" ]] || [[ ${HOSTNAME} =~ "lxplus" ]] ; then
-
+if [[ -e /cvmfs/larsoft.opensciencegrid.org/products ]] ; then
+    # environment for CERN and FERMILAB's machines
     products_dir=/cvmfs/larsoft.opensciencegrid.org/products
 
     gcc_version=v8_2_0         
@@ -32,16 +18,28 @@ elif [[ ${HOSTNAME} =~ "fnal" ]] || [[ ${HOSTNAME} =~ "lxplus" ]] ; then
     root_compiler=Linux64bit+3.10-2.17-e19-prof                  
     tbb_compiler=Linux64bit+3.10-2.17-e19-prof
     cmake_compiler=Linux64bit+3.10-2.17
+elif [[ ${HOSTNAME} =~ "neutrinos" ]] ; then
+    # environment for IFIC's machines
+    products_dir=/data4/NEXT/software/scisoft
+
+    gcc_version=v7_3_0         
+    root_version=v6_18_04         
+    tbb_version=v2019_3
+    cmake_version=v3_14_3
+    
+    gcc_compiler=Linux64bit+2.6-2.12
+    root_compiler=Linux64bit+2.6-2.12-e17-prof                
+    tbb_compiler=Linux64bit+2.6-2.12-e17-prof
+    cmake_compiler=Linux64bit+2.6-2.12
 elif [[ ${HOSTNAME} =~ "Anselmo" ]] ; then
-# environment for Anselmo's laptop
+    # environment for Anselmo's laptop
     root_dir=/hep/sw/root-6.12.06/myroot
 else
     echo "ENVIRONMENT NOT AVAILABLE FOR THIS MACHINE !!! ADD APPROPRIATE ENVIRONMENT TO scripts/setup.sh" 
     return
 fi
 
-
-if [[ ${HOSTNAME} =~ "neutrinos" ]] || [[ ${HOSTNAME} =~ "fnal" ]] || [[ ${HOSTNAME} =~ "lxplus" ]] ; then
+if [[ x$products_dir != x ]] ; then
     export gcc_dir=$products_dir/gcc/$gcc_version/$gcc_compiler
     export tbb_dir=$products_dir/tbb/$tbb_version/$tbb_compiler
     export root_dir=$products_dir/root/$root_version/$root_compiler
