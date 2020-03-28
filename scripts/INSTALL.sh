@@ -17,7 +17,7 @@ if [ -d "build" ]; then
     return
 fi
 
-# set environment variables needed by cmake
+# set environment variables
 source scripts/setup.sh
 
 # creates the build directory
