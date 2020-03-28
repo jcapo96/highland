@@ -60,9 +60,7 @@ export DYLD_LIBRARY_PATH=$HIGHLANDPATH/lib:$ROOTSYS/lib:$DYLD_LIBRARY_PATH
 export   LD_LIBRARY_PATH=$HIGHLANDPATH/lib:$ROOTSYS/lib:$LD_LIBRARY_PATH
 
 
-
-export CMAKE_MODULE_PATH=$ROOTSYS
-export CMAKE_PREFIX_PATH=$ROOTSYS
+export CMAKE_PREFIX_PATH=$HIGHLANDPATH:$ROOTSYS
 
 
 export HIGHLAND_PACKAGE_HIERARCHY=pionAnalysis:baseAnalysis:highlandTools:psycheSelections:highlandIO:highlandCorrections:highlandUtils:LArSoftReader:highlandEventModel:highlandCore:psycheIO:psycheDUNEUtils:psycheUtils:psycheEventModel:psycheCore
