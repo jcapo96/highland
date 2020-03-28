@@ -35,7 +35,3 @@ cmake --build build
 
 #install libraries and binaries in the appropriate folders  (equivalent to "make install" in most systems)
 cmake -P build/cmake_install.cmake 
-
-# set environment variables that need to run cmake first
-source scripts/setup_cmake.sh
-

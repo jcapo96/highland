@@ -120,8 +120,8 @@ INSTALL(TARGETS pion.exe DESTINATION ${CMAKE_SOURCE_DIR}/bin)
 #-------------------------------------------------------
 
 file(GLOB highland_inc2 ${CMAKE_SOURCE_DIR}/src/*/*/src/*.hxx
-                       ${LARSOFTREADERDIR}/src/2ndproduction/*.hxx
-                       ${LARSOFTREADERDIR}/src/2ndproduction/${DATAMCDIR}/*.hxx)
+                        ${LARSOFTREADERDIR}/src/2ndproduction/*.hxx
+                        ${LARSOFTREADERDIR}/src/2ndproduction/${DATAMCDIR}/*.hxx)
 
 foreach(file0 ${highland_inc2})
    INSTALL(FILES ${file0} DESTINATION ${CMAKE_SOURCE_DIR}/include)
@@ -137,9 +137,6 @@ add_custom_target(highland_dicts ALL SOURCES ${dict_list})
 # target to change the library name in the rootmap files
 add_custom_target(ch_rootmap COMMAND ${CMAKE_SOURCE_DIR}/scripts/chrootmap ${CMAKE_BINARY_DIR})
 
-# target to create the setup script with all environment variables
-add_custom_target(setup COMMAND ${CMAKE_SOURCE_DIR}/scripts/chsetup ${CMAKE_SOURCE_DIR})
-
 # target to install header files in the include folder
 add_custom_target(include ALL SOURCES ${highland_inc2} ${CMAKE_SOURCE_DIR})
 
@@ -149,8 +146,7 @@ add_custom_target(include ALL SOURCES ${highland_inc2} ${CMAKE_SOURCE_DIR})
 
 add_dependencies(pion.exe       highland)
 add_dependencies(highland       ch_rootmap)
-add_dependencies(ch_rootmap     setup)
-add_dependencies(setup          highland_dicts)
+add_dependencies(ch_rootmap     highland_dicts)
 add_dependencies(highland_dicts include)
 
 
