@@ -9,7 +9,8 @@ namespace ProdId{
     unknown=UNKNOWN_PRODUCTION,
     MCC5,
     MCC6,
-    MCC7
+    MCC7,
+    PDSPProd2
   };
 }
 
