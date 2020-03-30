@@ -15,7 +15,6 @@ baseAnalysis::baseAnalysis(AnalysisAlgorithm* ana): AnalysisAlgorithm(ana){
 
   // Add the package version
   // Add package versions
-  ND::versioning().AddPackage("psychePolicy",        anaUtils::GetSoftwareVersionFromPath((std::string)getenv("PSYCHEPOLICYROOT")));
   ND::versioning().AddPackage("psycheEventModel",    anaUtils::GetSoftwareVersionFromPath((std::string)getenv("PSYCHEEVENTMODELROOT")));
   ND::versioning().AddPackage("psycheCore",          anaUtils::GetSoftwareVersionFromPath((std::string)getenv("PSYCHECOREROOT")));
   ND::versioning().AddPackage("psycheUtils",         anaUtils::GetSoftwareVersionFromPath((std::string)getenv("PSYCHEUTILSROOT")));
@@ -37,9 +36,10 @@ void baseAnalysis::DefineProductions(){
 //********************************************************************
 
   // Add the different productions
-  ND::versioning().AddProduction(ProdId::MCC5,     "MCC5",     "v0r0",  "v1r0");
-  ND::versioning().AddProduction(ProdId::MCC6,     "MCC6",     "v0r0",  "v1r0");
-  ND::versioning().AddProduction(ProdId::MCC7,     "MCC5",     "v0r0",  "v1r0");
+  ND::versioning().AddProduction(ProdId::MCC5,       "MCC5",     "v0r0",  "v1r0");
+  ND::versioning().AddProduction(ProdId::MCC6,       "MCC6",     "v0r0",  "v1r0");
+  ND::versioning().AddProduction(ProdId::MCC7,       "MCC5",     "v0r0",  "v1r0");
+  ND::versioning().AddProduction(ProdId::PDSPProd2,  "PDSPProd2","v0r0",  "v1r0");
 }
 
 //********************************************************************
