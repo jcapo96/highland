@@ -165,7 +165,7 @@ protected:
   std::vector<UInt_t> _branchUniqueIDs;
 
   /// Index of the step in the selection
-  Int_t _index; //!
+  Int_t _index; 
 };
 
 
