@@ -62,6 +62,8 @@ void CorrectionManager::AddCorrection(Int_t index, const std::string& name, Corr
   corr->SetIndex(index);
   CorrectionBase* corr2 = NULL;
   //CorrectionBase* corr2 = GetCorrection(index); 
+
+  //TODO: protection for setting two corrections with the same index
   
 #pragma message("CorrectionManager::AddCorrection Name usage should be removed once approved!!!")
   
