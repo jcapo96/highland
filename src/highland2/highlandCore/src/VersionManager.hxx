@@ -58,11 +58,11 @@ public:
   /// return the singleton
   static Versioning& Get(void);
 
-  /// Check compatibility between input file software version and the production version use in oaAnalysisReader requirements file
+  /// Check compatibility between input file software version and the production version use in reader requirements file
   bool CheckVersionCompatibility(ProdId_h prodInput, ProdId_h prodReader);
 
   /// Add a production
-  void AddProduction(ProdId_h prodId, const std::string& prodName, const std::string& nd280Version, const std::string& oaAnalysisVersion);
+  void AddProduction(ProdId_h prodId, const std::string& prodName, const std::string& nd280Version, const std::string& readerVersion);
 
   /// Get the enum of the production corresponding to a given sofware version
   ProdId_h GetProduction(const std::string& softVersion);
@@ -97,7 +97,7 @@ public:
   void operator=(Versioning const&);
 
   /// Get the software version range for a given production name
-  bool GetSoftwareVersionsForProduction(ProdId_h prodId, std::string& nd280Version, std::string& oaAnalysisVersion);
+  bool GetSoftwareVersionsForProduction(ProdId_h prodId, std::string& nd280Version, std::string& readerVersion);
 
   /// Convert the production enum into an string
   std::string ConvertProduction(ProdId_h prod);
@@ -110,7 +110,7 @@ public:
 
   /// vector of sofware version corresponding to each production
   std::vector<std::string> _prodnd280Version;
-  std::vector<std::string> _prodoaAnalysisVersion;
+  std::vector<std::string> _prodReaderVersion;
 
   /// vector of production enums
   std::vector<ProdId_h> _prodId;

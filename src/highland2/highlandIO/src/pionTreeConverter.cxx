@@ -590,7 +590,7 @@ bool pionTreeConverter::AddFileToTChain(const std::string& inputString){
   _isMC = MC; 
   if (!header().SetIsMC(_isMC)) return false;
 
-  _softwareVersion = "v0r0";
+  _softwareVersion = "v08_40";
 
   // Sets the software version for this file
   return header().SetSoftwareVersion(_softwareVersion);

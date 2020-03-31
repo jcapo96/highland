@@ -107,7 +107,7 @@ bool CreateMiniTree::Initialize(){
   // Check software version compatibility between nd280AnalysisTools and current file
   if (_versionCheck){
     if(!ND::versioning().CheckVersionCompatibility(ND::versioning().GetProduction(input().GetSoftwareVersion()),
-                                                   anaUtils::GetProductionIdFromoaAnalysisReader())) return false;
+                                                   anaUtils::GetProductionIdFromReader())) return false;
   }
 
   // Dump the production used for corrections, bunching, systematics, etc

@@ -49,13 +49,13 @@ Versioning::Versioning(): ManagerBase("config","VERSION","PackageVersion",&_pack
 }
 
 //********************************************************************
-void Versioning::AddProduction(ProdId_h prodId, const std::string& prodName, const std::string& nd280Version, const std::string& oaAnalysisVersion){
+void Versioning::AddProduction(ProdId_h prodId, const std::string& prodName, const std::string& nd280Version, const std::string& readerVersion){
 //********************************************************************
 
   _prodId.push_back(prodId);
   _prodName.push_back(prodName);
   _prodnd280Version.push_back(nd280Version);
-  _prodoaAnalysisVersion.push_back(oaAnalysisVersion);
+  _prodReaderVersion.push_back(readerVersion);
 }
 
 //********************************************************************
@@ -63,6 +63,7 @@ ProdId_h Versioning::GetProduction(const std::string& softVersion){
 //********************************************************************
 
   for (UInt_t i=0;i<_prodId.size();i++){
+    std::cout << _prodId[i] << std::endl;
     if( softVersion == _prodnd280Version[i])
       return _prodId[i];
   }    
@@ -88,13 +89,13 @@ std::string Versioning::ConvertProduction(ProdId_h prod){
 }
 
 //********************************************************************
-bool Versioning::GetSoftwareVersionsForProduction(ProdId_h prodId, std::string& nd280Version, std::string& oaAnalysisVersion){
+bool Versioning::GetSoftwareVersionsForProduction(ProdId_h prodId, std::string& nd280Version, std::string& readerVersion){
 //********************************************************************
 
   for (UInt_t i=0;i<_prodId.size();i++){
     if (_prodId[i] == prodId){
-      nd280Version      = _prodnd280Version[i];
-      oaAnalysisVersion = _prodoaAnalysisVersion[i];
+      nd280Version  = _prodnd280Version[i];
+      readerVersion = _prodReaderVersion[i];
       return true;
     }
   }    
@@ -110,26 +111,26 @@ bool Versioning::CheckVersionCompatibility(ProdId_h prodInput, ProdId_h prodRead
   bool ok = true;
     
   // Get the software versions for a given production
-  std::string nd280Version[2], oaAnalysisVersion[2];
-  GetSoftwareVersionsForProduction(prodInput,  nd280Version[0], oaAnalysisVersion[0]);
-  GetSoftwareVersionsForProduction(prodReader, nd280Version[1], oaAnalysisVersion[1]);
+  std::string nd280Version[2], readerVersion[2];
+  GetSoftwareVersionsForProduction(prodInput,  nd280Version[0], readerVersion[0]);
+  GetSoftwareVersionsForProduction(prodReader, nd280Version[1], readerVersion[1]);
 
  
-  std::cerr << "oaAnalysisReader compiled with " << ConvertProduction(prodReader) << " (nd280/oaAnalysis versions: " << nd280Version[1] << "/" << oaAnalysisVersion[1] << ")  file. " << std::endl;
-  std::cerr << "Checking for compatibility version with current file  (nd280/oaAnalysis versions: " << nd280Version[0] << "/" << oaAnalysisVersion[0]  << ")" << std::endl;
-  if (oaAnalysisVersion[0] != oaAnalysisVersion[1]){
+  std::cerr << "Reader compiled with " << ConvertProduction(prodReader) << " (nd280/reader versions: " << nd280Version[1] << "/" << readerVersion[1] << ")  file. " << std::endl;
+  std::cerr << "Checking for compatibility version with current file  (nd280/reader versions: " << nd280Version[0] << "/" << readerVersion[0]  << ")" << std::endl;
+  if (readerVersion[0] != readerVersion[1]){
     ok = false;
     std::cerr << "*************************************************" << std::endl;
     std::cerr << "*************************************************" << std::endl;
-    std::cerr << "WARNING: Running over a " << ConvertProduction(prodInput) << "  file (oaAnalysis version " << oaAnalysisVersion[0] << ") !!!!!" << std::endl;
-    std::cerr << "oaAnalysis data classes definition could be incompatible !!!!" << std::endl;
-    std::cerr << "You should set the proper production version in oaAnalysisReader requirements file and recompile highland2 from scratch !!!" << std::endl;
+    std::cerr << "WARNING: Running over a " << ConvertProduction(prodInput) << "  file (reader version " << readerVersion[0] << ") !!!!!" << std::endl;
+    std::cerr << "reader data classes definition could be incompatible !!!!" << std::endl;
+    std::cerr << "You should set the proper production version in readerReader requirements file and recompile highland2 from scratch !!!" << std::endl;
     std::cerr << "You could also disable version check with command line option -v" << std::endl;
     std::cerr << "*************************************************" << std::endl;
     std::cerr << "*************************************************" << std::endl;
   }
   else
-    std::cout << "---> OK. Running over a " << ConvertProduction(prodInput) << " file (oaAnalysis version " << oaAnalysisVersion[0] << ")" << std::endl;    
+    std::cout << "---> OK. Running over a " << ConvertProduction(prodInput) << " file (reader version " << readerVersion[0] << ")" << std::endl;    
 
   return ok;
 

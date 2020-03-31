@@ -7,17 +7,17 @@ void anaUtils::AddStandardProductions(){
   // Add the different productions
   
   //May change when production evolves
-  //  ND::versioning().AddProduction(ProdId::PROD7DEVEL, "PROD7DEVEL", "v12",        "v13");
+  ND::versioning().AddProduction(ProdId::PDSPProd2,  "PDSPProd2","v08_40",  "v08_40");
 }
 
 //********************************************************************
-ProdId_h anaUtils::GetProductionIdFromoaAnalysisReader(){
+ProdId_h anaUtils::GetProductionIdFromReader(){
 //********************************************************************
 
 //  ProdId_h prodId=-1;
   ProdId_h prodId=UNKNOWN_PRODUCTION;
 
-  prodId=ProdId::MCC5;
+  prodId=ProdId::PDSPProd2;
 
   return prodId;
 

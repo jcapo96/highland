@@ -18,8 +18,8 @@ namespace ProdId{
 /// This is in addition to those defined in psycheUtils
 namespace anaUtils{
 
-    /// Get Production Id from nd280AnalysisTools
-    ProdId_h GetProductionIdFromoaAnalysisReader();
+    /// Get Production Id from reader software
+    ProdId_h GetProductionIdFromReader();
 
     /// Add the standard production versions
     void AddStandardProductions();
