@@ -16,5 +16,4 @@ rm -fr bin
 rm -fr lib
 rm -fr include
 rm -fr build
-rm -f scripts/setup_cmake.sh
 rm -f HIGHLANDConfig.cmake
