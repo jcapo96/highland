@@ -57,9 +57,12 @@ export PATH=$HIGHLANDPATH/bin:$ROOTSYS/bin:$PATH
 export DYLD_LIBRARY_PATH=$HIGHLANDPATH/lib:$ROOTSYS/lib:$DYLD_LIBRARY_PATH
 export   LD_LIBRARY_PATH=$HIGHLANDPATH/lib:$ROOTSYS/lib:$LD_LIBRARY_PATH
 
+# necessary for root to find headers in dictionaries 
+# (see https://root.cern/doc/v618/release-notes.html#header-location-and-root_generate_dictionary-root_standard_library_package)
+export ROOT_INCLUDE_PATH=$HIGHLANDPATH/include
+
 
 export CMAKE_PREFIX_PATH=$HIGHLANDPATH:$ROOTSYS
-
 
 export HIGHLAND_PACKAGE_HIERARCHY=pionAnalysis:baseAnalysis:highlandTools:psycheSelections:highlandIO:highlandCorrections:highlandUtils:LArSoftReader:highlandEventModel:highlandCore:psycheIO:psycheDUNEUtils:psycheUtils:psycheEventModel:psycheCore
 
