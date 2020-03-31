@@ -105,21 +105,12 @@ endforeach(file0)
 file(GLOB highland_src  ${CMAKE_SOURCE_DIR}/src/psyche/*/src/*.cxx 
                         ${CMAKE_SOURCE_DIR}/src/highland2/highland*/src/*.cxx                                           
                         ${CMAKE_SOURCE_DIR}/src/highland2/baseAnalysis/src/*.cxx
-                        ${CMAKE_SOURCE_DIR}/src/highland2/pionAnalysis/src/*.cxx
                         ${LARSOFTREADER_DIR}/LArSoft*.cxx
                         ${LARSOFTREADER_DIR}/${LARSOFT_DATAMC_DIR}/LArSoftReaderProjectSource.cxx)    
 
 add_library(highland SHARED ${dict_src} ${highland_src} ) 
 target_link_libraries(highland ${ROOT_LIBRARIES})
 INSTALL(TARGETS highland DESTINATION ${CMAKE_SOURCE_DIR}/lib)
-
-#-------------------------------------------------------
-#-------------- executable -----------------------------
-#-------------------------------------------------------
-
-add_executable(pion.exe  ${CMAKE_SOURCE_DIR}/src//highland2/pionAnalysis/app/RunPionAnalysis.cxx)
-target_link_libraries(pion.exe ${ROOT_LIBRARIES} "${CMAKE_BINARY_DIR}/libhighland${CMAKE_SHARED_LIBRARY_SUFFIX}")
-INSTALL(TARGETS pion.exe DESTINATION ${CMAKE_SOURCE_DIR}/bin)
 
 #-------------------------------------------------------
 #----- highland includes -------------------------------
@@ -150,7 +141,6 @@ add_custom_target(include ALL SOURCES ${highland_inc2} ${CMAKE_SOURCE_DIR})
 #------- dependencies ----------------------------------
 #-------------------------------------------------------
 
-add_dependencies(pion.exe       highland)
 add_dependencies(highland       ch_rootmap)
 add_dependencies(ch_rootmap     highland_dicts)
 add_dependencies(highland_dicts include)
