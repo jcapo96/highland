@@ -75,8 +75,6 @@ LArSoftTreeConverter::LArSoftTreeConverter():InputConverter("Events"){
   templates[ 13 ]   = (TProfile*)dEdX_template_file->Get( "dedx_range_mu"  );
   templates[ 2212 ] = (TProfile*)dEdX_template_file->Get( "dedx_range_pro" );
 
-
-  templates[ 2212 ]->Print(); 
 }
 
 //********************************************************************
