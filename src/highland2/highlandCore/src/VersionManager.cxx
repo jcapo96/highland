@@ -63,7 +63,6 @@ ProdId_h Versioning::GetProduction(const std::string& softVersion){
 //********************************************************************
 
   for (UInt_t i=0;i<_prodId.size();i++){
-    std::cout << _prodId[i] << std::endl;
     if( softVersion == _prodnd280Version[i])
       return _prodId[i];
   }    
