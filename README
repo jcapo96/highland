@@ -1,4 +1,4 @@
-The ighland distribution contains the following: 
+The highland distribution contains the following: 
 
 - README: this file
 - CMakeLists.txt: file used by cmake to know how to compile and build executables
@@ -20,10 +20,8 @@ scripts
 - INSTALL.sh: creates makefile, compiles and sets all environment variables. Ready to execute !!!!
 - cleanup.sh: removes everything created during compilation. It should be run from parent highland folder 
 
-- setup.sh: sets environment variables needed prior to compilation
-- setup_cmake.sh_template: template used to build a script that sets some environment variables 
+- setup.sh: sets environment variables
 - chrootmap: used internaly by cmake
-- chsetup: used internally by cmake
 
 
 INSTALLATION
@@ -42,10 +40,4 @@ Alternatively go inside the build folder and do:
 
 > make
 > make install
-
-
-EXECUTION
--------------
-
-> pion.exe -v -o output.root input.root
 
