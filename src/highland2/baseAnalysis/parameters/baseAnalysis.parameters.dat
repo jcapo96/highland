@@ -49,5 +49,5 @@ Create configurations with a single systematic ( a configuration for each system
 
 Enable/disable the configuration with all systematics (or the ones selected above)
 
- < baseAnalysis.Configurations.EnableAllSystematics = 1 >
+ < baseAnalysis.Configurations.EnableAllSystematics = 0 >
  
