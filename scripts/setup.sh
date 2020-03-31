@@ -4,21 +4,7 @@ export MAKEFLAGS=-j8 QUICK=1
 export HIGHLANDPATH="$(cd -P -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd -P)"
 echo "HIGHLANDPATH=${HIGHLANDPATH}"
 
-
-if [[ -e /cvmfs/larsoft.opensciencegrid.org/products ]] ; then
-    # environment for CERN and FERMILAB's machines
-    products_dir=/cvmfs/larsoft.opensciencegrid.org/products
-
-    gcc_version=v8_2_0         
-    root_version=v6_18_04d         
-    tbb_version=v2019_3
-    cmake_version=v3_9_6
-    
-    gcc_compiler=Linux64bit+3.10-2.17
-    root_compiler=Linux64bit+3.10-2.17-e19-prof                  
-    tbb_compiler=Linux64bit+3.10-2.17-e19-prof
-    cmake_compiler=Linux64bit+3.10-2.17
-elif [[ ${HOSTNAME} =~ "neutrinos" ]] ; then
+if [[ ${HOSTNAME} =~ "neutrinos" ]] ; then
     # environment for IFIC's machines
     products_dir=/data4/NEXT/software/scisoft
 
@@ -31,6 +17,20 @@ elif [[ ${HOSTNAME} =~ "neutrinos" ]] ; then
     root_compiler=Linux64bit+2.6-2.12-e17-prof                
     tbb_compiler=Linux64bit+2.6-2.12-e17-prof
     cmake_compiler=Linux64bit+2.6-2.12
+
+elif [[ -e /cvmfs/larsoft.opensciencegrid.org/products ]] ; then
+    # environment for CERN and FERMILAB's machines
+    products_dir=/cvmfs/larsoft.opensciencegrid.org/products
+
+    gcc_version=v8_2_0         
+    root_version=v6_18_04d         
+    tbb_version=v2019_3
+    cmake_version=v3_9_6
+    
+    gcc_compiler=Linux64bit+3.10-2.17
+    root_compiler=Linux64bit+3.10-2.17-e19-prof                  
+    tbb_compiler=Linux64bit+3.10-2.17-e19-prof
+    cmake_compiler=Linux64bit+3.10-2.17
 elif [[ ${HOSTNAME} =~ "Anselmo" ]] ; then
     # environment for Anselmo's laptop
     root_dir=/hep/sw/root-6.12.06/myroot
@@ -57,9 +57,12 @@ export PATH=$HIGHLANDPATH/bin:$ROOTSYS/bin:$PATH
 export DYLD_LIBRARY_PATH=$HIGHLANDPATH/lib:$ROOTSYS/lib:$DYLD_LIBRARY_PATH
 export   LD_LIBRARY_PATH=$HIGHLANDPATH/lib:$ROOTSYS/lib:$LD_LIBRARY_PATH
 
+# necessary for root to find headers in dictionaries 
+# (see https://root.cern/doc/v618/release-notes.html#header-location-and-root_generate_dictionary-root_standard_library_package)
+export ROOT_INCLUDE_PATH=$HIGHLANDPATH/include
+
 
 export CMAKE_PREFIX_PATH=$HIGHLANDPATH:$ROOTSYS
-
 
 export HIGHLAND_PACKAGE_HIERARCHY=pionAnalysis:baseAnalysis:highlandTools:psycheSelections:highlandIO:highlandCorrections:highlandUtils:LArSoftReader:highlandEventModel:highlandCore:psycheIO:psycheDUNEUtils:psycheUtils:psycheEventModel:psycheCore
 
