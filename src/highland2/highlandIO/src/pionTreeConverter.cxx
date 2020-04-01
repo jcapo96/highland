@@ -1282,8 +1282,6 @@ void pionTreeConverter::FillBeamTrueParticleInfo(AnaTrueParticle* truePart){
 
     truePart->ParentID = reco_beam_true_byHits_origin;
 
-    if (truePart->ParentID==2) truePart->Print();
-    
     truePart->ProcessStart = truePart->ConvertProcess(*reco_beam_true_byHits_process);
     truePart->ProcessEnd   = truePart->ConvertProcess(*reco_beam_true_byHits_endProcess);      
     
