@@ -29,10 +29,15 @@ public :
   DrawingTools(const std::string& file="", Int_t T2KstyleIndex=0);
   DrawingTools(Experiment& exp, Int_t T2KstyleIndex=0);
   virtual ~DrawingTools(){}
-  
+
+  using DrawingToolsBase::DrawToys;
   void DrawToys(DataSample& data, const std::string& cut="", const std::string& root_opt="", const std::string& opt="", const std::string& leg_name="");
+
+  using DrawingToolsBase::DrawToysRatio;
   void DrawToysRatio(DataSample& sample1, DataSample& sample2, const std::string& cut="", 
                      const std::string& root_opt="", const std::string& opt="", const std::string& leg_name="", double norm=-1);
+
+  using DrawingToolsBase::DrawToysRatioTwoCuts;
   void DrawToysRatioTwoCuts(DataSample& sample1, DataSample& sample2, const std::string& cut1, const std::string& cut2, 
                             const std::string& root_opt="", const std::string& opt="", const std::string& leg_name="", double norm=-1);
 
@@ -92,13 +97,14 @@ public :
 
   /// Print on the screen the purities for the different categories defined by "categ" and with cuts "cut".
   /// The expected number of events are also printed, after scaling by events_ratio.
+  using DrawingToolsBase::PrintPurities;
   void PrintPurities(DataSample& data, const std::string& categ,  const std::string& cut, double events_ratio = 1);
 
   /// Print on the screen the purities for the different categories defined by "categ" and with cuts "cut".
   /// The expected number of events are also printed, after scaling by the data POT in the Experiment.
   void PrintPurities(Experiment& exp, const std::string& categ,  const std::string& cut, const std::string& opt="");
 
-
+  using DrawingToolsBase::Draw;
   void Draw(DataSample& data, const std::string& name, int nbins, double* xbins, const std::string& categ="all", 
 	    const std::string& cut="", const std::string& root_opt="", const std::string& opt="", double norm=-1,bool scale_errors=true);
   void Draw(DataSample& data, const std::string& name, int nbins, double xmin, double xmax, const std::string& categ="all", 
@@ -115,18 +121,20 @@ public :
   void DrawRatio(DataSample& data, const std::string& name, int nx, double xmin, double xmax, 
 		 const std::string& cut1, const std::string& cut2,  const std::string& root_opt="", const std::string& opt="", const std::string& leg_name="");
 
+  using DrawingToolsBase::DrawEff;
   void DrawEff(DataSample& data, const std::string& name, int nbins, double* xbins, 
 	       const std::string& cut1, const std::string& cut2, const std::string& root_opt="", const std::string& opt="", const std::string& leg_name="");
   void DrawEff(DataSample& data, const std::string& name, int nx, double xmin, double xmax, 
 	       const std::string& cut1, const std::string& cut2, const std::string& root_opt="", const std::string& opt="", const std::string& leg_name="");
 
+  using DrawingToolsBase::DrawDoubleEff;
   void DrawDoubleEff(DataSample& sample1, DataSample& sample2, const std::string& var, int nx, double* xbins,
 		     const std::string& cut1, const std::string& cut2, const std::string& root_opt="", const std::string& opt="", const std::string& leg="");
   
   void DrawDoubleEff(DataSample& sample1, DataSample& sample2, const std::string& var, int nx, double xmin, double xmax, 
 		     const std::string& cut1, const std::string& cut2, const std::string& root_opt="", const std::string& opt="", const std::string& leg="");
 
-
+  using DrawingToolsBase::DrawSignificance;
   void DrawSignificance(DataSample& data, const std::string& name, int nbins, double* xbins, const std::string& cut1, const std::string& cut2, 
 			double norm=1, double rel_syst=0,const std::string& root_opt="", const std::string& opt="", const std::string& leg_name="");
   void DrawSignificance(DataSample& data, const std::string& name, int nbins, double xmin, double xmax, const std::string& cut1, const std::string& cut2, 
@@ -154,7 +162,6 @@ public :
   void Draw(DataSample& sample1, DataSample& sample2, const std::string& var, int nx, double* xbins, int ny, double* ybins,
             const std::string& categ, const std::string& cut, const std::string& root_opt, const std::string& opt, double norm1, double norm2,  bool scale_errors=true);
   
-  
   void DrawRatio(DataSample& sample1, DataSample& sample2, const std::string& var, int nx, double xmin, double xmax, 
 		 const std::string& cut1, const std::string& cut2, double norm=-1, const std::string& root_opt="", const std::string& opt="", const std::string& leg_name="");
   void DrawRatio(DataSample& sample1, DataSample& sample2, const std::string& var, int nx, double* xbins, 
@@ -167,6 +174,7 @@ public :
 
 
   // ---------- Plots VS cut -----------------
+  using DrawingToolsBase::DrawEventsVSCut;
   void DrawEventsVSCut(DataSample& sample , const std::string& cut_norm="", int first_cut=-1, int last_cut=-1, 
 		       const std::string& root_opt="", const std::string& opt="", const std::string& leg="")
   {ReadOther(sample.GetTree("config"));DrawingToolsBase::DrawEventsVSCut(sample.GetTree(),cut_norm,first_cut,last_cut,root_opt,opt,leg);}
@@ -179,6 +187,7 @@ public :
 		       const std::string& root_opt="", const std::string& opt="", const std::string& leg="")
   {ReadOther(sample.GetTree("config"));DrawingToolsBase::DrawEventsVSCut(sample.GetTree(),isel,branch,cut_norm,first_cut,last_cut,root_opt,opt,leg);}
 
+  using DrawingToolsBase::DrawEffVSCut;  
   void DrawEffVSCut(DataSample& sample , const std::string& signal="", const std::string& precut="", int first_cut=-1, int last_cut=-1,
                     const std::string& root_opt="", const std::string& opt="", const std::string& leg="");
   //  {DrawingToolsBase::DrawEffVSCut(sample.GetTree("truth"),signal,precut,first_cut,last_cut,root_opt,opt,leg);}
@@ -191,6 +200,7 @@ public :
                     const std::string& root_opt="", const std::string& opt="", const std::string& leg="");
   //  {DrawingToolsBase::DrawEffVSCut(sample.GetTree("truth"),isel,branch,signal,precut,first_cut,last_cut,root_opt,opt,leg);}
 
+  using DrawingToolsBase::DrawPurVSCut;
   void DrawPurVSCut(DataSample& sample , const std::string& signal="", const std::string& precut="", int first_cut=-1, int last_cut=-1,
 		    const std::string& root_opt="", const std::string& opt="", const std::string& leg="")
   {ReadOther(sample.GetTree("config"));DrawingToolsBase::DrawPurVSCut(sample.GetTree(),signal,precut,first_cut,last_cut,root_opt,opt,leg);}
@@ -203,6 +213,8 @@ public :
 		    const std::string& root_opt="", const std::string& opt="", const std::string& leg="")
   {ReadOther(sample.GetTree("config"));DrawingToolsBase::DrawPurVSCut(sample.GetTree(),isel,branch,signal,precut,first_cut,last_cut,root_opt,opt,leg);}
 
+
+  using DrawingToolsBase::DrawRatioVSCut;
   //! [DrawingToolsVsCutsMethods]
   /// Draw the ratio between two trees as a function of the cut
   void DrawRatioVSCut(DataSample& sample1, DataSample& sample2, const std::string& precut="", int first_cut=-1, int last_cut=-1,
@@ -211,7 +223,6 @@ public :
                       const std::string& root_opt="", const std::string& opt="", const std::string& leg="", double norm=-1.);
   void DrawRatioVSCut(DataSample& sample1, DataSample& sample2, int isel, int branch, const std::string& precut="", int first_cut=-1, int last_cut=-1,
                       const std::string& root_opt="", const std::string& opt="", const std::string& leg="", double norm=-1.);
-
 
 
   void DrawEffPurVSCut(DataSample& sample, const std::string& signal, const std::string& precut="", int first_cut=-1, int last_cut=-1,
@@ -230,6 +241,7 @@ public :
   
   // ---------- POT -----------------
 
+  using DrawingToolsBase::DumpPOT;
   //! [DrawingTools_POT]
   /// Dump the POT information for this sample, provided the sample it self
   void DumpPOT(DataSample& data);
@@ -269,7 +281,7 @@ public :
   /// This method draws the distribution of the number of selected events for all toys (one entry per toy in the histogram), provided a cut
   /// This is useful to check that the systematic error bars correspond to the RMS of this distribution
   void DrawToys(Experiment& exp, const std::string& cut="", const std::string& root_opt="", const std::string& opt="", const std::string& leg="");
-  
+
   /// Data-MC comparison plots using a vector of pairs of data and MC samples (Experiment), properly normalised to each other.  
   void Draw(Experiment& exp, const std::string& var, int nx, double xmin, double xmax, 
             const std::string& categ="all", const std::string& cut="", const std::string& root_opt="", const std::string& opt="",double norm=-1., bool scale_errors=true);
@@ -318,7 +330,6 @@ public :
   /// data and mc will be FILLED here
   void GetEventsVSCut(Experiment& exp, const std::string& name, const std::string& cut_norm, int isel, int ibranch, int& first_cut, int& last_cut,
            const std::string& root_opt, const std::string& opt, TH1_h*& data, TH1_h*& mc);
-
 
   void DrawEventsVSCut(Experiment& exp, const std::string& cut_norm="", int first_cut=-1, int last_cut=-1, 
 		       const std::string& root_opt="", const std::string& opt="", const std::string& leg="");
