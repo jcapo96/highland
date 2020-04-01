@@ -1279,6 +1279,10 @@ void pionTreeConverter::FillBeamTrueParticleInfo(AnaTrueParticle* truePart){
   if (byHits){
     truePart->ID  = reco_beam_true_byHits_ID;
     truePart->PDG = reco_beam_true_byHits_PDG;
+
+    truePart->ParentID = reco_beam_true_byHits_origin;
+
+    if (truePart->ParentID==2) truePart->Print();
     
     truePart->ProcessStart = truePart->ConvertProcess(*reco_beam_true_byHits_process);
     truePart->ProcessEnd   = truePart->ConvertProcess(*reco_beam_true_byHits_endProcess);      
@@ -1428,8 +1432,9 @@ void pionTreeConverter::FillTrueBeamDaughterTrueParticleInfo(Int_t ipart, AnaTru
   truePart->ID  = (*true_beam_daughter_ID)[ipart];
   truePart->PDG = (*true_beam_daughter_PDG)[ipart];
   
-  truePart->ParentID  = parent->ID;
-  truePart->ParentPDG = parent->PDG;
+  truePart->ParentID   = parent->ID;
+  truePart->ParentPDG  = parent->PDG;
+  truePart->GParentPDG = parent->ParentPDG;
 
   //  truePart->GParentPDG = 0;
 
