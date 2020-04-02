@@ -876,71 +876,12 @@ void pionTreeConverter::FillTrueVertexInfo(Int_t ivertex, AnaTrueVertex* trueVer
 void pionTreeConverter::FillBeamParticleInfo(std::vector<AnaTrueParticleB*>& trueParticles, AnaParticle* part){
 //*****************************************************************************
 
-
-
-  // Not yet implemented
-/*
-   Int_t           reco_beam_type;
-   Double_t        reco_beam_vtxX;
-   Double_t        reco_beam_vtxY;
-   Double_t        reco_beam_vtxZ;
-   std::vector<double>  *reco_beam_TrkPitch;
-   std::vector<double>  *reco_beam_calo_wire;
-   std::vector<double>  *reco_beam_calo_tick;
-
-   Int_t           reco_beam_nTrackDaughters;
-   Int_t           reco_beam_nShowerDaughters;
-   Bool_t          reco_beam_flipped;
-   Bool_t          reco_beam_passes_beam_cuts;
-
-   Int_t           reco_beam_allTrack_ID;
-   Bool_t          reco_beam_allTrack_beam_cuts;
-   Bool_t          reco_beam_allTrack_flipped;
-   Double_t        reco_beam_allTrack_len;
-   Double_t        reco_beam_allTrack_startX;
-   Double_t        reco_beam_allTrack_startY;
-   Double_t        reco_beam_allTrack_startZ;
-   Double_t        reco_beam_allTrack_endX;
-   Double_t        reco_beam_allTrack_endY;
-   Double_t        reco_beam_allTrack_endZ;
-   Double_t        reco_beam_allTrack_trackDirX;
-   Double_t        reco_beam_allTrack_trackDirY;
-   Double_t        reco_beam_allTrack_trackDirZ;
-   Double_t        reco_beam_allTrack_trackEndDirX;
-   Double_t        reco_beam_allTrack_trackEndDirY;
-   Double_t        reco_beam_allTrack_trackEndDirZ;
-   std::vector<double>  *reco_beam_allTrack_resRange;
-   std::vector<double>  *reco_beam_allTrack_calibrated_dEdX;
-   Double_t        reco_beam_allTrack_Chi2_proton;
-   Int_t           reco_beam_allTrack_Chi2_ndof;
-
-
-      Int_t           reco_beam_vertex_slice;
-   std::vector<std::vector<double> > *reco_beam_vertex_dRs;
-   std::vector<int>     *reco_beam_vertex_hits_slices;
-
-   Double_t        reco_beam_Chi2_proton;
-   Int_t           reco_beam_Chi2_ndof;
-   std::vector<double>  *reco_beam_cosmic_candidate_lower_hits;
-   std::vector<double>  *reco_beam_cosmic_candidate_upper_hits;
-   std::vector<int>     *reco_beam_cosmic_candidate_ID;
-
-
-   std::vector<double>  *reco_beam_incidentEnergies;
-   Double_t        reco_beam_interactingEnergy;
-   std::vector<double>  *true_beam_incidentEnergies;
-   Double_t        true_beam_interactingEnergy;
-
-*/   
-  
   part->UniqueID  = reco_beam_trackID;
 
   // This is the beam particle (TODO)
   part->Charge = -8888;
 
-
   part->ReconPDG[0] = reco_beam_type;   // TODO
-
       
   SubDetId::SetDetectorUsed(part->Detector , SubDetId::kSubdet1_1);
   
@@ -1050,6 +991,63 @@ void pionTreeConverter::FillBeamParticleInfo(std::vector<AnaTrueParticleB*>& tru
       part->TrueEff=0;
     }
   }
+
+
+  // Not yet implemented
+/*
+   Int_t           reco_beam_type;
+   Double_t        reco_beam_vtxX;
+   Double_t        reco_beam_vtxY;
+   Double_t        reco_beam_vtxZ;
+   std::vector<double>  *reco_beam_TrkPitch;
+   std::vector<double>  *reco_beam_calo_wire;
+   std::vector<double>  *reco_beam_calo_tick;
+
+   Int_t           reco_beam_nTrackDaughters;
+   Int_t           reco_beam_nShowerDaughters;
+   Bool_t          reco_beam_flipped;
+   Bool_t          reco_beam_passes_beam_cuts;
+
+   Int_t           reco_beam_allTrack_ID;
+   Bool_t          reco_beam_allTrack_beam_cuts;
+   Bool_t          reco_beam_allTrack_flipped;
+   Double_t        reco_beam_allTrack_len;
+   Double_t        reco_beam_allTrack_startX;
+   Double_t        reco_beam_allTrack_startY;
+   Double_t        reco_beam_allTrack_startZ;
+   Double_t        reco_beam_allTrack_endX;
+   Double_t        reco_beam_allTrack_endY;
+   Double_t        reco_beam_allTrack_endZ;
+   Double_t        reco_beam_allTrack_trackDirX;
+   Double_t        reco_beam_allTrack_trackDirY;
+   Double_t        reco_beam_allTrack_trackDirZ;
+   Double_t        reco_beam_allTrack_trackEndDirX;
+   Double_t        reco_beam_allTrack_trackEndDirY;
+   Double_t        reco_beam_allTrack_trackEndDirZ;
+   std::vector<double>  *reco_beam_allTrack_resRange;
+   std::vector<double>  *reco_beam_allTrack_calibrated_dEdX;
+   Double_t        reco_beam_allTrack_Chi2_proton;
+   Int_t           reco_beam_allTrack_Chi2_ndof;
+
+
+      Int_t           reco_beam_vertex_slice;
+   std::vector<std::vector<double> > *reco_beam_vertex_dRs;
+   std::vector<int>     *reco_beam_vertex_hits_slices;
+
+   Double_t        reco_beam_Chi2_proton;
+   Int_t           reco_beam_Chi2_ndof;
+   std::vector<double>  *reco_beam_cosmic_candidate_lower_hits;
+   std::vector<double>  *reco_beam_cosmic_candidate_upper_hits;
+   std::vector<int>     *reco_beam_cosmic_candidate_ID;
+
+
+   std::vector<double>  *reco_beam_incidentEnergies;
+   Double_t        reco_beam_interactingEnergy;
+   std::vector<double>  *true_beam_incidentEnergies;
+   Double_t        true_beam_interactingEnergy;
+
+*/   
+
   
 }
 
@@ -1175,7 +1173,6 @@ void pionTreeConverter::FillDaughterParticleTrackInfo(std::vector<AnaTrueParticl
   // -------- Not yet implemented --------
   /*
     std::vector<int>     *reco_daughter_PFP_ID;
-    std::vector<int>     *reco_daughter_PFP_nHits;
     std::vector<double>  *reco_daughter_PFP_trackScore_collection;
     std::vector<double>  *reco_daughter_PFP_emScore_collection;
     std::vector<double>  *reco_daughter_PFP_michelScore_collection;
@@ -1232,6 +1229,33 @@ void pionTreeConverter::FillDaughterParticleShowerInfo(std::vector<AnaTruePartic
     part->HitZ[0][j] = (*reco_daughter_shower_spacePts_Z)[itrk][j];
   }
 
+
+
+  // --------- reco_daughter_PFP ------------------------
+  part->CNNscore[0] = (*reco_daughter_PFP_trackScore)[itrk];
+  part->CNNscore[1] = (*reco_daughter_PFP_emScore)[itrk];
+  part->CNNscore[2] = (*reco_daughter_PFP_michelScore)[itrk];
+
+  /*
+  part->NHits = 0;
+  for (Int_t i=0;i<3;i++){
+    part->NHitsPerPlane[i] = ntrkhits_pmtrajfit[itrk][i];
+    part->NHits += part->NHitsPerPlane[i];
+  }
+  */
+  part->NHits = (*reco_daughter_PFP_nHits)[itrk];
+
+  
+  // -------- Not yet implemented --------
+  /*
+    std::vector<int>     *reco_daughter_PFP_ID;
+    std::vector<double>  *reco_daughter_PFP_trackScore_collection;
+    std::vector<double>  *reco_daughter_PFP_emScore_collection;
+    std::vector<double>  *reco_daughter_PFP_michelScore_collection;
+  */
+
+
+  
   //------ Truth association ------- //TODO
   
   if (_isMC){
@@ -1279,7 +1303,9 @@ void pionTreeConverter::FillBeamTrueParticleInfo(AnaTrueParticle* truePart){
   if (byHits){
     truePart->ID  = reco_beam_true_byHits_ID;
     truePart->PDG = reco_beam_true_byHits_PDG;
-    
+
+    truePart->ParentID = reco_beam_true_byHits_origin;
+
     truePart->ProcessStart = truePart->ConvertProcess(*reco_beam_true_byHits_process);
     truePart->ProcessEnd   = truePart->ConvertProcess(*reco_beam_true_byHits_endProcess);      
     
@@ -1431,8 +1457,9 @@ void pionTreeConverter::FillTrueBeamDaughterTrueParticleInfo(Int_t ipart, AnaTru
   truePart->ID  = (*true_beam_daughter_ID)[ipart];
   truePart->PDG = (*true_beam_daughter_PDG)[ipart];
   
-  truePart->ParentID  = parent->ID;
-  truePart->ParentPDG = parent->PDG;
+  truePart->ParentID   = parent->ID;
+  truePart->ParentPDG  = parent->PDG;
+  truePart->GParentPDG = parent->ParentPDG;
 
   //  truePart->GParentPDG = 0;
 
