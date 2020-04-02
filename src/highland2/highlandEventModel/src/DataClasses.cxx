@@ -400,7 +400,6 @@ AnaTrueParticle::AnaTrueParticle(): AnaTrueParticleB(){
   
   ReconParticles.clear();
   Daughters.clear();
-  Pi0_decay_ID.clear();
 }
 
 //********************************************************************
@@ -417,10 +416,8 @@ AnaTrueParticle::AnaTrueParticle(const AnaTrueParticle& truePart):AnaTrueParticl
   
   ReconParticles.clear();
 
-  for (UInt_t i=0;i<truePart.Daughters.size();i++){
+  for (UInt_t i=0;i<truePart.Daughters.size();i++)
     Daughters.push_back(truePart.Daughters[i]);
-    Daughters.push_back(truePart.Pi0_decay_ID[i]);
-  }
 
   
   /*
@@ -445,9 +442,6 @@ void AnaTrueParticle::Print() const{
   std::cout << "NDaughters:      " << (int)Daughters.size() << std::endl;
   if (Daughters.size())
     std::cout << "First dau ID:    " << Daughters[0] << std::endl;
-  if (Pi0_decay_ID.size())
-    std::cout << "First Pi0 decay ID: " << Pi0_decay_ID[0] << std::endl;
-  
 }
 
 
