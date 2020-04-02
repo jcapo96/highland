@@ -147,6 +147,8 @@ public:
   /// Vector of Daughters TrueParticles
   std::vector<Int_t> Daughters; 
   
+  /// vector of true pi0 id decays
+  std::vector<Int_t> Pi0_decay_ID;
 };
 
 const UInt_t NMAXHITSPERPLANE = 300;

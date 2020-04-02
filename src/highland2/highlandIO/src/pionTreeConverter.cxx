@@ -1370,8 +1370,11 @@ void pionTreeConverter::FillTrueBeamTrueParticleInfo(AnaTrueParticle* truePart){
   //    truePart->PositionEnd[3] = 
     
   //    truePart->ProcessStart = truePart->ConvertProcess(*true_beam_process);
-  truePart->ProcessEnd   = truePart->ConvertProcess(*true_beam_endProcess);      
+  truePart->ProcessEnd   = truePart->ConvertProcess(*true_beam_endProcess);
 
+  for(int i = 0; i < (int)true_beam_Pi0_decay_ID->size(); i++)
+    truePart->Pi0_decay_ID.push_back(true_beam_Pi0_decay_ID->at(i));
+    
   // ------- Not implemented yet ------------------
   /*
     Int_t           true_beam_nElasticScatters;
