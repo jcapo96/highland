@@ -55,6 +55,8 @@ class TrackCategoryDefinition{
     /// types can coexist.
     TrackCategoryDefinition(bool multi = false) {
       _isMultiType = multi;
+      _isObject=false;
+      _codes.clear();
     }
 
     virtual ~TrackCategoryDefinition() {}
@@ -126,6 +128,38 @@ class TrackCategoryDefinition{
     Int_t* GetCodes(Int_t codes[]);
 
 
+    void SetIsObjectCategory(bool isObject){_isObject=isObject;}
+    bool IsObject(){return _isObject;}
+
+    /// Get the code for the actual track in this category.
+    int GetObjectCode(Int_t i=-1) {
+      if (i==-1) i = _codes.size()-1;
+      return _codes[i];
+    }
+
+    /// Set the code for the actual track. Use defaultcode if code isn't
+    /// defined for this category.
+    void SetObjectCode(int code, int defaultcode = -999) {
+      bool ok = false;
+
+      for (std::vector<TrackTypeDefinition>::iterator it = _types.begin(); it != _types.end(); it++) {
+        if (it->_code == code) {
+          ok = true;
+          break;
+        }
+      }
+
+      if (!ok) {
+        code = defaultcode;
+      }
+
+      _codes.push_back(code);
+    }
+
+
+  void ResetObjectCodes() {_codes.clear();}
+
+  
   protected:
 
     /// The types for the actual track.
@@ -141,6 +175,17 @@ class TrackCategoryDefinition{
 
     /// Whether this is this a multi-type category (can several types coexist?).
     bool _isMultiType;
+
+    /// Whether this is an Object based category
+    bool _isObject;
+
+    /// --- Used by Object base categories ---
+    Int_t _counterIndex;
+    std::string _counterName;
+    Int_t _counterSize;
+
+    std::vector<Int_t> _codes;
+    ///---
 
     /// The types defined for this category.
     std::vector<TrackTypeDefinition> _types;

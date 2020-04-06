@@ -79,6 +79,9 @@ class CategoryManager: public ManagerBase {
     /// The array variables should all be ntypes in length.
     void AddCategory(const std::string& name, int ntypes, std::string* names, int* codes, int* colors, bool multi = false, bool noWarning = false, bool addNOTRUTH=true, bool addSAND=true);
 
+
+    void AddObjectCategory(const std::string& name, int ntypes, std::string* names, int* codes, int* colors, bool multi = false, bool noWarning = false, bool addNOTRUTH=true, bool addSAND=true);
+
     /// Copy an existing Category into another with a  different name
     void CopyCategory(const std::string& categ_name, const std::string& categ_name2);
 
@@ -119,6 +122,28 @@ class CategoryManager: public ManagerBase {
       }
     }
 
+    /// Set the actual code for this category. If the specified code
+    /// isn't defined for the category, defaultcode is used instead.
+    void SetObjectCode(const std::string& categ, int code, int defaultcode = 0) {
+      if (HasCategory(categ)) {
+        GetCategory(categ).SetObjectCode(code, defaultcode);
+      } else {
+        std::cout << "Code not set: category '" << categ << "' not found !!!" << std::endl;
+      }
+    }
+
+    /// Get the actual code for this category.
+    int GetObjectCode(const std::string& categ, Int_t index=-1){
+      if (!HasCategory(categ)) return -1;
+    
+      if (!GetCategory(categ).IsMultiType())
+        return GetCategory(categ).GetObjectCode(index);
+      else{
+        std::cout << "Category '" << categ << "' is a multi-type category" << std::endl;
+        return -1;
+      }
+    }
+  
     /// A category can fulfill multiple types. Set the different bits.
     /// For multitype categories only.
     void SetCategoryType(const std::string& categ, int type, bool ok) {
@@ -143,7 +168,7 @@ class CategoryManager: public ManagerBase {
     void SetReady(bool ok) {
       _ready = ok;
     }
-
+    
   protected:
 
     /// The internal map of categories and the names they were registered with.

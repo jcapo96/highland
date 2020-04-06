@@ -18,6 +18,14 @@ CategoryManager::CategoryManager(): ManagerBase("config","CATEG","TrackCategoryD
 
 
 //********************************************************************
+void CategoryManager::AddObjectCategory(const std::string& categ_name, int ntypes, std::string* names, int* codes, int* colors, bool multi, bool noWarning, bool addNOTRUTH, bool addSAND){
+//********************************************************************
+
+  AddCategory(categ_name,ntypes,names,codes,colors,multi,noWarning,addNOTRUTH,addSAND);
+  GetCategory(categ_name).SetIsObjectCategory(true);  
+}
+
+//********************************************************************
 void CategoryManager::AddCategory(const std::string& categ_name, int ntypes, std::string* names, int* codes, int* colors, bool multi, bool noWarning, bool addNOTRUTH, bool addSAND){
 //********************************************************************
 
@@ -181,8 +189,11 @@ void CategoryManager::ResetCurrentCategories(){
       for (unsigned int i=0;i<categ.GetNTypes();i++)
           categ.SetCategoryType(i,false);
     }
+    else if (categ.IsObject())
+      categ.ResetObjectCodes();
     else{
       categ.SetCode(-999,-999);
+
     }
   }
 
