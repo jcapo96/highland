@@ -392,7 +392,7 @@ void baseAnalysis::FillTruthTree(){
         for (unsigned int i=0;i<categ.GetNTypes();i++)
            output().FillVectorVar(categ_index, (int)cat().CheckCategoryType(categ_name,i),i);
       }
-      else output().FillVar(categ_index, cat().GetCode(categ_name));
+      else if (!categ.IsObject()) output().FillVar(categ_index, cat().GetCode(categ_name));
     }
 
     // Fill the tree
