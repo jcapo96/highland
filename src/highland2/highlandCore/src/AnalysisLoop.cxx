@@ -554,6 +554,11 @@ void AnalysisLoop::DefineMicroTrees(){
       ana().output().AddVectorVar(categ_index, categ_name, "I","This is a category variable that can be used to split up a MC histogram into a stack. Use the DumpCategory(\"...\") function for more.", counter_index, "N"+categ_name, categ.GetNTypes());
       counter_index++;
     }
+    else if (categ.IsObject()){
+      ana().output().AddVectorVar(categ_index, categ_name, "I",
+                                  "This is a category variable that can be used to split up a MC histogram into a stack. Use the DumpCategory(\"...\") function for more.",
+                                  categ._counterIndex, categ._counterName, categ._counterSize);
+    }
     else
       ana().output().AddVar(categ_index, categ_name,"I","This is a category variable that can be used to split up a MC histogram into a stack. Use the DumpCategory(\"...\") function for more.");
   }
@@ -745,7 +750,7 @@ void AnalysisLoop::DefineTruthTree(){
       ana().output().AddVectorVar(categ_index, categ_name, "I","This is a category variable that can be used to split up a MC histogram into a stack. Use the DumpCategory(\"...\") function for more.", counter_index, "N"+categ_name, categ.GetNTypes());
       counter_index++;
     }
-    else
+    else if (!categ.IsObject()) 
       ana().output().AddVar(categ_index, categ_name,"I","This is a category variable that can be used to split up a MC histogram into a stack. Use the DumpCategory(\"...\") function for more.");
   }
 
@@ -1151,6 +1156,10 @@ void AnalysisLoop::FillMicroTrees(){
     if (categ.IsMultiType()){
       for (unsigned int i=0;i<categ.GetNTypes();i++)
          ana().output().FillVectorVar(categ_index, (int)ana().cat().CheckCategoryType(categ_name,i),i);
+    }
+    else if (categ.IsObject()){
+      for (UInt_t i=0;i<categ._codes.size();i++)
+        ana().output().FillVectorVarForceIndex(categ_index, categ.GetObjectCode(i),i);
     }
     else ana().output().FillVar(categ_index, ana().cat().GetCode(categ_name));
   }
