@@ -67,7 +67,8 @@ class baseAnalysis: public AnalysisAlgorithm{
   // Return the true vertex from the ToyBox (some ToyBox derived classes could not have that member)
   virtual AnaTrueVertexB* GetTrueVertex() const = 0;
 
- protected:
+  // protected:
+  public:
 
   enum enumStandardMicroTrees_baseAnalysis{
     run = enumStandardMicroTreesLast_AnalysisAlgorithm+1,
