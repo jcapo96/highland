@@ -510,7 +510,13 @@ public :
 
   const std::string& GetCounterName(Int_t counter_index) const {return _tree_vars_all_counters[GetCurrentTree()][counter_index];}
 
-
+  /// Returns the variable index
+  Int_t GetVarIndex(Int_t tree_index, const std::string& var) const {
+    for (UInt_t i=0;i<_tree_vars_all_vars[tree_index].size();i++)
+      if (_tree_vars_all_vars[tree_index][i]==var) return i;
+    return -1;
+  }
+  
   //--------- Operations with counters ------------
 
 
@@ -626,6 +632,7 @@ public :
   void FillVectorVar(Int_t index, Int_t var,              Int_t indx=-1);
   void FillVectorVar(Int_t index, Double_t var,           Int_t indx=-1);
   void FillVectorVar(Int_t index, const std::string& var, Int_t indx=-1);
+  void FillVectorVarForceIndex(Int_t index, Int_t var,   Int_t indx);  // The index is specified regardless of whether this is a variable using a counter variable 
 
   /// Fill a vector variable from array
   void FillVectorVarFromArray(Int_t index, const Double_t    var[], UInt_t size) {for (UInt_t i=0;i<size;i++) FillVectorVar(index,(Double_t)var[i]         ,i);}

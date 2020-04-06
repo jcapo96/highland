@@ -1389,6 +1389,21 @@ void OutputManager::FillVectorVar(Int_t index, Int_t var, Int_t indx){
 }
 
 //********************************************************************
+void OutputManager::FillVectorVarForceIndex(Int_t index, Int_t var, Int_t indx){
+//********************************************************************
+
+  if (!_tree_vars_exist_int_vector[_current_tree][index])  WrongVariableType(index, "Vector", "Int");
+  
+  // fill the variable
+  try {
+    (_tree_vars_int_vector[_current_tree][index])->Fill(indx,var);
+  } catch (const OutOfBounds&) {
+    std::cout << "WARNING: Tried to fill variable " << GetVarName(index) << " outside vector size. Index was: " << indx << std::endl;
+  }
+}
+
+
+//********************************************************************
 void OutputManager::FillVectorVar(Int_t index, Float_t var, Int_t indx){
 //********************************************************************
 
