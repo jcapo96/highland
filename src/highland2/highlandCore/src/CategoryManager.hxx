@@ -79,8 +79,9 @@ class CategoryManager: public ManagerBase {
     /// The array variables should all be ntypes in length.
     void AddCategory(const std::string& name, int ntypes, std::string* names, int* codes, int* colors, bool multi = false, bool noWarning = false, bool addNOTRUTH=true, bool addSAND=true);
 
-
-    void AddObjectCategory(const std::string& name, int ntypes, std::string* names, int* codes, int* colors, bool multi = false, bool noWarning = false, bool addNOTRUTH=true, bool addSAND=true);
+    /// Add a category which is applied to several objects in a single event
+    void AddObjectCategory(const std::string& categ_name, Int_t counter_index, const std::string& counter_name, Int_t counter_size,
+                           int ntypes, std::string* names, int* codes, int* colors, bool multi = false, bool noWarning = false, bool addNOTRUTH=true, bool addSAND=true);
 
     /// Copy an existing Category into another with a  different name
     void CopyCategory(const std::string& categ_name, const std::string& categ_name2);

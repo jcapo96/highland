@@ -127,8 +127,13 @@ class TrackCategoryDefinition{
     // Get an array with all codes for this category
     Int_t* GetCodes(Int_t codes[]);
 
-
-    void SetIsObjectCategory(bool isObject){_isObject=isObject;}
+    // Set the attributes of this category (as ObjectCategory)
+    void SetObjectCategory(Int_t counterIndex, const std::string& counterName, Int_t counterSize) {
+      _isObject=true;
+      _counterIndex= counterIndex;
+      _counterName = counterName;
+      _counterSize = counterSize;
+    }
     bool IsObject(){return _isObject;}
 
     /// Get the code for the actual track in this category.
