@@ -4,8 +4,6 @@
 #include "anaTreeConverter.hxx"
 #include "anaTreeNewConverter.hxx"
 #include "nueAnaTreeConverter.hxx"
-#include "pionTreeConverter.hxx"
-#include "LArSoftTreeConverter.hxx"
 
 #include "baseToyMaker.hxx"
 
@@ -47,12 +45,10 @@ void baseAnalysis::DefineInputConverters(){
 //********************************************************************
 
   // add the different converters
-  input().AddConverter("LArSoftTree",    new LArSoftTreeConverter());
   input().AddConverter("MiniTree",       new HighlandMiniTreeConverter());
   input().AddConverter("anatree",        new anaTreeConverter());
   input().AddConverter("anatree_new",    new anaTreeNewConverter());
   input().AddConverter("nueana",         new nueAnaTreeConverter());
-  input().AddConverter("pionana",        new pionTreeConverter());
 }
 
 //********************************************************************

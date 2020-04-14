@@ -4,7 +4,6 @@
 #include "HighlandMiniTreeConverter.hxx"
 #include "anaTreeConverter.hxx"
 #include "nueAnaTreeConverter.hxx"
-#include "LArSoftTreeConverter.hxx"
 #include "Parameters.hxx"
 //#include "Versioning.hxx"
 #include "GeometryManager.hxx"
@@ -41,7 +40,6 @@ CreateMiniTree::CreateMiniTree(int argc, char *argv[]):SimpleLoopBase(argc, argv
   input().AddConverter("MiniTree",       new HighlandMiniTreeConverter(true));
   input().AddConverter("anatree",        new anaTreeConverter());
   input().AddConverter("nueana",         new nueAnaTreeConverter());
-  input().AddConverter("LArSoft",        new LArSoftTreeConverter());
 
 }
 //********************************************************************
@@ -577,11 +575,12 @@ bool CreateMiniTree::SpillLevelPreselection(){
   if (!static_cast<AnaBeam*>(_spill->Beam)->BeamParticle) return true;
   if (static_cast<AnaBeam*>(_spill->Beam)->BeamParticle->TrueObject) return true;
   
-  double tof =  static_cast<AnaBeam*>(_spill->Beam)->TOF;
+  //  double tof =  static_cast<AnaBeam*>(_spill->Beam)->TOF;
   
-  if (tof > _beamMinTOF && tof < _beamMaxTOF) return true;
-  else return false;
+  //  if (tof > _beamMinTOF && tof < _beamMaxTOF) return true;
+  //  else return false;
 
+  return true;
 }
 
 
