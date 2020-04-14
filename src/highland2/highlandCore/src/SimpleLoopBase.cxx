@@ -302,9 +302,9 @@ void SimpleLoopBase::FillConfigTree(){
 
   SetFillSingleTree(OutputManager::config);
 
-  // The $CMTPATH
-  AddVar(OutputManager::config, SimpleLoopBase::CMTPATH,   "CMTPATH",   "C", "the CMTPATH used to produce the output file");  
-  FillVar(SimpleLoopBase::CMTPATH, (std::string)getenv("CMTPATH") );  
+  // The $HIGHLANDPATH
+  AddVar(OutputManager::config, SimpleLoopBase::HIGHLANDPATH,   "HIGHLANDPATH",   "C", "the HIGHLANDPATH used to produce the output file");  
+  FillVar(SimpleLoopBase::HIGHLANDPATH, (std::string)getenv("HIGHLANDPATH") );  
 
   // The Machine name
   AddVar(OutputManager::config, SimpleLoopBase::HOSTNAME,   "HOSTNAME",   "C", "the machine used to produce the output file");  

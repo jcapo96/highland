@@ -111,7 +111,7 @@ class SimpleLoopBase: public OutputManager {
   enum enumConfigTree_SimpleLoopBase{
     SoftwareVersion=0,
     HOSTNAME,
-    CMTPATH,
+    HIGHLANDPATH,
     INPUTFILE,
     OriginalFile,
     enumConfigTreeLast_SimpleLoopBase
