@@ -6,7 +6,7 @@
 
 // define a constant value for uninitialised parameters
 const Float_t  kFloatUnassigned = -999.;
-const Double_t kDoubleUnassigned = -999.;
+//const Double_t kDoubleUnassigned = -999.;
 //const UInt_t   kUnassigned      = 0xDEADBEEF;
 //const short    kShortUnassigned = 0xFF;
 const Int_t    kIntUnassigned = -999;
@@ -774,27 +774,6 @@ AnaBeam::AnaBeam(){
   POT           = kIntUnassigned;
   Spill         = kIntUnassigned;
   BeamParticle  = NULL;
-
-  BeamTrigger   = kIntUnassigned;
-  TOF           = kDoubleUnassigned;
-  BeamTrackTime = kDoubleUnassigned;
-  BeamMomentum  = kDoubleUnassigned;
-  BeamMomentumInTPC  = kDoubleUnassigned;
-  for (int i=0;i<2;i++){
-    CerenkovStatus[i]   = kIntUnassigned;
-    CerenkovTime[i]     = kDoubleUnassigned;
-    CerenkovPressure[i] = kDoubleUnassigned;
-  }
-
-  nMomenta=kIntUnassigned;
-  nTracks =kIntUnassigned;
-  
-  for (int i=0;i<3;i++){
-    nFibers[i]=kIntUnassigned;
-  }
-
-  PDGs.clear();
-
 }
 
 //********************************************************************
@@ -802,8 +781,7 @@ AnaBeam::~AnaBeam(){
 //********************************************************************
 
   if (BeamParticle)
-    delete BeamParticle;
-  
+    delete BeamParticle;  
 }
 
 //********************************************************************
@@ -811,33 +789,11 @@ AnaBeam::AnaBeam(const AnaBeam& beam):AnaBeamB(beam){
 //********************************************************************
 
   POT           = beam.POT;
-  Spill         = beam.Spill;
+  Spill         = beam.Spill;  
+
   BeamParticle  = NULL;
   if (beam.BeamParticle)
     BeamParticle  = beam.BeamParticle->Clone();
-
-  BeamTrigger   = beam.BeamTrigger;
-  TOF           = beam.TOF;
-  BeamTrackTime = beam.BeamTrackTime;
-  BeamMomentum  = beam.BeamMomentum;
-  BeamMomentumInTPC  = beam.BeamMomentumInTPC;
-  for (int i=0;i<2;i++){
-    CerenkovStatus[i]   = beam.CerenkovStatus[i];
-    CerenkovTime[i]     = beam.CerenkovTime[i];
-    CerenkovPressure[i] = beam.CerenkovPressure[i];
-  }
-
-  nMomenta = beam.nMomenta;
-  nTracks  = beam.nTracks;
-  
-  for (int i=0;i<3;i++){
-    nFibers[i]=beam.nFibers[i];
-  }
-
-  PDGs.clear();
-  for (UInt_t i=0; i<beam.PDGs.size(); i++)
-    PDGs.push_back(beam.PDGs[i]);
-  
 }
 
 //********************************************************************
@@ -847,24 +803,7 @@ void AnaBeam::Print() const{
   std::cout << "-------- AnaBeam --------- " << std::endl;
 
   std::cout << "POT:              " << POT << std::endl;
-  std::cout << "BeamTrigger:      " << BeamTrigger << std::endl;
-  std::cout << "TOF:              " << TOF << std::endl;
-  std::cout << "BeamTrackTime:    " << BeamTrackTime << std::endl;
-  std::cout << "CerenkovStatus:   " << CerenkovStatus[0]   << " " << CerenkovStatus[1]   << std::endl;
-  std::cout << "CerenkovTime:     " << CerenkovTime[0]     << " " << CerenkovTime[1]     << std::endl;
-  std::cout << "CerenkovPressure: " << CerenkovPressure[0] << " " << CerenkovPressure[1] << std::endl;
-  std::cout << "BeamMomentum:     " << BeamMomentum << std::endl;
-  std::cout << "BeamMomentumInTPC:" << BeamMomentumInTPC << std::endl;
-  std::cout << "nFibers(P1,P2,P3):" << nFibers[0] << " " << nFibers[1] << " " << nFibers[2] << std::endl;
-  std::cout << "nMomenta:         " << nMomenta << std::endl;
-  std::cout << "nTracks:          " << nTracks << std::endl;
-
-  std::cout << "PDGs:             ";
-  for (UInt_t i=0;i<PDGs.size();i++) std::cout << PDGs[i] << " ";
-  std::cout << std::endl;
-
 }
-
 
 //********************************************************************
 AnaTrigger::AnaTrigger() {

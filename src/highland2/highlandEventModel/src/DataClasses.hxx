@@ -465,23 +465,6 @@ public:
 
   /// The beam particle
   AnaParticleMomB* BeamParticle;
-
-  /// Other relevant beam info
-  int BeamTrigger;
-  double TOF;
-  int    CerenkovStatus[2];
-  double CerenkovTime[2];
-  double CerenkovPressure[2];
-  double BeamTrackTime;
-  double BeamMomentum;
-  double BeamMomentumInTPC;
-
-  int nFibers[3];
-  size_t nMomenta;  
-  size_t nTracks;  
-  
-  std::vector< int > PDGs;
-
 };
 
 /// Representation of the data quality flags.
