@@ -64,7 +64,7 @@ export ROOT_INCLUDE_PATH=$HIGHLANDPATH/include
 
 export CMAKE_PREFIX_PATH=$HIGHLANDPATH:$ROOTSYS
 
-export HIGHLAND_PACKAGE_HIERARCHY=baseAnalysis:highlandTools:psycheSelections:highlandIO:highlandCorrections:highlandUtils:LArSoftReader:highlandEventModel:highlandCore:psycheIO:psycheDUNEUtils:psycheUtils:psycheEventModel:psycheCore
+export HIGHLAND_PACKAGE_HIERARCHY=baseAnalysis:highlandTools:psycheSelections:highlandIO:highlandCorrections:highlandUtils:highlandEventModel:highlandCore:psycheIO:psycheDUNEUtils:psycheUtils:psycheEventModel:psycheCore
 
 
 #------ set the ROOT folder for every package in highland  ------
