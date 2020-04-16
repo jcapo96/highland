@@ -1960,7 +1960,7 @@ void DrawingToolsBase::DrawToysBase(TH1_h& result, TH1_h& weights, int nx, doubl
 
   // Histogram attributes
   hentries->GetXaxis()->SetTitle("# weighted events");
-  hentries->GetYaxis()->SetTitle("faction of toys");
+  hentries->GetYaxis()->SetTitle("fraction of toys");
   hentries->SetTitle(_title.c_str());
 
   // Draw the legend if requested
