@@ -120,15 +120,8 @@ public:
   /// The purity with which this particle was matched to a reconstructed object.
   Float_t Purity;
 
-
   /// The particle length
   Float_t Length;
-
-  /// The particle length inside the TPC
-  Float_t LengthInTPC;
-  
-  /// The true momentum at the TPC entrance
-  Float_t MomentumInTPC;
    
   /// The bunch in which this true interaction occurred, based on the time of
   /// this true particle Start Position and the bunching used for the reconstructed objects.
@@ -142,7 +135,6 @@ public:
 
   /// Vector of pointers to AnaParticle's associated with this true particle
   std::vector<AnaParticleB*> ReconParticles; //!
-
 
   /// Vector of Daughters TrueParticles
   std::vector<Int_t> Daughters; 
@@ -177,25 +169,6 @@ public:
 
   /// True-reco matching purity
   Float_t TruePur;
-
-  /// Number of hits in each wire plane
-  Int_t NHitsPerPlane[3];
-
-  /// Residual range for each wire in each plane
-  Float_t ResidualRange[3][NMAXHITSPERPLANE];
-
-  /// dEdx for each wire in each plane
-  Float_t dEdx[3][NMAXHITSPERPLANE];
-  Float_t dEdx_corr[3][NMAXHITSPERPLANE];
-
-  /// dQdx for each wire in each plane
-  Float_t dQdx[3][NMAXHITSPERPLANE];  
-  Float_t dQdx_corr[3][NMAXHITSPERPLANE];  
-
-  /// dQdx for each wire in each plane
-  Float_t HitX[3][NMAXHITSPERPLANE]; 
-  Float_t HitY[3][NMAXHITSPERPLANE]; 
-  Float_t HitZ[3][NMAXHITSPERPLANE]; 
  
   /// Average energy deposited in the detector
   Float_t AveragedEdx;
@@ -211,12 +184,6 @@ public:
 
   /// The chi2 value when the track was fitted using a Kalman filter.
   Float_t Chi2;
-
-  /// Particle ID hypothesis used in the fit (if any)
-  Int_t FitPDG;
-  
-  /// PDG of the most probable particle hypothesis used at reconstruction level
-  Int_t ReconPDG[3]; 
    
   /// The bunch of the track, based on the PositionStart.T()
   Int_t Bunch;
@@ -230,22 +197,6 @@ public:
   TVector3 DownstreamHits_Position[2];
   Float_t UpstreamHits_Charge[2];
   Float_t DownstreamHits_Charge[2];
-
-  /// PID variables
-  Float_t PID[3][10];
-
-  Float_t PIDA[3];
-
-  Float_t Chi2Proton;
-  Float_t Chi2ndf;
-
-  Float_t CNNscore[3];
-  
-  /// CALO variables
-  Float_t CALO[3][10];
-  
-  /// Momentum by range for muon and proton hypotheses
-  Float_t RangeMomentum[2];
 
   /// Vector of daugthers particles
   std::vector<AnaRecObjectC*> Daughters;

@@ -53,22 +53,7 @@ AnaParticleE::AnaParticleE(){
 
   NDOF          = kIntUnassigned;
   Chi2          = kFloatUnassigned;
-  FitPDG        = kFloatUnassigned;
   Bunch         = kIntUnassigned;
-
-  for (Int_t i=0;i<3;i++){
-    NHitsPerPlane[i] = kIntUnassigned;
-    for (UInt_t j=0;j<NMAXHITSPERPLANE;j++){
-      dEdx[i][j]=kFloatUnassigned;
-      dQdx[i][j]=kFloatUnassigned;
-      dEdx_corr[i][j]=kFloatUnassigned;
-      dQdx_corr[i][j]=kFloatUnassigned;
-      HitX[i][j]=kFloatUnassigned;
-      HitY[i][j]=kFloatUnassigned;
-      HitZ[i][j]=kFloatUnassigned;
-      ResidualRange[i][j]=kFloatUnassigned;
-    }
-  }  
 
   for (int i=0; i<2; i++) {
     UpstreamHits_Position[i]   = TVector3(kFloatUnassigned, kFloatUnassigned, kFloatUnassigned);
@@ -82,26 +67,6 @@ AnaParticleE::AnaParticleE(){
   ReconVertices.clear();
   anaUtils::ReserveArray(DirectionAtVertex, 3);
   MomentumAtVertex    = kFloatUnassigned;
-
-
-  for (int i=0; i<3; i++) {
-    PIDA[i]=kFloatUnassigned;
-    ReconPDG[i]=kIntUnassigned;
-    for (int j=0; j<10; j++) {
-      PID[i][j]=kFloatUnassigned;
-      CALO[i][j]=kFloatUnassigned;
-    }
-  }
-
-
-  Chi2Proton=kFloatUnassigned;
-  Chi2ndf=kIntUnassigned;
-
-  for (int i=0; i<3; i++)
-    CNNscore[i]=kFloatUnassigned;
-  
-  for (int i=0; i<2; i++)
-    RangeMomentum[i] = kFloatUnassigned;
 
   Daughters.clear();
   
@@ -134,22 +99,7 @@ AnaParticleE::AnaParticleE(const AnaParticleE& part){
 
   NDOF          = part.NDOF;
   Chi2          = part.Chi2;
-  FitPDG        = part.FitPDG;
   Bunch         = part.Bunch;
-
-  for (Int_t i=0;i<3;i++){
-    NHitsPerPlane[i] = part.NHitsPerPlane[i];
-    for (Int_t j=0;j<std::min((Int_t)NMAXHITSPERPLANE,NHitsPerPlane[i]);j++){
-      dEdx[i][j]=part.dEdx[i][j];
-      dQdx[i][j]=part.dQdx[i][j];
-      dEdx_corr[i][j]=part.dEdx_corr[i][j];
-      dQdx_corr[i][j]=part.dQdx_corr[i][j];
-      HitX[i][j]=part.HitX[i][j];
-      HitY[i][j]=part.HitY[i][j];
-      HitZ[i][j]=part.HitZ[i][j];
-      ResidualRange[i][j]=part.ResidualRange[i][j];
-    }
-  }
 
   for (int i=0; i<2; i++) {
     UpstreamHits_Position[i] = part.UpstreamHits_Position[i];
@@ -170,27 +120,6 @@ AnaParticleE::AnaParticleE(const AnaParticleE& part){
   anaUtils::CopyArray(part.DirectionAtVertex, DirectionAtVertex, 3);
   MomentumAtVertex = part.MomentumAtVertex;
 
-
-  for (int i=0; i<3; i++) {
-    PIDA[i]=part.PIDA[i];
-    ReconPDG[i]=part.ReconPDG[i];
-
-    for (int j=0; j<10; j++) {
-      PID[i][j]=part.PID[i][j];
-      CALO[i][j]=part.CALO[i][j];
-    }
-  }
-
-  Chi2Proton = part.Chi2Proton;
-  Chi2ndf    = part.Chi2ndf;
-
-  for (int i=0; i<3; i++)
-    CNNscore[i]=part.CNNscore[i];
-  
-  
-  for (int i=0; i<2; i++)
-    RangeMomentum[i] = part.RangeMomentum[i];
-
   // TODO. Daughters should not be clone since the pointer leaves in the Particle vector
   Daughters.clear();
   for (UInt_t i=0;i<part.Daughters.size();i++){
@@ -210,50 +139,8 @@ void AnaParticleE::Print() const{
   std::cout << "NReconVertices:          " << (int)ReconVertices.size() << std::endl;
   std::cout << "MomentumAtVertex:        " << MomentumAtVertex << std::endl;
   std::cout << "DirectionAtVertex:       " << DirectionAtVertex[0] << " " << DirectionAtVertex[1] << " " << DirectionAtVertex[2] << std::endl;    
-  std::cout << "FitPDG:                  " << FitPDG << std::endl;
   std::cout << "AveragedEdx:             " << AveragedEdx << std::endl;
   std::cout << "AveragedQdx:             " << AveragedQdx << std::endl;
-  
-  std::cout << "PIDA:                    ";
-  for (int i=0;i<3;i++) std::cout << PIDA[i] << " ";
-  std::cout << std::endl;
-
-  std::cout << "ReconPDG:                ";
-  for (int i=0;i<3;i++) std::cout << ReconPDG[i] << " ";
-  std::cout << std::endl;
- 
-  std::cout << "PID[0]:                  ";
-  for (int i=0;i<10;i++) std::cout << PID[0][i] << " ";
-  std::cout << std::endl;
-
-  std::cout << "PID[1]:                  ";
-  for (int i=0;i<10;i++) std::cout << PID[1][i] << " ";
-  std::cout << std::endl;
-
-  std::cout << "PID[2]:                  ";
-  for (int i=0;i<10;i++) std::cout << PID[2][i] << " ";
-  std::cout << std::endl;
-
-  std::cout << "CALO[0]:                  ";
-  for (int i=0;i<10;i++) std::cout << CALO[0][i] << " ";
-  std::cout << std::endl;
-
-  std::cout << "CALO[1]:                  ";
-  for (int i=0;i<10;i++) std::cout << CALO[1][i] << " ";
-  std::cout << std::endl;
-
-
-  std::cout << "CALO[2]:                  ";
-  for (int i=0;i<10;i++) std::cout << CALO[2][i] << " ";
-  std::cout << std::endl;
-
-  std::cout << "Chi2Proton:              " << Chi2Proton << std::endl;
-  std::cout << "Chi2ndf:                 " << Chi2ndf << std::endl;
-
-  std::cout << "CNN score:               " << CNNscore[0] << " " << CNNscore[1] << " " << CNNscore[2] << std::endl;
-  
-  std::cout << "RangeMomentum            " << RangeMomentum[0] << " " << RangeMomentum[1] << std::endl;
-
   std::cout << "#Daughters               " << Daughters.size() << std::endl;
 
 
@@ -395,9 +282,7 @@ AnaTrueParticle::AnaTrueParticle(): AnaTrueParticleB(){
   Bunch         = kIntUnassigned;
   VertexIndex   = kIntUnassigned;
   Length        = kFloatUnassigned;
-  LengthInTPC   = kFloatUnassigned;
-  MomentumInTPC = kFloatUnassigned;
-  
+
   ReconParticles.clear();
   Daughters.clear();
 }
@@ -411,8 +296,6 @@ AnaTrueParticle::AnaTrueParticle(const AnaTrueParticle& truePart):AnaTrueParticl
   Bunch       = truePart.Bunch;
   VertexIndex = truePart.VertexIndex;
   Length      = truePart.Length;
-  LengthInTPC = truePart.LengthInTPC;
-  MomentumInTPC = truePart.MomentumInTPC;
   
   ReconParticles.clear();
 
@@ -437,8 +320,6 @@ void AnaTrueParticle::Print() const{
   std::cout << "NReconParticles: " << (int)ReconParticles.size() << std::endl;
   std::cout << "VertexIndex:     " << VertexIndex << std::endl;
   std::cout << "Length:          " << Length << std::endl;
-  std::cout << "LengthInTPC:     " << LengthInTPC << std::endl;
-  std::cout << "MomentumInTPC:   " << MomentumInTPC << std::endl;
   std::cout << "NDaughters:      " << (int)Daughters.size() << std::endl;
   if (Daughters.size())
     std::cout << "First dau ID:    " << Daughters[0] << std::endl;
