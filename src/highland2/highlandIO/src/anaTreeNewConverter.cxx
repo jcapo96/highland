@@ -738,11 +738,12 @@ void anaTreeNewConverter::FillParticleInfo(std::vector<AnaTrueParticleB*>& trueP
   part->UniqueID  = trkId_pmtrajfit[itrk];
 
   part->NHits = 0;
+  /*
   for (Int_t i=0;i<3;i++){
     part->NHitsPerPlane[i] = ntrkhits_pmtrajfit[itrk][i];
     part->NHits += part->NHitsPerPlane[i];
   }
-  
+  */
   SubDetId::SetDetectorUsed(part->Detector , SubDetId::kSubdet1_1);
 
   part->PositionEnd[0]  = trkstartx_pmtrajfit[itrk];
@@ -764,7 +765,7 @@ void anaTreeNewConverter::FillParticleInfo(std::vector<AnaTrueParticleB*>& trueP
   part->Length = trklen_pmtrajfit[itrk];
 
   part->Momentum = trkmomrange_pmtrajfit[itrk];
-
+  /*
   part->AveragedEdx=0;
   part->AveragedQdx=0;
   Int_t ncontrib=0;
@@ -782,7 +783,7 @@ void anaTreeNewConverter::FillParticleInfo(std::vector<AnaTrueParticleB*>& trueP
 
   part->AveragedEdx /= 1.*ncontrib;
   part->AveragedQdx /= 1.*ncontrib;
-
+  */
 
   /*  
   part->PID[0] = trkpidchimu_pmtrajfit[itrk][0];
