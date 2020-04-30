@@ -959,6 +959,7 @@ void AnaEventInfoB::Print() const{
 
     std::cout << "IsMC:               " << IsMC << std::endl;
     std::cout << "IsSand:             " << IsSand << std::endl;
+    std::cout << "Run:                " << Run << std::endl;
     std::cout << "SubRun:             " << SubRun << std::endl;
     std::cout << "Evt:                " << Event << std::endl;
 }
