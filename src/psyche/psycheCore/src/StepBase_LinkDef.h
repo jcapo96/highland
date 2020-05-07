@@ -1,4 +1,3 @@
-#ifdef __CLING__
+#ifdef __CINT__
 #pragma link C++ class StepBase+;
-#pragma link C++ class StepBase*+;
 #endif
