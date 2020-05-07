@@ -58,9 +58,9 @@ message("Include directories: ${INCLUDE_DIRECTORIES}")
 #------- ROOT Dictionaries -----------------------------
 #-------------------------------------------------------
 
-file(GLOB dict_src ${CMAKE_SOURCE_DIR}/src/*/*/src/*_LinkDef.h)
+file(GLOB dict_src0 ${CMAKE_SOURCE_DIR}/src/*/*/src/*_LinkDef.h)
 
-foreach(file0 ${dict_src})
+foreach(file0 ${dict_src0})
   string(FIND ${file0} "/"          pos_ini REVERSE)
   string(SUBSTRING ${file0} 0      ${pos_ini}  dir)
   string(REPLACE "${dir}/"     "" file2 ${file0})
