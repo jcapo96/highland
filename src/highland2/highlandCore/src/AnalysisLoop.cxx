@@ -15,11 +15,10 @@
 #include "ZeroToyMaker.hxx"
 
 #include <sys/time.h>
+#include <TError.h>
 
 // save all trees every 5000 entries
 const int NENTRIES_TREESAVE=5000;
-
-SelectionManager* _selMan=NULL;
 
 //********************************************************************
 AnalysisLoop::AnalysisLoop(AnalysisAlgorithm* ana, int argc, char *argv[]){
@@ -27,6 +26,9 @@ AnalysisLoop::AnalysisLoop(AnalysisAlgorithm* ana, int argc, char *argv[]){
 
   _ana = ana;
 
+  // Remove root warnings
+  gErrorIgnoreLevel = kError;
+  
   std::string programName = argv[0];
   std::string paramFile = "";
 
@@ -130,7 +132,6 @@ AnalysisLoop::AnalysisLoop(AnalysisAlgorithm* ana, int argc, char *argv[]){
   exit(0);
 #endif
 
-  _selMan = new SelectionManager();
 }
 
 //********************************************************************
