@@ -140,7 +140,8 @@ public:
   std::vector<Int_t> Daughters; 
 };
 
-const UInt_t NMAXHITSPERPLANE = 300;
+const UInt_t NMAXHITSPERPLANE        = 300;
+const UInt_t NMAXHITSPERPLANE_SELTRK = 2500;
 
 /// Extension to AnaParticleB to be used by aggregation
 class AnaParticleE{
