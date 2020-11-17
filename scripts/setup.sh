@@ -31,7 +31,7 @@ elif [[ -e /cvmfs/larsoft.opensciencegrid.org/products ]] ; then
     root_compiler=Linux64bit+3.10-2.17-e19-prof                  
     tbb_compiler=Linux64bit+3.10-2.17-e19-prof
     cmake_compiler=Linux64bit+3.10-2.17
-elif [[ ${HOSTNAME} =~ "Anselmo" ]] ; then
+elif [[ ${HOSTNAME} =~ "portcervera.ific.uv.es" ||  ${HOSTNAME} =~ "Anselmo-Cerveras-MacBook-Pro-II.local" ]]; then
     # environment for Anselmo's laptop
     root_dir=/hep/sw/root-6.12.06/myroot
 else
