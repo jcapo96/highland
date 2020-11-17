@@ -14,7 +14,10 @@ void EventVariationBase::InitializeEvent(const AnaEventC& event, const Selection
   // Delete the SystBox when it exists and create a new one. 
   // TODO: It is probably faster to just reset the arrays
 
-  // Create the box
+  //  if(_systBoxes[0][0][uniqueID]) delete _systBoxes[0][0][uniqueID];
+  //  _systBoxes[0][0][uniqueID]=NULL;
+  
+  // Create the box (only the first time)
   if(!_systBoxes[0][0][uniqueID])
     _systBoxes[0][0][uniqueID] = new SystBoxB();
   
@@ -55,6 +58,9 @@ void EventVariationBase::FillSystBox(const AnaEventC& event, const SelectionBase
   
   // Get the EventBox for the input selection
   EventBoxB* EventBox = event.EventBoxes[sel.GetEventBoxId()];
+
+  // Reset the systematics box
+  box.Reset();
   
   if (nGroups>0){
     Int_t nMaxRecObjects=0;
