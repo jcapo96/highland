@@ -27,6 +27,8 @@ namespace anaUtils{
     /// Get the AnaTrueParticleB in the current spill with the given ID. Return NULL if it can't be found.
     AnaTrueParticleB* GetTrueParticleByID(const AnaEventB& event, int ID);
 
+    /// Get the AnaParticleB in the bunch with the given UniqueID. Return NULL if it can't be found.
+    AnaParticleB* GetParticleByID(const AnaBunchB& bunch, int ID);
 
     /// Merge the two vectors of AnaTrackBs into a single vector, with no duplicated tracks.
     std::vector<AnaTrackB*> MergeUniqueTracks(const std::vector<AnaTrackB*>& tracks1, const std::vector<AnaTrackB*>& tracks2);
