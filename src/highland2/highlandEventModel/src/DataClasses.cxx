@@ -1,7 +1,7 @@
 #define DataClasses_C
 
 #include "DataClasses.hxx"
-#include "BasicUtils.hxx"
+#include "AnalysisUtils.hxx"
 #include "TMath.h"
 
 // define a constant value for uninitialised parameters
@@ -69,6 +69,7 @@ AnaParticleE::AnaParticleE(){
   MomentumAtVertex    = kFloatUnassigned;
 
   Daughters.clear();
+  DaughtersIDs.clear();
   
 }
 
@@ -122,9 +123,14 @@ AnaParticleE::AnaParticleE(const AnaParticleE& part){
 
   // TODO. Daughters should not be clone since the pointer leaves in the Particle vector
   Daughters.clear();
-  for (UInt_t i=0;i<part.Daughters.size();i++){
-    Daughters.push_back(part.Daughters[i]->Clone());
+
+  // Instead a copy of the daughters IDs is made
+  DaughtersIDs.clear();
+  for (UInt_t j=0;j<part.DaughtersIDs.size();j++){
+    DaughtersIDs.push_back(part.DaughtersIDs[j]);
   }
+    
+  
 }
 
 //********************************************************************
@@ -427,6 +433,17 @@ AnaBunch::AnaBunch(const AnaBunch& bunch):AnaBunchB(bunch){
   //AnaBunch::AnaBunch(const AnaBunch& bunch){
 //********************************************************************
 
+
+  // Associate to each particle all daughters (pointers) using the DaughterIDs
+  for (UInt_t i=0;i<Particles.size();i++){
+    AnaParticle* part = static_cast<AnaParticle*>(Particles[i]);
+    for (UInt_t j=0;j<part->DaughtersIDs.size();j++){
+      AnaParticleB* dau = anaUtils::GetParticleByID(*this,part->DaughtersIDs[j]);
+      if (dau) part->Daughters.push_back(dau);
+    }
+  }
+
+  
 /*
     Bunch  = bunch.Bunch;
     Weight = bunch.Weight;
