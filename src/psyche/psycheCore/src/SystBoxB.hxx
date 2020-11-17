@@ -14,6 +14,8 @@ class SystBoxB{
 
   virtual ~SystBoxB();
 
+  void Reset();
+  
   ///---------- Relevant rec objects and true objects for each systematic ------------------
 
   /// Array of Relevant RecObjects for each systematic
