@@ -53,14 +53,20 @@ if [[ -z "$ROOTSYS" ]]; then
     # tell the system where ROOT is
     export ROOTSYS=$root_dir
         echo "hola"    
-    export PATH=$HIGHLANDPATH/bin:$ROOTSYS/bin:$PATH    
-    export DYLD_LIBRARY_PATH=$HIGHLANDPATH/lib:$ROOTSYS/lib:$DYLD_LIBRARY_PATH
-    export   LD_LIBRARY_PATH=$HIGHLANDPATH/lib:$ROOTSYS/lib:$LD_LIBRARY_PATH
-fi
+    export PATH=$ROOTSYS/bin:$PATH    
+    export DYLD_LIBRARY_PATH=$ROOTSYS/lib:$DYLD_LIBRARY_PATH
+    export   LD_LIBRARY_PATH=$ROOTSYS/lib:$LD_LIBRARY_PATH
+
     
-# necessary for root to find headers in dictionaries 
-# (see https://root.cern/doc/v618/release-notes.html#header-location-and-root_generate_dictionary-root_standard_library_package)
-export ROOT_INCLUDE_PATH=$HIGHLANDPATH/include
+    # necessary for root to find headers in dictionaries 
+    # (see https://root.cern/doc/v618/release-notes.html#header-location-and-root_generate_dictionary-root_standard_library_package)
+    export ROOT_INCLUDE_PATH=$HIGHLANDPATH/include
+fi
+
+
+export PATH=$HIGHLANDPATH/bin:$PATH    
+export DYLD_LIBRARY_PATH=$HIGHLANDPATH/lib:$DYLD_LIBRARY_PATH
+export   LD_LIBRARY_PATH=$HIGHLANDPATH/lib:$LD_LIBRARY_PATH
 
 
 export CMAKE_PREFIX_PATH=$HIGHLANDPATH:$ROOTSYS
