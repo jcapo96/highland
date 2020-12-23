@@ -39,24 +39,25 @@ else
     return
 fi
 
-if [[ x$products_dir != x ]] ; then
+if [[ x$products_dir != x ]] && [[ -z "$TBBROOT" ]] ; then
     export gcc_dir=$products_dir/gcc/$gcc_version/$gcc_compiler
     export tbb_dir=$products_dir/tbb/$tbb_version/$tbb_compiler
     export root_dir=$products_dir/root/$root_version/$root_compiler
     export cmake_dir=$products_dir/cmake/$cmake_version/$cmake_compiler
-        
+
     export LD_LIBRARY_PATH=$gcc_dir/lib64:$gcc_dir/lib:$tbb_dir/lib:$LD_LIBRARY_PATH         
     export PATH=$cmake_dir/bin/:$gcc_dir/bin/:$PATH
 fi
 
-
-# tell the system where ROOT is
-export ROOTSYS=$root_dir
-
-export PATH=$HIGHLANDPATH/bin:$ROOTSYS/bin:$PATH    
-export DYLD_LIBRARY_PATH=$HIGHLANDPATH/lib:$ROOTSYS/lib:$DYLD_LIBRARY_PATH
-export   LD_LIBRARY_PATH=$HIGHLANDPATH/lib:$ROOTSYS/lib:$LD_LIBRARY_PATH
-
+if [[ -z "$ROOTSYS" ]]; then
+    # tell the system where ROOT is
+    export ROOTSYS=$root_dir
+        echo "hola"    
+    export PATH=$HIGHLANDPATH/bin:$ROOTSYS/bin:$PATH    
+    export DYLD_LIBRARY_PATH=$HIGHLANDPATH/lib:$ROOTSYS/lib:$DYLD_LIBRARY_PATH
+    export   LD_LIBRARY_PATH=$HIGHLANDPATH/lib:$ROOTSYS/lib:$LD_LIBRARY_PATH
+fi
+    
 # necessary for root to find headers in dictionaries 
 # (see https://root.cern/doc/v618/release-notes.html#header-location-and-root_generate_dictionary-root_standard_library_package)
 export ROOT_INCLUDE_PATH=$HIGHLANDPATH/include
