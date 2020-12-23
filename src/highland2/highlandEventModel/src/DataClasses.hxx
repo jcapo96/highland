@@ -591,7 +591,7 @@ protected:
 
 public:
   /// The trigger flags for this spill.
-  AnaTrigger Trigger;
+  AnaTrigger Trigger; //!
 };
 
 
