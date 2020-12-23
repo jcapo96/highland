@@ -25,7 +25,7 @@ elif [[ -e /cvmfs/larsoft.opensciencegrid.org/products ]] ; then
     gcc_version=v8_2_0         
     root_version=v6_18_04d         
     tbb_version=v2019_3
-    cmake_version=v3_9_6
+    cmake_version=v3_14_3
     
     gcc_compiler=Linux64bit+3.10-2.17
     root_compiler=Linux64bit+3.10-2.17-e19-prof                  
