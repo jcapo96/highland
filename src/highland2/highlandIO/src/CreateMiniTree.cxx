@@ -37,7 +37,7 @@ CreateMiniTree::CreateMiniTree(int argc, char *argv[]):SimpleLoopBase(argc, argv
 
   // add the different converters
   //  input().AddConverter("FlatTree",       new FlatTreeConverter(true));
-  input().AddConverter("MiniTree",       new HighlandMiniTreeConverter(true));
+  input().AddConverter("MiniTree",       new HighlandMiniTreeConverter("MiniTree",true));
   input().AddConverter("anatree",        new anaTreeConverter());
   input().AddConverter("nueana",         new nueAnaTreeConverter());
 

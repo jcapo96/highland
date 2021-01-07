@@ -15,7 +15,7 @@
 class MiniTreeConverter: public InputConverter{
 
  public:
-  MiniTreeConverter(bool readRooTrackerVtx=false);
+  MiniTreeConverter(const std::string& tree_path="MiniTree", bool readRooTrackerVtx=false);
   virtual ~MiniTreeConverter();
 
   virtual bool Initialize();

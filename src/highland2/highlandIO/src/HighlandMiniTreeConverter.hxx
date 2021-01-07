@@ -9,7 +9,7 @@
 class HighlandMiniTreeConverter: public MiniTreeConverter{
 
  public:
-  HighlandMiniTreeConverter(bool readRooTrackerVtx=false):MiniTreeConverter(readRooTrackerVtx){}
+  HighlandMiniTreeConverter(const std::string& tree_path="MiniTree", bool readRooTrackerVtx=false):MiniTreeConverter(tree_path, readRooTrackerVtx){}
   virtual ~HighlandMiniTreeConverter(){}
 
   // Create the appropriate spill instance

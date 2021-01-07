@@ -9,7 +9,7 @@
 AnaSpillC* RawSpillC=NULL;
 
 //********************************************************************
-MiniTreeConverter::MiniTreeConverter(bool readRooTrackerVtx):InputConverter("MiniTree"){
+MiniTreeConverter::MiniTreeConverter(const std::string& tree_path, bool readRooTrackerVtx):InputConverter(tree_path){
 //********************************************************************
 
   // Use corrected values or raw values
