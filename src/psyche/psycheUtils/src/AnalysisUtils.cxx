@@ -36,7 +36,7 @@ AnaTrueParticleB* anaUtils::GetTrueParticleByID(const AnaEventB& event, int ID) 
 AnaParticleB* anaUtils::GetParticleByID(const AnaBunchB& bunch, int ID) {
   //********************************************************************
 
-  for (int i = 0; i < bunch.Particles.size(); i++) {
+  for (UInt_t i = 0; i < bunch.Particles.size(); i++) {
     if (bunch.Particles[i]->UniqueID == ID) {
       return bunch.Particles[i];
     }
