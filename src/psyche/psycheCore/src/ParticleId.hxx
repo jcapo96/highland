@@ -30,7 +30,8 @@ namespace ParticleId {
              kRho0PDG = 113, kRhoZeroPDG = kRho0PDG,
              kSigmaPosPDG = 3222, kSigmaPlusPDG=kSigmaPosPDG,
              kSigmaNegPDG = 3112, kSigmaMinusPDG=kSigmaNegPDG,
-             kSigma0PDG = 3212, kSigmaZeroPDG=kSigma0PDG
+             kSigma0PDG = 3212, kSigmaZeroPDG=kSigma0PDG,
+             kDeuteronPDG=1000010020
         };
 
 
@@ -72,6 +73,7 @@ namespace ParticleId {
              kSigmaPos, kSigmaPlus=kSigmaPos,
              kSigmaNeg, kSigmaMinus=kSigmaNeg,
              kSigma0, kSigmaZero=kSigma0,
+             kDeuteron,
              kLast // used to give the size to AnaTrueVertex::NPrimaryParticle array and to loop over this enum
         };
 
