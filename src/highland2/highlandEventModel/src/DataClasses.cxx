@@ -121,10 +121,13 @@ AnaParticleE::AnaParticleE(const AnaParticleE& part){
   anaUtils::CopyArray(part.DirectionAtVertex, DirectionAtVertex, 3);
   MomentumAtVertex = part.MomentumAtVertex;
 
-  // TODO. Daughters should not be clone since the pointer leaves in the Particle vector
+  // copy daughters
   Daughters.clear();
+  for(UInt_t j = 0; j < part.Daughters.size(); j++){
+    Daughters.push_back(part.Daughters.at(j));
+  }
 
-  // Instead a copy of the daughters IDs is made
+  // and daughters IDs
   DaughtersIDs.clear();
   for (UInt_t j=0;j<part.DaughtersIDs.size();j++){
     DaughtersIDs.push_back(part.DaughtersIDs[j]);
