@@ -200,7 +200,7 @@ public:
   Float_t DownstreamHits_Charge[2];
 
   /// Vector of daugthers particles
-  std::vector<AnaRecObjectC*> Daughters;
+  std::vector<AnaRecObjectC*> Daughters;  //!
   std::vector<UInt_t> DaughtersIDs;
   
   /// The pointer to the most primary AnaVertexB (global vertex) associated with this track
