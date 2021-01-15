@@ -510,6 +510,26 @@ void AnaSpill::RedoLinks(){
   for (UInt_t i=0;i<TrueParticles.size();i++)
     (static_cast<AnaTrueParticle*>(TrueParticles[i]))->ReconParticles.clear();
 
+
+  // Fill the vector of pointers for the Daugthers of each particle using the IDs
+
+  std::vector<AnaBunchC*> allBunches = Bunches;
+  if (OutOfBunch) allBunches.push_back(OutOfBunch);
+  
+  for (UInt_t i=0;i<allBunches.size();i++){
+    AnaBunchB* bunch = static_cast<AnaBunchB*>(allBunches[i]);
+    
+    for (UInt_t j=0;j<bunch->Particles.size();j++){
+      AnaParticle* part = static_cast<AnaParticle*>(bunch->Particles[j]);
+
+      part->Daughters.clear();
+      for (UInt_t k=0;k<part->DaughtersIDs.size();k++){
+        AnaParticleB* dau = anaUtils::GetParticleByID(*bunch, part->DaughtersIDs[k]);
+        if (dau)  part->Daughters.push_back(dau);
+      }      
+    }
+  }
+  
   // Redo the links
   AnaSpillB::RedoLinks();
 }
