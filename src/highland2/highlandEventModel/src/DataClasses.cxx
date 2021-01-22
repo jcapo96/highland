@@ -121,16 +121,17 @@ AnaParticleE::AnaParticleE(const AnaParticleE& part){
   anaUtils::CopyArray(part.DirectionAtVertex, DirectionAtVertex, 3);
   MomentumAtVertex = part.MomentumAtVertex;
 
-  // TODO. Daughters should not be clone since the pointer leaves in the Particle vector
+
+  // Daughters should not be clone since the pointer leaves in the Particle vector
+  // This vector is filled in AnaBunch, using te IDS
   Daughters.clear();
 
+  
   // Instead a copy of the daughters IDs is made
   DaughtersIDs.clear();
   for (UInt_t j=0;j<part.DaughtersIDs.size();j++){
     DaughtersIDs.push_back(part.DaughtersIDs[j]);
   }
-    
-  
 }
 
 //********************************************************************
@@ -439,7 +440,7 @@ AnaBunch::AnaBunch(const AnaBunch& bunch):AnaBunchB(bunch){
     AnaParticle* part = static_cast<AnaParticle*>(Particles[i]);
     for (UInt_t j=0;j<part->DaughtersIDs.size();j++){
       AnaParticleB* dau = anaUtils::GetParticleByID(*this,part->DaughtersIDs[j]);
-      if (dau) part->Daughters.push_back(dau);
+      if (dau) part->Daughters.push_back(dau);      
     }
   }
 
@@ -595,6 +596,15 @@ AnaEvent::AnaEvent(const AnaSpill& spill, const AnaBunch& bunch):AnaEventB(spill
 //*****************************************************************************
 
   Trigger = spill.Trigger;
+
+  // Fill de Daugthers vector in eac particle using IDs
+  for (Int_t i=0;i<nParticles;i++){
+    AnaParticle* part = static_cast<AnaParticle*>(Particles[i]);
+    for (UInt_t j=0;j<part->DaughtersIDs.size();j++){
+      AnaParticleB* dau = anaUtils::GetParticleByID(*this,part->DaughtersIDs[j]);
+      if (dau) part->Daughters.push_back(dau);      
+    }
+  }  
 }
 
 //********************************************************************
