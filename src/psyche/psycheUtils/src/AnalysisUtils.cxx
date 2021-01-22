@@ -45,6 +45,18 @@ AnaParticleB* anaUtils::GetParticleByID(const AnaBunchB& bunch, int ID) {
   return NULL;
 }
 
+//********************************************************************
+AnaParticleB* anaUtils::GetParticleByID(const AnaEventB& event, int ID) {
+  //********************************************************************
+
+  for (UInt_t i = 0; i < event.nParticles; i++) {
+    if (event.Particles[i]->UniqueID == ID) {
+      return event.Particles[i];
+    }
+  }
+
+  return NULL;
+}
 
 //**************************************************
 std::vector<AnaTrackB*> anaUtils::MergeUniqueTracks(const std::vector<AnaTrackB*>& tracks1, const std::vector<AnaTrackB*>& tracks2) {
