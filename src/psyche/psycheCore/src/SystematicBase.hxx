@@ -106,9 +106,16 @@ public:
   /// index
   /// By default is empty
   virtual void Initialize(){}
+
+  /// Add a daughter to tis systematic
+  void AddDaughter(SystematicBase* dau){_daughters.push_back(dau);}
+
   
 protected:
 
+  /// The daugthers of this systematic
+  std::vector<SystematicBase*> _daughters;
+  
   /// The name of this systematic.
   std::string _name;
 

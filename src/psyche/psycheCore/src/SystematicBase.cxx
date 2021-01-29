@@ -12,6 +12,8 @@ SystematicBase::SystematicBase() {
   _PDF = kGaussian;
   _enabled = false;
   _systBoxes=NULL;
+
+  _daughters.clear();
 }
 
 //***********************************************************
@@ -39,6 +41,8 @@ std::string SystematicBase::ConvertType() {
     return "flux";
   else
     return "unknown";
+
+  _daughters.clear();
 }
 
 //***********************************************************
