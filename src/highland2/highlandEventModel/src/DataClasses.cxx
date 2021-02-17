@@ -436,6 +436,7 @@ AnaBunch::AnaBunch(const AnaBunch& bunch):AnaBunchB(bunch){
   // Associate to each particle all daughters (pointers) using the DaughterIDs
   for (UInt_t i=0;i<Particles.size();i++){
     AnaParticle* part = static_cast<AnaParticle*>(Particles[i]);
+    part->Daughters.clear();
     for (UInt_t j=0;j<part->DaughtersIDs.size();j++){
       AnaParticleB* dau = anaUtils::GetParticleByID(*this,part->DaughtersIDs[j]);
       if (dau) part->Daughters.push_back(dau);      
@@ -598,6 +599,7 @@ AnaEvent::AnaEvent(const AnaSpill& spill, const AnaBunch& bunch):AnaEventB(spill
   // Fill de Daugthers vector in eac particle using IDs
   for (Int_t i=0;i<nParticles;i++){
     AnaParticle* part = static_cast<AnaParticle*>(Particles[i]);
+    part->Daughters.clear();
     for (UInt_t j=0;j<part->DaughtersIDs.size();j++){
       AnaParticleB* dau = anaUtils::GetParticleByID(*this,part->DaughtersIDs[j]);
       if (dau) part->Daughters.push_back(dau);      
