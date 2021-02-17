@@ -960,6 +960,13 @@ public:
 #define AddVarMaxSize4MD(out, name, doc, count, size)  out.AddMatrixVar(name,#name,"D",doc,count,#count,-size,4);
 
 
+#define AddVar3DMF(out, name, doc, count, size1, size2, size3)  out.Add3DMatrixVar(name,#name,"F",doc,count,#count,size1,size2,size3);
+
+#define AddVar3D3MF(out, name, doc, count, size1, size2)  out.Add3DMatrixVar(name,#name,"F",doc,count,#count,size1,size2,3);
+
+#define AddVar3D4MF(out, name, doc, count, size1, size2)  out.Add3DMatrixVar(name,#name,"F",doc,count,#count,size1,size2,4);
+
+
 #define AddToyVarF(out, name, doc)  out.AddToyVar(name,#name,"F",doc);
 #define AddToyVarI(out, name, doc)  out.AddToyVar(name,#name,"I",doc);
 #define AddToyVarC(out, name, doc)  out.AddToyVar(name,#name,"C",doc);
