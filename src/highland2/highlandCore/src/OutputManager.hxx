@@ -977,6 +977,10 @@ public:
 #define AddToyVarVI(out, name, doc, size)  out.AddToyVectorVar(name,#name,"I",doc,size);
 #define AddToyVarVD(out, name, doc, size)  out.AddToyVectorVar(name,#name,"D",doc,size);
 
+#define AddToyVarMF(out, name, doc, size1,size2)  out.AddToyMatrixVar(name,#name,"F",doc,size1,size2);
+#define AddToyVarMI(out, name, doc, size1,size2)  out.AddToyMatrixVar(name,#name,"I",doc,size1,size2);
+#define AddToyVarMD(out, name, doc, size1,size2)  out.AddToyMatrixVar(name,#name,"D",doc,size1,size2);
+
 
 #define AddTree(out, name, tree)  out.AddTreeWithName(name,#name,tree);
 
