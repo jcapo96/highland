@@ -961,6 +961,7 @@ public:
 
 
 #define AddVar3DMF(out, name, doc, count, size1, size2, size3)  out.Add3DMatrixVar(name,#name,"F",doc,count,#count,size1,size2,size3);
+#define AddVar3DMI(out, name, doc, count, size1, size2, size3)  out.Add3DMatrixVar(name,#name,"I",doc,count,#count,size1,size2,size3);
 
 #define AddVar3D3MF(out, name, doc, count, size1, size2)  out.Add3DMatrixVar(name,#name,"F",doc,count,#count,size1,size2,3);
 
