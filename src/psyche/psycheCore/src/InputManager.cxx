@@ -203,6 +203,9 @@ bool InputManager::LoadSpill(Long64_t& entry){
     return false;
   }
 
+  // Make sure read spill appears as not cloned
+  SpillToRead->isClone = false;
+
   // If the spill is succesfully read the previous successfully read spill must be deleted
   DeleteSpill();
 
