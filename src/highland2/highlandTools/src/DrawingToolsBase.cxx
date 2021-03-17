@@ -3201,9 +3201,15 @@ void DrawingToolsBase::PrintPurities(TTree* tree, const std::string& categ,  con
   TH1_h *ht = new TH1_h("temp"," ",10,0.,10.);
 
   std::string cut1 = FormatCut(cut);
-  if (tree->FindLeaf("toy_ref"))
-    cut1 = cut1 + " && toy_index == toy_ref";
-
+  // TODO. this will not work when plotting some object categories with several toys
+  if (tree->FindLeaf("toy_ref")){
+    int NTOYS = drawUtils::GetNToys(tree);
+    if (NTOYS>1)
+      cut1 = cut1 + " && toy_index == toy_ref";
+    else
+      cut1 = cut1 + " && toy_index[0] == toy_ref";
+  }    
+  
   //  std::string cut1w = "("+cut1+")"+w;
   std::string cut1w = weightTools::ApplyWeights(tree,cut,"");
 
