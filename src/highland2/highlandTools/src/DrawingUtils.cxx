@@ -347,6 +347,7 @@ void drawUtils::BuildOptions(){
   drawUtils::AddOption("NWEi",      "Exclude the specified (ith) external weight(s) (\"NWE0 NWE1 ... \")");
   drawUtils::AddOption("NOEXTW",    "Don't apply external weights");
   drawUtils::AddOption("EFFDEF",    "Use Default tree for efficiencies");
+  drawUtils::AddOption("CATNAME",   "Use category name as legend title");
   //! [DrawingToolsOptions]
 }
 

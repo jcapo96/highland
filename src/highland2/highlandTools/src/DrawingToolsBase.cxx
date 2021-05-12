@@ -2236,7 +2236,9 @@ void DrawingToolsBase::DrawHistoStack(HistoStack* hs, const std::string& categ, 
       drawUtils::AddLegendEntry(_legends.back(), hs->GetTotal1D(), leg, "l");
     else
       hs->FillLegend(_legends.back());
-
+    
+    if (drawUtils::CheckOption(uopt,"CATNAME"))
+      _legends.back()->SetHeader(categ.c_str(),"C");
     _legends.back()->Draw();
   }
   
