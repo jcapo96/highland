@@ -35,7 +35,7 @@ public :
     else return _confs[index];
   }
 
-  /// return the configuration with a given index
+  /// return the configuration with a given name
   ConfigurationBase* GetConfiguration(const std::string& conf){
     return GetConfiguration(GetConfigurationIndex(conf));
   }
