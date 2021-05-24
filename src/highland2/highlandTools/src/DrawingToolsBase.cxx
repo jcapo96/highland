@@ -3304,13 +3304,6 @@ void DrawingToolsBase::ChangeCategoryColor(const std::string& categ_name, int co
   // Read the categories from the config tree
   ReadCategories(_config_file);
 
-  bool multi = false;
-  bool noWarning = false;
-
-  // don't add automatic categories
-  bool addNOTRUTH=false;
-  bool addSAND=false;
-
   // get the category that is beingh changed
   if(!cat().HasCategory(categ_name)){
     std::cout << "Category " << categ_name << " does not exist!!!!" << std::endl;
