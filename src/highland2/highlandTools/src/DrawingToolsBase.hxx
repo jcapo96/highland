@@ -761,6 +761,8 @@ public :
   /// * colors is an array of length ntypes of the colour to plot each option with.
   void ChangeCategory(const std::string& categ_name, int ntypes, std::string* names, int* codes, int* colors);
 
+  void ChangeCategoryColor(const std::string& categ_name, int code, int color);
+
   /// Check whether a category has been defined
   bool HasCategory(const std::string& categ_name);
 

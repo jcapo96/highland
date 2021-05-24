@@ -3298,6 +3298,43 @@ void DrawingToolsBase::ChangeCategory(const std::string& categ_name, int ntypes,
 }
 
 //********************************************************************
+void DrawingToolsBase::ChangeCategoryColor(const std::string& categ_name, int code, int color){
+//********************************************************************
+
+  // Read the categories from the config tree
+  ReadCategories(_config_file);
+
+  bool multi = false;
+  bool noWarning = false;
+
+  // don't add automatic categories
+  bool addNOTRUTH=false;
+  bool addSAND=false;
+
+  // get the category that is beingh changed
+  if(!cat().HasCategory(categ_name)){
+    std::cout << "Category " << categ_name << " does not exist!!!!" << std::endl;
+    return;
+  }
+  TrackCategoryDefinition& categ = cat().GetCategory(categ_name);
+
+  // loop over types
+  bool found = false;
+  for(UInt_t i=0;i<categ.GetNTypes();i++){
+    if(categ._types[i]._code == code){
+      found = true;
+      categ._types[i]._color = color;
+      break;
+    }
+  }
+
+  if(!found){
+    std::cout << "Category " << categ_name << " has no code " << code << "!!!!" << std::endl;
+    return;
+  }  
+}
+
+//********************************************************************
 bool DrawingToolsBase::HasCategory(const std::string& categ){
 //********************************************************************
 
