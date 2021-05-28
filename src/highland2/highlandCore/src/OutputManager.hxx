@@ -649,6 +649,7 @@ public :
   void FillMatrixVar(Int_t index, Float_t var,  Int_t indx1, Int_t indx2);
   void FillMatrixVar(Int_t index, Int_t var,    Int_t indx1, Int_t indx2);
   void FillMatrixVar(Int_t index, Double_t var, Int_t indx1, Int_t indx2);
+  void FillMatrixVarForceIndex(Int_t index, Int_t var, Int_t indx1, Int_t indx2);  // The index is specified regardless of whether this is a variable using a counter variable
 
   /// Fill a matrix variable from array
   void FillMatrixVarFromArray(Int_t index, const Double_t var[], Int_t indx1, UInt_t size) {for (UInt_t i=0;i<size;i++) FillMatrixVar(index,(Double_t)var[i],indx1,i);}
@@ -669,6 +670,7 @@ public :
   void Fill3DMatrixVar(Int_t index, Float_t var,  Int_t indx1, Int_t indx2, Int_t indx3);
   void Fill3DMatrixVar(Int_t index, Int_t var,    Int_t indx1, Int_t indx2, Int_t indx3);
   void Fill3DMatrixVar(Int_t index, Double_t var, Int_t indx1, Int_t indx2, Int_t indx3);
+  void Fill3DMatrixVarForceIndex(Int_t index, Int_t var, Int_t indx1, Int_t indx2, Int_t indx3);  // The index is specified regardless of whether this is a variable using a counter variable
 
   /// Fill a 3D matrix variable from array
   void Fill3DMatrixVarFromArray(Int_t index, const Double_t var[], Int_t indx1, Int_t indx2, UInt_t size) {for (UInt_t i=0;i<size;i++) Fill3DMatrixVar(index,(Double_t)var[i],indx1,indx2,i);}

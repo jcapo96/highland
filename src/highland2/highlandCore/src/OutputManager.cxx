@@ -1468,6 +1468,20 @@ void OutputManager::FillMatrixVar(Int_t index, Int_t var, Int_t indx1, Int_t ind
 }
 
 //********************************************************************
+void OutputManager::FillMatrixVarForceIndex(Int_t index, Int_t var, Int_t indx1, Int_t indx2){
+//********************************************************************
+
+  if (!_tree_vars_exist_int_matrix[_current_tree][index])  WrongVariableType(index, "Matrix", "Int");
+  
+  // fill the variable
+  try {
+    (_tree_vars_int_matrix[_current_tree][index])->Fill(indx1,indx2,var);
+  } catch (const OutOfBounds&) {
+    std::cout << "WARNING: Tried to fill variable " << GetVarName(index) << " outside matrix size. Indeces were: " << indx1 << ", " << indx2 << std::endl;
+  }
+}
+
+//********************************************************************
 void OutputManager::FillMatrixVar(Int_t index, Float_t var, Int_t indx1, Int_t indx2){
 //********************************************************************
 
@@ -1512,6 +1526,20 @@ void OutputManager::Fill3DMatrixVar(Int_t index, Int_t var, Int_t indx1, Int_t i
     (_tree_vars_int_3Dmatrix[_current_tree][index])->Fill(indx1,indx2,indx3,var);
   } catch (const OutOfBounds&) {
     std::cout << "WARNING: Tried to fill variable " << GetVarName(index) << " outside 3D matrix size. Indices were: " << indx1 << ", " << indx2 << ", " << indx3 << std::endl;
+  }
+}
+
+//********************************************************************
+void OutputManager::Fill3DMatrixVarForceIndex(Int_t index, Int_t var, Int_t indx1, Int_t indx2, Int_t indx3){
+//********************************************************************
+
+  if (!_tree_vars_exist_int_3Dmatrix[_current_tree][index])  WrongVariableType(index, "Matrix", "Int");
+  
+  // fill the variable
+  try {
+    (_tree_vars_int_3Dmatrix[_current_tree][index])->Fill(indx1,indx2,indx3,var);
+  } catch (const OutOfBounds&) {
+    std::cout << "WARNING: Tried to fill variable " << GetVarName(index) << " outside 3Dmatrix size. Indeces were: " << indx1 << ", " << indx2 << ", " << indx3 << std::endl;
   }
 }
 
