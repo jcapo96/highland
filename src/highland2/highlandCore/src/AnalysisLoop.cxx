@@ -556,9 +556,24 @@ void AnalysisLoop::DefineMicroTrees(){
       counter_index++;
     }
     else if (categ.IsObject()){
-      ana().output().AddVectorVar(categ_index, categ_name, "I",
-                                  "This is a category variable that can be used to split up a MC histogram into a stack. Use the DumpCategory(\"...\") function for more.",
-                                  categ._counterIndex, categ._counterName, categ._counterSize);
+      if(categ._objectOrder == 1){
+	ana().output().AddVectorVar(categ_index, categ_name, "I",
+				    "This is a category variable that can be used to split up a MC histogram into a stack. Use the DumpCategory(\"...\") function for more.",
+				    categ._counterIndex, categ._counterName, categ._counterSize1);
+      }
+      else if(categ._objectOrder == 2){
+	ana().output().AddMatrixVar(categ_index, categ_name, "I",
+				    "This is a category variable that can be used to split up a MC histogram into a stack. Use the DumpCategory(\"...\") function for more.",
+				    categ._counterIndex, categ._counterName, categ._counterSize1, categ._counterSize2);
+      }
+
+      else if(categ._objectOrder == 3){
+	ana().output().Add3DMatrixVar(categ_index, categ_name, "I",
+				      "This is a category variable that can be used to split up a MC histogram into a stack. Use the DumpCategory(\"...\") function for more.",
+				      categ._counterIndex, categ._counterName, categ._counterSize1, categ._counterSize2, categ._counterSize3);
+      }
+      
+      else std::cout << "object order (" << categ._objectOrder << ") exceeds maximum order suported (3)" << std::endl;
     }
     else
       ana().output().AddVar(categ_index, categ_name,"I","This is a category variable that can be used to split up a MC histogram into a stack. Use the DumpCategory(\"...\") function for more.");
@@ -957,7 +972,7 @@ void AnalysisLoop::Loop(int nmax,int imin){
   //--------- Loop over entries in the tree ----------------------------------
   _entry=_entry_imin;
   while (_entry<_entry_imax) {
-
+  
     // Initialize clock
     timeval tim;
     gettimeofday(&tim, NULL);
@@ -976,7 +991,7 @@ void AnalysisLoop::Loop(int nmax,int imin){
     double t1=tim.tv_sec+(tim.tv_usec/1000000.0);
 
     delta_t[0] += t1-t0;
-
+    
     //---- For each Spill loop over Bunches ----
     for (unsigned int ibunch=0;ibunch<ana().input().GetSpill().Bunches.size();ibunch++){
       gettimeofday(&tim, NULL);
@@ -991,7 +1006,7 @@ void AnalysisLoop::Loop(int nmax,int imin){
 
       delta_t[1] += t3-t2;
 
-
+      
       //---- For each bunch loop over configurations ----     
       for (std::vector<ConfigurationBase*>::iterator it= ana().conf().GetConfigurations().begin();it!=ana().conf().GetConfigurations().end();it++){
       	ConfigurationBase* conf = *it;
@@ -1010,7 +1025,7 @@ void AnalysisLoop::Loop(int nmax,int imin){
         delta_t[2] += t5-t4;
         
         _conf_passed=false;
-        
+	  
         //---- For each configuration loop over toys --------
         for (int n=0;n<conf->GetNToys();n++){
           
@@ -1027,7 +1042,7 @@ void AnalysisLoop::Loop(int nmax,int imin){
           delta_t[3] += t7-t6;
 
           //---- For each toy loop over selections --------
-          for (std::vector<SelectionBase*>::iterator sit= ana().sel().GetSelections().begin();sit!=ana().sel().GetSelections().end();sit++){
+	  for (std::vector<SelectionBase*>::iterator sit= ana().sel().GetSelections().begin();sit!=ana().sel().GetSelections().end();sit++){
             SelectionBase& selec = **sit;
             if (!selec.IsEnabled()) continue;                            
             gettimeofday(&tim, NULL);
@@ -1055,8 +1070,8 @@ void AnalysisLoop::Loop(int nmax,int imin){
 
             delta_t[6] += t11-t10;
             if (_toy_passed) _conf_passed=true;            
-          }
-
+	  }
+	  
           gettimeofday(&tim, NULL);
           double t12=tim.tv_sec+(tim.tv_usec/1000000.0);
 
@@ -1067,7 +1082,7 @@ void AnalysisLoop::Loop(int nmax,int imin){
           
           delta_t[7] += t13-t12;
           
-        }
+	}
         
         gettimeofday(&tim, NULL);
         double t14=tim.tv_sec+(tim.tv_usec/1000000.0);
@@ -1078,7 +1093,7 @@ void AnalysisLoop::Loop(int nmax,int imin){
         double t15=tim.tv_sec+(tim.tv_usec/1000000.0);
         
         delta_t[8] += t15-t14;
-      }      
+      }
       gettimeofday(&tim, NULL);
       double t16=tim.tv_sec+(tim.tv_usec/1000000.0);
 
@@ -1159,8 +1174,26 @@ void AnalysisLoop::FillMicroTrees(){
          ana().output().FillVectorVar(categ_index, (int)ana().cat().CheckCategoryType(categ_name,i),i);
     }
     else if (categ.IsObject()){
-      for (UInt_t i=0;i<categ._codes.size();i++)
-        ana().output().FillVectorVarForceIndex(categ_index, categ.GetObjectCode(i),i);
+      if(categ._objectOrder == 1){
+	for (UInt_t i=0;i<categ._codesOrder1.size();i++)
+	  ana().output().FillVectorVarForceIndex(categ_index, categ.GetObjectCode(categ._objectOrder,i),i);
+      }
+      else if(categ._objectOrder == 2){
+	for (UInt_t i=0;i<categ._codesOrder2.size();i++){
+	  for (UInt_t j=0;j<categ._codesOrder2.at(i).size();j++){
+	    ana().output().FillMatrixVarForceIndex(categ_index, categ.GetObjectCode(categ._objectOrder,i,j),i,j);
+	  }
+	}
+      }
+      else if(categ._objectOrder == 3){
+	for (UInt_t i=0;i<categ._codesOrder3.size();i++){
+	  for (UInt_t j=0;j<categ._codesOrder3.at(i).size();j++){
+	    for (UInt_t k=0;k<categ._codesOrder3.at(i).at(j).size();k++){
+	      ana().output().Fill3DMatrixVarForceIndex(categ_index, categ.GetObjectCode(categ._objectOrder,i,j,k),i,j,k);
+	    }
+	  }
+	}
+      }
     }
     else ana().output().FillVar(categ_index, ana().cat().GetCode(categ_name));
   }
