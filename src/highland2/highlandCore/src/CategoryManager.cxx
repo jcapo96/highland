@@ -17,12 +17,14 @@ CategoryManager::CategoryManager(): ManagerBase("config","CATEG","TrackCategoryD
 }
 
 //********************************************************************
-void CategoryManager::AddObjectCategory(const std::string& categ_name, Int_t counter_index, const std::string& counter_name, Int_t counter_size, 
-                                        int ntypes, std::string* names, int* codes, int* colors, bool multi, bool noWarning, bool addNOTRUTH, bool addSAND){
+void CategoryManager::AddObjectCategory(const std::string& categ_name, Int_t counter_index, const std::string& counter_name,
+                                        int ntypes, std::string* names, int* codes, int* colors, 
+					Int_t object_order, Int_t counter_size1, Int_t counter_size2, Int_t counter_size3, 
+					bool multi, bool noWarning, bool addNOTRUTH, bool addSAND){
 //********************************************************************
 
   AddCategory(categ_name,ntypes,names,codes,colors,multi,noWarning,addNOTRUTH,addSAND);
-  GetCategory(categ_name).SetObjectCategory(counter_index, counter_name, counter_size);  
+  GetCategory(categ_name).SetObjectCategory(object_order, counter_index, counter_name, counter_size1, counter_size2, counter_size3);  
 }
 
 //********************************************************************

@@ -80,8 +80,10 @@ class CategoryManager: public ManagerBase {
     void AddCategory(const std::string& name, int ntypes, std::string* names, int* codes, int* colors, bool multi = false, bool noWarning = false, bool addNOTRUTH=true, bool addSAND=true);
 
     /// Add a category which is applied to several objects in a single event
-    void AddObjectCategory(const std::string& categ_name, Int_t counter_index, const std::string& counter_name, Int_t counter_size,
-                           int ntypes, std::string* names, int* codes, int* colors, bool multi = false, bool noWarning = false, bool addNOTRUTH=true, bool addSAND=true);
+    void AddObjectCategory(const std::string& categ_name, Int_t counter_index, const std::string& counter_name, 
+                           int ntypes, std::string* names, int* codes, int* colors,
+			   Int_t object_order, Int_t counter_size1, Int_t counter_size2 = 0, Int_t counter_size3 = 0,
+			   bool multi = false, bool noWarning = false, bool addNOTRUTH=true, bool addSAND=true);
 
     /// Copy an existing Category into another with a  different name
     void CopyCategory(const std::string& categ_name, const std::string& categ_name2);
@@ -125,11 +127,11 @@ class CategoryManager: public ManagerBase {
 
     /// Set the actual code for this category. If the specified code
     /// isn't defined for the category, defaultcode is used instead.
-    void SetObjectCode(const std::string& categ, int code, int defaultcode = 0) {
+    void SetObjectCode(const std::string& categ, int code, int defaultcode = 0, Int_t indx2 = -1, Int_t indx3 = -1) {
       if (HasCategory(categ)) {
-        GetCategory(categ).SetObjectCode(code, defaultcode);
+	GetCategory(categ).SetObjectCode(code, defaultcode, indx2, indx3);
       } else {
-        std::cout << "Code not set: category '" << categ << "' not found !!!" << std::endl;
+	std::cout << "Code not set: category '" << categ << "' not found !!!" << std::endl;
       }
     }
 
