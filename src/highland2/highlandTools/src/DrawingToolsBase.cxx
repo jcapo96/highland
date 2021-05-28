@@ -2236,7 +2236,9 @@ void DrawingToolsBase::DrawHistoStack(HistoStack* hs, const std::string& categ, 
       drawUtils::AddLegendEntry(_legends.back(), hs->GetTotal1D(), leg, "l");
     else
       hs->FillLegend(_legends.back());
-
+    
+    if (drawUtils::CheckOption(uopt,"CATNAME"))
+      _legends.back()->SetHeader(categ.c_str(),"C");
     _legends.back()->Draw();
   }
   
@@ -3201,9 +3203,15 @@ void DrawingToolsBase::PrintPurities(TTree* tree, const std::string& categ,  con
   TH1_h *ht = new TH1_h("temp"," ",10,0.,10.);
 
   std::string cut1 = FormatCut(cut);
-  if (tree->FindLeaf("toy_ref"))
-    cut1 = cut1 + " && toy_index == toy_ref";
-
+  // TODO. this will not work when plotting some object categories with several toys
+  if (tree->FindLeaf("toy_ref")){
+    int NTOYS = drawUtils::GetNToys(tree);
+    if (NTOYS>1)
+      cut1 = cut1 + " && toy_index == toy_ref";
+    else
+      cut1 = cut1 + " && toy_index[0] == toy_ref";
+  }    
+  
   //  std::string cut1w = "("+cut1+")"+w;
   std::string cut1w = weightTools::ApplyWeights(tree,cut,"");
 
@@ -3287,6 +3295,36 @@ void DrawingToolsBase::ChangeCategory(const std::string& categ_name, int ntypes,
 
 
   cat().AddCategory(categ_name, ntypes, names, codes, colors, multi, noWarning, addNOTRUTH, addSAND);
+}
+
+//********************************************************************
+void DrawingToolsBase::ChangeCategoryColor(const std::string& categ_name, int code, int color){
+//********************************************************************
+
+  // Read the categories from the config tree
+  ReadCategories(_config_file);
+
+  // get the category that is beingh changed
+  if(!cat().HasCategory(categ_name)){
+    std::cout << "Category " << categ_name << " does not exist!!!!" << std::endl;
+    return;
+  }
+  TrackCategoryDefinition& categ = cat().GetCategory(categ_name);
+
+  // loop over types
+  bool found = false;
+  for(UInt_t i=0;i<categ.GetNTypes();i++){
+    if(categ._types[i]._code == code){
+      found = true;
+      categ._types[i]._color = color;
+      break;
+    }
+  }
+
+  if(!found){
+    std::cout << "Category " << categ_name << " has no code " << code << "!!!!" << std::endl;
+    return;
+  }  
 }
 
 //********************************************************************

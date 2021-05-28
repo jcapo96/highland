@@ -955,9 +955,11 @@ public:
 #define AddVar4MD(out, name, doc, count)  out.AddMatrixVar(name,#name,"D",doc,count,#count,-MAXVECTORSIZE,4);
 
 
+#define AddVarMaxSize3MI(out, name, doc, count, size)  out.AddMatrixVar(name,#name,"I",doc,count,#count,-size,3);
 #define AddVarMaxSize3MF(out, name, doc, count, size)  out.AddMatrixVar(name,#name,"F",doc,count,#count,-size,3);
 #define AddVarMaxSize3MD(out, name, doc, count, size)  out.AddMatrixVar(name,#name,"D",doc,count,#count,-size,3);
 
+#define AddVarMaxSize4MI(out, name, doc, count, size)  out.AddMatrixVar(name,#name,"I",doc,count,#count,-size,4);
 #define AddVarMaxSize4MF(out, name, doc, count, size)  out.AddMatrixVar(name,#name,"F",doc,count,#count,-size,4);
 #define AddVarMaxSize4MD(out, name, doc, count, size)  out.AddMatrixVar(name,#name,"D",doc,count,#count,-size,4);
 
