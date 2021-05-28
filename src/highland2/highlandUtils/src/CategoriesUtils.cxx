@@ -16,8 +16,8 @@ int nutype_codes[]         = {14         , -14              , 12       , -12    
 int nutype_colors[]        = {2          , 3                , 4        , 5              , COLOTHER};
 const int NNUTYPE = sizeof(nutype_types)/sizeof(nutype_types[0]);
 
-std::string part_types[] = {"#mu^{-}", "e^{-}", "#pi^{0}", "k^{-}", "#mu^{+}", "e^{+}", "#pi^{+}", "k^{+}" , "p"  , NAMEOTHER};
-int pdg[]                = {13       , 11     , 111      , -321   , -13      , -11    , 211      ,  321    ,  2212, CATOTHER};
+std::string part_types[] = {"#mu^{-}", "e^{-}", "#pi^{-}", "k^{-}", "#mu^{+}", "e^{+}", "#pi^{+}", "k^{+}" , "p"  , NAMEOTHER};
+int pdg[]                = {13       , 11     , -211     , -321   , -13      , -11    , 211      ,  321    ,  2212, CATOTHER};
 int part_colors[]        = {2        , 3      , 4        ,  94    , 7        , 6      , 31       ,  92     ,   8  , COLOTHER};
 const int NPART = sizeof(part_types)/sizeof(part_types[0]);
 
@@ -107,6 +107,23 @@ void anaUtils::AddStandardCategories(const std::string& prefix){
   _categ->AddCategory(prefix+"reactionnofv",       NREACNOFV,          reacnofv_types,           reacnofv_codes,           reacnofv_colors);
   //  _categ->AddCategory(prefix+"topology",           NTOPOLOGY,          topology_types,           topology_codes,           topology_colors);
   //  _categ->AddCategory(prefix+"mectopology",        NMECTOPOLOGY,       mectopology_types,        mectopology_codes,        mectopology_colors);
+}
+
+//********************************************************************
+void anaUtils::AddStandardObjectCategories(const std::string& prefix, Int_t counter_enum, const std::string& object_counter, const Int_t object_order){
+//********************************************************************
+
+  //only for 1st order objects for the moment
+  if(object_order!=1)return;
+
+  // Add standard categories for color drawing
+  _categ->AddObjectCategory(prefix+"particle",   counter_enum, object_counter, NPART,    part_types,   pdg,        part_colors,   object_order, -100);
+  _categ->AddObjectCategory(prefix+"parent",     counter_enum, object_counter, NPARENT,  parent_types, parent_pdg, parent_colors, object_order, -100);
+  _categ->AddObjectCategory(prefix+"gparent",    counter_enum, object_counter, NPARENT,  parent_types, parent_pdg, parent_colors, object_order, -100);
+  _categ->AddObjectCategory(prefix+"primary",    counter_enum, object_counter, NPARENT,  parent_types, parent_pdg, parent_colors, object_order, -100);
+  _categ->AddObjectCategory(prefix+"ndau",       counter_enum, object_counter, NNDAU,    ndau_types,   ndau,       ndau_colors,   object_order, -100);
+  _categ->AddObjectCategory(prefix+"process",    counter_enum, object_counter, NPROCESS, process_types,process,    process_colors, object_order, -100);
+  _categ->AddObjectCategory(prefix+"endprocess", counter_enum, object_counter, NPROCESS, process_types,process,    process_colors, object_order, -100);
 }
 
 //********************************************************************
@@ -287,6 +304,56 @@ void anaUtils::FillCategories(AnaEventB* event, AnaParticleB* part, const std::s
       }
 
     }
+  }
+}
+
+//********************************************************************
+void anaUtils::FillObjectCategories(AnaEventB* event, AnaParticleB* part, const std::string& prefix, const Int_t object_order){
+//********************************************************************
+
+  if (object_order!=1)return; //for the moment only first order objects are accepted 
+  if ( ! part) return;
+
+  // Categories are previously initialized with -999 in CategoryManager::ResetCurrentCategories()
+
+  // ----- Particle ------------------------------
+  // no true info
+  _categ->SetObjectCode(prefix + "ndau"    , static_cast<AnaParticle*>(part)->Daughters.size(), CATOTHER);
+
+  //true info
+  if (part->TrueObject) {
+
+    if (part->GetTrueParticle()->PDG != 0) {
+      AnaTrueParticle* truePart = static_cast<AnaTrueParticle*>(part->TrueObject);
+      AnaTrueParticleB* primary = anaUtils::GetTrueParticleByID(*event, truePart->PrimaryID);
+
+      //if (truePart->TrueVertex) {
+        // Must be called before setting the particle category because by default it assumes the particle is the true lepton
+        // Overwritten below when there is a candidate
+        //FillCategories(truePart->TrueVertex,prefix,det,IsAntinu);
+	//}
+
+      _categ->SetObjectCode(prefix + "particle",  truePart->PDG,              CATOTHER);
+      _categ->SetObjectCode(prefix + "parent",    truePart->ParentPDG ,       CATOTHER);
+      _categ->SetObjectCode(prefix + "gparent",   truePart->GParentPDG,       CATOTHER);
+      _categ->SetObjectCode(prefix + "process",   truePart->ProcessStart,     CATOTHER);
+      _categ->SetObjectCode(prefix + "endprocess",truePart->ProcessEnd,       CATOTHER);
+      
+      if (primary) {
+        _categ->SetObjectCode(prefix + "primary", primary->PDG,          CATOTHER);
+      }
+      else {
+	_categ->SetObjectCode(prefix + "primary" , CATNOTRUTH);
+      }
+
+    }
+  }
+  else{
+    _categ->SetObjectCode(prefix + "particle", CATNOTRUTH);
+    _categ->SetObjectCode(prefix + "parent"  , CATNOTRUTH);
+    _categ->SetObjectCode(prefix + "gparent" , CATNOTRUTH);
+    _categ->SetObjectCode(prefix + "process" , CATNOTRUTH);
+    _categ->SetObjectCode(prefix + "endprocess" , CATNOTRUTH);
   }
 }
 

@@ -12,6 +12,7 @@ namespace anaUtils{
 
   /// Add the standard categories only, given a prefix for their name.
   void AddStandardCategories(const std::string& prefix = "");
+  void AddStandardObjectCategories(const std::string& prefix, const Int_t counter_index, const std::string& counter_name, const Int_t object_order);
   
   /// Add the standard categories only, given a prefix for their name.
   void AddStandardAntiNumuCategories(const std::string& prefix = "");
@@ -28,6 +29,8 @@ namespace anaUtils{
   void FillCategories(const AnaTrueVertexB* vertex, const std::string& prefix, const SubDetId::SubDetEnum det=SubDetId::kSubdet1_1, bool IsAntinu = false, bool IsSand = false);
   void FillCategories(const AnaTrueVertexB* vertex,                            const SubDetId::SubDetEnum det=SubDetId::kSubdet1_1, bool IsAntinu = false, bool IsSand = false);
   void SetCategoriesDefaultCode(const std::string& prefix, const int code = CATNOTRUTH);
+
+  void FillObjectCategories(AnaEventB* event,       AnaParticleB* part,        const std::string& prefix,  const Int_t object_order);
 
   /// Return the code for the "antinumuparent" category.
   /// Although this category is not one of the standard ones (it is added in
