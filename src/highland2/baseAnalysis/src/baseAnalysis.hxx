@@ -1,12 +1,12 @@
 #ifndef baseAnalysis_h
 #define baseAnalysis_h
 
-#include "HighlandAnalysisUtils.hxx"
+//#include "HighlandAnalysisUtils.hxx"
 #include "AnalysisAlgorithm.hxx"
 
 #include "Parameters.hxx"
-#include "CutUtils.hxx"
-#include "VersioningUtils.hxx"
+//#include "CutUtils.hxx"
+//#include "VersioningUtils.hxx"
 #include "SystId.hxx"
 #include "Versioning.hxx"
 #include "CategoriesUtils.hxx"
@@ -74,10 +74,6 @@ class baseAnalysis: public AnalysisAlgorithm{
     run = enumStandardMicroTreesLast_AnalysisAlgorithm+1,
     subrun,
     evt,
-    bunch,
-    selvtx_det,
-    selvtx_pos,
-    selvtx_truepos,
 
     enumStandardMicroTreesLast_baseAnalysis
   };

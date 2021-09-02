@@ -1,16 +1,13 @@
 #include "baseAnalysis.hxx"
 
 #include "HighlandMiniTreeConverter.hxx"
-#include "anaTreeConverter.hxx"
-#include "anaTreeNewConverter.hxx"
-#include "nueAnaTreeConverter.hxx"
 
 #include "baseToyMaker.hxx"
 
 //********************************************************************
 baseAnalysis::baseAnalysis(AnalysisAlgorithm* ana): AnalysisAlgorithm(ana){
   //********************************************************************
-
+  /*
   // Add the package version
   // Add package versions
   ND::versioning().AddPackage("psycheEventModel",    anaUtils::GetSoftwareVersionFromPath((std::string)getenv("PSYCHEEVENTMODELROOT")));
@@ -27,6 +24,7 @@ baseAnalysis::baseAnalysis(AnalysisAlgorithm* ana): AnalysisAlgorithm(ana){
   ND::versioning().AddPackage("highlandIO",          anaUtils::GetSoftwareVersionFromPath((std::string)getenv("HIGHLANDIOROOT")));
 
   ND::versioning().AddPackage("baseAnalysis", anaUtils::GetSoftwareVersionFromPath((std::string)getenv("BASEANALYSISROOT")));
+  */
 }
 
 //********************************************************************
@@ -34,10 +32,7 @@ void baseAnalysis::DefineProductions(){
 //********************************************************************
 
   // Add the different productions
-  ND::versioning().AddProduction(ProdId::MCC5,       "MCC5",     "v0r0",    "v1r0");
-  ND::versioning().AddProduction(ProdId::MCC6,       "MCC6",     "v0r0",    "v1r0");
-  ND::versioning().AddProduction(ProdId::MCC7,       "MCC7",     "v0r0",    "v1r0");
-  ND::versioning().AddProduction(ProdId::PDSPProd2,  "PDSPProd2","v08_40",  "v08_40");
+
 }
 
 //********************************************************************
@@ -46,9 +41,6 @@ void baseAnalysis::DefineInputConverters(){
 
   // add the different converters
   input().AddConverter("MiniTree",       new HighlandMiniTreeConverter());
-  input().AddConverter("anatree",        new anaTreeConverter());
-  input().AddConverter("anatree_new",    new anaTreeNewConverter());
-  input().AddConverter("nueana",         new nueAnaTreeConverter());
 }
 
 //********************************************************************
@@ -64,14 +56,15 @@ bool baseAnalysis::InitializeBase(){
 
   // Initialize trees or not at the beginnng of each configuration
   SetInitializeTrees(ND::params().GetParameterI("baseAnalysis.InitializeTrees"));
-  
+
+  /*
   if (_versionCheck){
     if(!ND::versioning().CheckVersionCompatibility(ND::versioning().GetProduction(input().GetSoftwareVersion()),
                                                    anaUtils::GetProductionIdFromReader())) return false;
   }
-
+  */
   // Dump the production used for corrections, bunching, systematics, etc
-  versionUtils::DumpProductions();
+  //  versionUtils::DumpProductions();
 
 
   // This will take care of data/MC differences in detector volumes definitions 	 
@@ -185,12 +178,7 @@ void baseAnalysis::DefineMicroTrees(bool addBase){
   AddVarI(output(), run,    "run number");
   AddVarI(output(), subrun, "subrun number ");
   AddVarI(output(), evt,    "event number ");
-  AddVarI(output(), bunch,  "bunch number ");
 
-  // --- Vertex info
-  AddVarI(  output(), selvtx_det,       "detector in which the reconstructed vertex is");
-  AddVar4VF(output(), selvtx_pos,       "reconstructed vertex position");
-  AddVar4VF(output(), selvtx_truepos,   "position of the true vertex associated to the reconstructed vertex");
 }
 
 //********************************************************************
@@ -286,15 +274,6 @@ void baseAnalysis::FillMicroTreesBase(bool addBase){
   output().FillVar(run,    GetSpill().EventInfo->Run);
   output().FillVar(subrun, GetSpill().EventInfo->SubRun);
   output().FillVar(evt,    GetSpill().EventInfo->Event);
-  output().FillVar(bunch,  GetBunch().Bunch);
-
-  // Vertex info
-  if (GetVertex()){
-    output().FillVar(selvtx_det,anaUtils::GetDetector(GetVertex()->Position));
-    output().FillVectorVarFromArray(selvtx_pos,GetVertex()->Position, 4);
-    if (GetVertex()->TrueVertex)
-      output().FillVectorVarFromArray(selvtx_truepos, GetVertex()->TrueVertex->Position, 4);
-  }
 
 }
 
@@ -304,13 +283,8 @@ void baseAnalysis::FillToyVarsInMicroTreesBase(bool addBase){
 
   (void)addBase;
 
-  if (!GetVertex()) return;
-  if (!GetVertex()->TrueVertex) return;
-
   // Nothing here for the moment
   
-  //  AnaTrueVertex* trueVertex = static_cast<AnaTrueVertex*>(GetVertex()->TrueVertex);
-
 }
 
 //********************************************************************
