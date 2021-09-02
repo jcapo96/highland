@@ -2,17 +2,15 @@
 #include "InputManager.hxx"
 //#include "FlatTreeConverter.hxx"
 #include "HighlandMiniTreeConverter.hxx"
-#include "anaTreeConverter.hxx"
-#include "nueAnaTreeConverter.hxx"
 #include "Parameters.hxx"
 //#include "Versioning.hxx"
-#include "GeometryManager.hxx"
+//#include "GeometryManager.hxx"
 #include "HighlandAnalysisUtils.hxx"
 
 #include "CorrId.hxx"
 
 // Corrections
-#include "MomRangeCorrection.hxx"
+//#include "MomRangeCorrection.hxx"
 
 Int_t NVtx;
 TClonesArray* Vtx;
@@ -26,20 +24,20 @@ CreateMiniTree::CreateMiniTree(int argc, char *argv[]):SimpleLoopBase(argc, argv
   //********************************************************************
 
   // Add the different productions
-  ND::versioning().AddProduction(ProdId::MCC5,     "MCC5",     "v0r0",  "v1r0");
+  //  ND::versioning().AddProduction(ProdId::MCC5,     "MCC5",     "v0r0",  "v1r0");
 
   // Add package versions to be saved in config tree
+  /*
   ND::versioning().AddPackage("psycheCore",          anaUtils::GetSoftwareVersionFromPath((std::string)getenv("PSYCHECOREROOT")));
   ND::versioning().AddPackage("psycheUtils",         anaUtils::GetSoftwareVersionFromPath((std::string)getenv("PSYCHEUTILSROOT")));
   ND::versioning().AddPackage("highlandTools",       anaUtils::GetSoftwareVersionFromPath((std::string)getenv("HIGHLANDTOOLSROOT")));
   ND::versioning().AddPackage("highlandCorrections", anaUtils::GetSoftwareVersionFromPath((std::string)getenv("HIGHLANDCORRECTIONSROOT")));
   ND::versioning().AddPackage("highlandIO",          anaUtils::GetSoftwareVersionFromPath((std::string)getenv("HIGHLANDIOROOT")));
-
+  */
+  
   // add the different converters
   //  input().AddConverter("FlatTree",       new FlatTreeConverter(true));
   input().AddConverter("MiniTree",       new HighlandMiniTreeConverter("MiniTree",true));
-  input().AddConverter("anatree",        new anaTreeConverter());
-  input().AddConverter("nueana",         new nueAnaTreeConverter());
 
 }
 //********************************************************************
@@ -103,19 +101,20 @@ bool CreateMiniTree::Initialize(){
 
 
   // Check software version compatibility between nd280AnalysisTools and current file
+  /*
   if (_versionCheck){
     if(!ND::versioning().CheckVersionCompatibility(ND::versioning().GetProduction(input().GetSoftwareVersion()),
                                                    anaUtils::GetProductionIdFromReader())) return false;
   }
-
+  */
   // Dump the production used for corrections, bunching, systematics, etc
-  versionUtils::DumpProductions();
+  //  versionUtils::DumpProductions();
 
 
   // Enable any corrections that have to be done while the mini tree is being created.
   
   if (ND::params().GetParameterI("highlandIO.FlatTree.EnableMomRangeCorrection")){
-    _corrections.AddCorrection(CorrId::kMomRangeCorr, "momrange_corr", new MomRangeCorrection());
+    //    _corrections.AddCorrection(CorrId::kMomRangeCorr, "momrange_corr", new MomRangeCorrection());
   }
 
   //  _file->mkdir("geom");
@@ -348,7 +347,7 @@ void CreateMiniTree::WriteGeometry(){
     
     // Write the geometry in the geom directory
     if(_file) _file->cd("geom");
-    ND::hgman().GeoManager()->Write();
+    //    ND::hgman().GeoManager()->Write();
     _file->cd();
 
     // Update the current GeomID
