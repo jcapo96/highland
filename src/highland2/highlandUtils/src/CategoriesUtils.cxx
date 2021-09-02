@@ -1,6 +1,6 @@
 #include "CategoriesUtils.hxx"
-#include "DUNEAnalysisUtils.hxx"
 #include "BasicUtils.hxx"
+#include "AnalysisUtils.hxx"
 //#include "TreeConverterUtils.hxx"
 
 
@@ -158,7 +158,7 @@ Int_t anaUtils::GetTopology(const AnaTrueVertex& trueVertex, const SubDetId::Sub
    */
 
   // out of FGD1 FV
-  if ( ! anaUtils::InFiducialVolume(det,trueVertex.Position)) return CATOUTFV;
+  //  if ( ! anaUtils::InFiducialVolume(det,trueVertex.Position)) return CATOUTFV;
 
   /// primary particles from the true vertex
   Int_t Nmuon =     trueVertex.NPrimaryParticles[ParticleId::kMuon];
@@ -448,7 +448,7 @@ Int_t anaUtils::GetReaction(const AnaTrueVertex& trueVertex, const SubDetId::Sub
   */
 
   // out of FV
-  if ( ! InFiducialVolume(det, trueVertex.Position)) return CATOUTFV;
+  //  if ( ! InFiducialVolume(det, trueVertex.Position)) return CATOUTFV;
 
   return GetReactionNoFgdFv(trueVertex,IsAntinu);
 }
