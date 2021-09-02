@@ -1,41 +1,6 @@
-/*! \page psyche/psycheND280UtilsHistory History for the psyche/psycheND280Utils Package 
+/*! \page psyche/psycheDUNEUtilsHistory History for the psyche/psycheDUNEUtils Package 
 
-\section psycheND280Utils_v3r1_history Version v3r1
+\section psycheND280Utils_v0r1_history Version v0r1
 
-Freeze information:
-   - Freeze Date: Sun Mar  6 17:09:46 2016
-   - Freeze User: acervera
-   - Freeze Host: Macintosh-64b9e8d35af0-2.local
-
-major reorganization with new packages and  changes in event model class names
-
-- ND280BeamBunching: add specific files for ND280 specifiying the file to read
-- move bunch positions data files to this new package
-- VersioningUtils moved to psycheND280Utils. Convert it into a namespace since there is no need for a class
-- AnaEventB::kEventBoxTracker --> EventBoxId::kEventBoxTracker, SystematicSource --> BinnedData, SubDetId::SubDetEnum --> SubDetId_h
-- MomentumResolVariation: a class that handles the smearing of the global/TPC momentum, MomentumResolutionSystematic and Correction will inherit from it 
-- a new class to apply TPCPIDVariation, the corresponding systematic and correction will use it
-- ND280AnalysisUtils: add utility IncrementPOTBySpill, previously in Header
-
-
-\section psycheND280Utils_v3r3_history Version v3r3
-
-Freeze information:
-   - Freeze Date: Mon Apr 11 16:32:04 2016
-   - Freeze User: acervera
-   - Freeze Host: portanselmo.ific.uv.es
-
-Freeze for BANFF development
-
-- TPCPIDVariation: Current frozen version assigns muon mean/sigma for every particle, which is an obvious bug. Fixing it. added ToyExperiment as an input param, some re-organization
-- FiducialVolumeDefinition: Definition of ECAL and SMRD fiducial volumes. Used by the stopping cut in 4pi (needed to compute the momentum by range)
-- CutUtils: Addition of ECAL PID and Stopping ECAL/SMRD cuts. They are used in the numu 4pi selection for high angle tracks.
-- ToFSenseCorrector: New organization of the flip method. Now we apply the flip sense to those tracks that fulfil muon like requirements. 
-  Distinction between Fwd, Bwd and HA topologies is made. Currently, only optimised for muons in starting or ending in FGD1.
-  Changing name of isECAL class. Including ForceForward method in HasValidToF to classify consistently. Removing PID conditions from HasValidToF.
-- ND280AnalysisUtils: Update (temporary) the run id for the data to include the full run6 anti-nu. However, this doesn't separate between fhc and rhc for run6. 
-  Need to have access to each run (where can we get this info?) and also introduce the subrun id.
-- Add nue utils and cututils classes.
-- BinnedData --> BinnesParams to avoid confusion (data vs MC)
 
 */
