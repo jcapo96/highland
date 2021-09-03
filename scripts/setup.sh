@@ -52,7 +52,6 @@ fi
 if [[ -z "$ROOTSYS" ]]; then
     # tell the system where ROOT is
     export ROOTSYS=$root_dir
-        echo "hola"    
     export PATH=$ROOTSYS/bin:$PATH    
     export DYLD_LIBRARY_PATH=$ROOTSYS/lib:$DYLD_LIBRARY_PATH
     export   LD_LIBRARY_PATH=$ROOTSYS/lib:$LD_LIBRARY_PATH
