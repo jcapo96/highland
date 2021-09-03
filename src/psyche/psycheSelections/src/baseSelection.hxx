@@ -23,7 +23,7 @@ class baseSelection: public SelectionBase{
 };
 
 
-/// A cut on event quality. Requires good beam and ND280 data quality flags.
+/// A cut on event quality. Requires good beam and detector data quality flags.
 class EventQualityCut: public StepBase {
     public:
         using StepBase::Apply;

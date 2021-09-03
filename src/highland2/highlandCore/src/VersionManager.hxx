@@ -62,7 +62,7 @@ public:
   bool CheckVersionCompatibility(ProdId_h prodInput, ProdId_h prodReader);
 
   /// Add a production
-  void AddProduction(ProdId_h prodId, const std::string& prodName, const std::string& nd280Version, const std::string& readerVersion);
+  void AddProduction(ProdId_h prodId, const std::string& prodName, const std::string& detSoftVersion, const std::string& readerVersion);
 
   /// Get the enum of the production corresponding to a given sofware version
   ProdId_h GetProduction(const std::string& softVersion);
@@ -97,7 +97,7 @@ public:
   void operator=(Versioning const&);
 
   /// Get the software version range for a given production name
-  bool GetSoftwareVersionsForProduction(ProdId_h prodId, std::string& nd280Version, std::string& readerVersion);
+  bool GetSoftwareVersionsForProduction(ProdId_h prodId, std::string& detSoftVersion, std::string& readerVersion);
 
   /// Convert the production enum into an string
   std::string ConvertProduction(ProdId_h prod);
@@ -109,7 +109,7 @@ public:
   void ParseSoftwareVersion(const std::string& version, int& v, int& r, int& p);
 
   /// vector of sofware version corresponding to each production
-  std::vector<std::string> _prodnd280Version;
+  std::vector<std::string> _prodDetSoftVersion;
   std::vector<std::string> _prodReaderVersion;
 
   /// vector of production enums

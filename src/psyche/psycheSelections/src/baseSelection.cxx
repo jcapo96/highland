@@ -1,7 +1,5 @@
 #include "baseSelection.hxx"
-//#include "ND280AnalysisUtils.hxx"
 #include "BasicUtils.hxx"
-//#include "CutUtils.hxx"
 
 //********************************************************************
 baseSelection::baseSelection(): SelectionBase() {
@@ -26,7 +24,7 @@ bool EventQualityCut::Apply(AnaEventC& eventBB, ToyBoxB& box) const{
   if(event.GetIsMC())  return true;              // This is MC, ignore DQ. 
 
   if (enableDQCut) {
-    if(!event.DataQuality->GoodDaq ) return false;  // Bad ND280 DQ
+    if(!event.DataQuality->GoodDaq ) return false;  // Bad Detector Data quality
   }
 
   if (enableBeamQualityCut) {

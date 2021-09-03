@@ -32,11 +32,11 @@ public :
   bool AddHeader(const std::string& file, bool bySpillPOT=false);
   bool AddHeader(TTree* tree, bool bySpillPOT=false);
 
-  /// This is the method used externaly. It corresponds to POT that passed beam and ND280 quality cuts.
-  Double_t GetPOT() { return GetPOTGoodBeamGoodND280(); }
+  /// This is the method used externaly. It corresponds to POT that passed beam and Detector quality cuts.
+  Double_t GetPOT() { return GetPOTGoodBeamGoodDetector(); }
 
-  /// This is the method used externaly. It corresponds to POT that passed beam and ND280 quality cuts.
-  Int_t GetNSpills() { return GetSpillGoodBeamGoodND280(); }
+  /// This is the method used externaly. It corresponds to POT that passed beam and Detector quality cuts.
+  Int_t GetNSpills() { return GetSpillGoodBeamGoodDetector(); }
 
   /// Get the total recorded POT, before any quality cuts.
   Double_t GetPOTNoCut() { return _POT_NoCut; }
@@ -47,28 +47,28 @@ public :
   /// Get the total POT that was removed due to bad beam quality.
   Double_t GetPOTBadBeam() { return _POT_BadBeam; }
 
-  /// Get the total POT that was removed due to bad ND280 quality.
-  Double_t GetPOTBadND280() { return _POT_BadND280; }
+  /// Get the total POT that was removed due to bad Detector quality.
+  Double_t GetPOTBadDetector() { return _POT_BadDetector; }
 
-  /// Get the total POT that passed beam and ND280 quality cuts.
-  Double_t GetPOTGoodBeamGoodND280() { return _POT_GoodBeamGoodND280; }
+  /// Get the total POT that passed beam and Detector quality cuts.
+  Double_t GetPOTGoodBeamGoodDetector() { return _POT_GoodBeamGoodDetector; }
 
-  /// Set the total POT that passed beam and ND280 quality cuts.
-  void SetPOTGoodBeamGoodND280(Double_t good) {_POT_GoodBeamGoodND280 = good;}
+  /// Set the total POT that passed beam and Detector quality cuts.
+  void SetPOTGoodBeamGoodDetector(Double_t good) {_POT_GoodBeamGoodDetector = good;}
 
-  /// Get the total POT that passed beam and ND280 quality cuts, at 0KA horn current.
+  /// Get the total POT that passed beam and Detector quality cuts, at 0KA horn current.
   Double_t GetPOT0KA() { return _POT_0KA; }
 
-  /// Get the total POT that passed beam and ND280 quality cuts, at 200KA horn current.
+  /// Get the total POT that passed beam and Detector quality cuts, at 200KA horn current.
   Double_t GetPOT200KA() { return _POT_200KA; }
 
-  /// Get the total POT that passed beam and ND280 quality cuts, at 250KA horn current.
+  /// Get the total POT that passed beam and Detector quality cuts, at 250KA horn current.
   Double_t GetPOT250KA() { return _POT_250KA; }
 
-  /// Get the total POT that passed beam and ND280 quality cuts, at -250KA horn current.
+  /// Get the total POT that passed beam and Detector quality cuts, at -250KA horn current.
   Double_t GetPOTMinus250KA() { return _POT_m250KA; }
 
-  /// Get the total POT that passed beam and ND280 quality cuts, at a horn current
+  /// Get the total POT that passed beam and Detector quality cuts, at a horn current
   /// that isn't 0KA, 200KA or 250KA.
   Double_t GetPOTOtherKA() { return _POT_OtherKA; }
 
@@ -78,11 +78,11 @@ public :
   /// Get the total spills that was removed due to bad beam quality.
   Int_t GetSpillBadBeam() { return _Spill_BadBeam; }
 
-  /// Get the total spills that was removed due to bad ND280 quality.
-  Int_t GetSpillBadND280() { return _Spill_BadND280; }
+  /// Get the total spills that was removed due to bad Detector quality.
+  Int_t GetSpillBadDetector() { return _Spill_BadDetector; }
 
-  /// Get the total spills that passed beam and ND280 quality cuts.
-  Int_t GetSpillGoodBeamGoodND280() { return _Spill_GoodBeamGoodND280; }
+  /// Get the total spills that passed beam and Detector quality cuts.
+  Int_t GetSpillGoodBeamGoodDetector() { return _Spill_GoodBeamGoodDetector; }
 
   /// Print the POT information.
   void DumpPOT();
@@ -108,8 +108,8 @@ public :
   Double_t _POT_CountedPerFile;
   Double_t _POT_NoCut;
   Double_t _POT_BadBeam;
-  Double_t _POT_BadND280;
-  Double_t _POT_GoodBeamGoodND280;
+  Double_t _POT_BadDetector;
+  Double_t _POT_GoodBeamGoodDetector;
   Double_t _POT_0KA;
   Double_t _POT_200KA;
   Double_t _POT_250KA;
@@ -119,8 +119,8 @@ public :
   /// Spill info
   Int_t _Spill_NoCut;
   Int_t _Spill_BadBeam;
-  Int_t _Spill_BadND280;
-  Int_t _Spill_GoodBeamGoodND280;
+  Int_t _Spill_BadDetector;
+  Int_t _Spill_GoodBeamGoodDetector;
 
   /// data or MC mode 
   bool _IsMC;

@@ -49,12 +49,12 @@ Versioning::Versioning(): ManagerBase("config","VERSION","PackageVersion",&_pack
 }
 
 //********************************************************************
-void Versioning::AddProduction(ProdId_h prodId, const std::string& prodName, const std::string& nd280Version, const std::string& readerVersion){
+void Versioning::AddProduction(ProdId_h prodId, const std::string& prodName, const std::string& detSoftVersion, const std::string& readerVersion){
 //********************************************************************
 
   _prodId.push_back(prodId);
   _prodName.push_back(prodName);
-  _prodnd280Version.push_back(nd280Version);
+  _prodDetSoftVersion.push_back(detSoftVersion);
   _prodReaderVersion.push_back(readerVersion);
 }
 
@@ -63,7 +63,7 @@ ProdId_h Versioning::GetProduction(const std::string& softVersion){
 //********************************************************************
 
   for (UInt_t i=0;i<_prodId.size();i++){
-    if( softVersion == _prodnd280Version[i])
+    if( softVersion == _prodDetSoftVersion[i])
       return _prodId[i];
   }    
   
@@ -88,12 +88,12 @@ std::string Versioning::ConvertProduction(ProdId_h prod){
 }
 
 //********************************************************************
-bool Versioning::GetSoftwareVersionsForProduction(ProdId_h prodId, std::string& nd280Version, std::string& readerVersion){
+bool Versioning::GetSoftwareVersionsForProduction(ProdId_h prodId, std::string& detSoftVersion, std::string& readerVersion){
 //********************************************************************
 
   for (UInt_t i=0;i<_prodId.size();i++){
     if (_prodId[i] == prodId){
-      nd280Version  = _prodnd280Version[i];
+      detSoftVersion  = _prodDetSoftVersion[i];
       readerVersion = _prodReaderVersion[i];
       return true;
     }
@@ -110,13 +110,13 @@ bool Versioning::CheckVersionCompatibility(ProdId_h prodInput, ProdId_h prodRead
   bool ok = true;
     
   // Get the software versions for a given production
-  std::string nd280Version[2], readerVersion[2];
-  GetSoftwareVersionsForProduction(prodInput,  nd280Version[0], readerVersion[0]);
-  GetSoftwareVersionsForProduction(prodReader, nd280Version[1], readerVersion[1]);
+  std::string detSoftVersion[2], readerVersion[2];
+  GetSoftwareVersionsForProduction(prodInput,  detSoftVersion[0], readerVersion[0]);
+  GetSoftwareVersionsForProduction(prodReader, detSoftVersion[1], readerVersion[1]);
 
  
-  std::cerr << "Reader compiled with " << ConvertProduction(prodReader) << " (nd280/reader versions: " << nd280Version[1] << "/" << readerVersion[1] << ")  file. " << std::endl;
-  std::cerr << "Checking for compatibility version with current file  (nd280/reader versions: " << nd280Version[0] << "/" << readerVersion[0]  << ")" << std::endl;
+  std::cerr << "Reader compiled with " << ConvertProduction(prodReader) << " (detSoft/reader versions: " << detSoftVersion[1] << "/" << readerVersion[1] << ")  file. " << std::endl;
+  std::cerr << "Checking for compatibility version with current file  (detSoft/reader versions: " << detSoftVersion[0] << "/" << readerVersion[0]  << ")" << std::endl;
   if (readerVersion[0] != readerVersion[1]){
     ok = false;
     std::cerr << "*************************************************" << std::endl;

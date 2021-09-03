@@ -38,10 +38,10 @@ TVector3 anaUtils::CalcNuDir(TVector3 &nup0Global, TVector3 &nup1Local){
 //***************************************************************
 
   InitializeNeutrinoBeamLineParameters();
-  const TVector3 nd280Global(BeamPipePosition);
+  const TVector3 detectorGlobal(BeamPipePosition);
 
   //in m 
-  const TVector3 nup0Local = nup0Global - nd280Global;
+  const TVector3 nup0Local = nup0Global - detectorGlobal;
 
   TVector3 nuDirCalc = TVector3(nup1Local - nup0Local);
   nuDirCalc *= 1./nuDirCalc.Mag();
