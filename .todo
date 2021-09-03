@@ -1,0 +1,9 @@
+- Those files/folders contain setup dependent things
+  * psycheEventModel/src/xxxId
+  * highlandEventModel/src/Versioning.hxx
+  * highlandUtils/src/ProductionUtils.cxx
+  * highlandTools/src/SetT2KStyle.H
+  * highlandIO/src/CreateMiniTree.cxx
+  * highlandCorrections
+
+- Remove RooTracker stuff, T2K related
