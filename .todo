@@ -1,9 +1,11 @@
-- Those files/folders contain setup dependent things
+- Those files/folders contain setup dependent things. 
   * psycheEventModel/src/xxxId
   * highlandEventModel/src/Versioning.hxx
   * highlandUtils/src/ProductionUtils.cxx
   * highlandTools/src/SetT2KStyle.H
   * highlandIO/src/CreateMiniTree.cxx
-  * highlandCorrections
+  * highlandCorrections: FOLDER TO BE REMOVED ??
 
 - Remove RooTracker stuff, T2K related
+
+- psycheSelections/src/baseSelection.cxx. This probably needs to be removed, including the folder. Official selections would go one day into psychePDSelections
