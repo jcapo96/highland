@@ -234,8 +234,8 @@ Int_t MiniTreeConverter::GetSpill(Long64_t& entry, AnaSpillC*& spill){
 
   // Increment entry number
   entry++;
-  if (entry%10000==0 || entry == _nentries || (entry%1000==0 && entry<10000) )
-    std::cout << "entry: " << entry << " of " << _nentries << " (" << (100*entry/_nentries) << "%)" << std::endl;
+  //  if (entry%10000==0 || entry == _nentries || (entry%1000==0 && entry<10000) )
+  //    std::cout << "entry: " << entry << " of " << _nentries << " (" << (100*entry/_nentries) << "%)" << std::endl;
 
   // Load the geometry for this spill(999 is the default value in BaseDataClasses). TODO DUNE
   //  if (_spill->GeomID!=999)
