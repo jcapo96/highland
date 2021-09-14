@@ -1636,6 +1636,19 @@ void OutputManager::FillToyMatrixVar(Int_t index, Double_t var, const Int_t comp
 void OutputManager::WrongVariableType(Int_t index, const std::string& dim, const std::string& type){
 //********************************************************************
 
+  // The variable was not added to the tree
+  
+  if (GetVarName(index)==""){
+    std::cout << "ERROR in OutputManager::Fill" << dim << "Var(). Variable with index " <<  index << " has not been added to the tree !!!!" << std::endl;
+    std::cout << "These are the previous and next variables: " << std::endl;
+    for (int i=index-5;i< index+5;i++)
+      std::cout << i  << ": " << _tree_vars_all_vars[_current_tree][i] << std::endl;
+
+    exit(1);
+  }
+
+  // The variable has the wrong type
+  
   std::cout << "ERROR in OutputManager::Fill" << dim << "Var(). " << GetVarName(index) << " is not a " << type <<  " variable. !!!!" << std::endl;
   std::cout << "Please check the call to Fill" << dim << "Var(" << GetVarName(index) << ", A) in your analysis algorithm and cast the A input value if needed !!!!"  << std::endl;
   exit(1);
