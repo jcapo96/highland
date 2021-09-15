@@ -773,6 +773,9 @@ public :
   void SetDocStringManager(DocStringManager* doc){_doc=doc;}
 
   DocStringManager& docstrings(){return *_doc;}
+
+
+  void DumpAllVars();
   
  protected:
 

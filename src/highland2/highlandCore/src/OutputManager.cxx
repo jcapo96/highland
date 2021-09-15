@@ -1283,6 +1283,16 @@ void OutputManager::AddCounter(Int_t tree_index, Int_t counter_index, const std:
 //********************************************************************
 void OutputManager::AddCounter(Int_t tree_index, Int_t index, Int_t counter_index, const std::string& counter_name, int size){
 //********************************************************************
+
+  if (GetCounterName(counter_index)!="" && GetCounterName(counter_index) != counter_name){
+    
+    std::cout << "OutputManager::AddCounter(). " << "Adding counter with name '" << counter_name << "' and index " << counter_index << std::endl;
+    std::cout << "A counter with the same index and a different name '" << GetCounterName(counter_index) << "' already exists !!!!" << std::endl;
+    std::cout << "Most likely this counter was added as a category counter in AddStandardObjectCategories. Check this call !!!!" << std::endl;
+    exit(1);
+  }
+    
+    
   if (counter_index==-1){
 
     _tree_vars_counter[tree_index][index]=0;
@@ -1654,3 +1664,15 @@ void OutputManager::WrongVariableType(Int_t index, const std::string& dim, const
   exit(1);
 }
 
+
+//********************************************************************
+void OutputManager::DumpAllVars(){
+//********************************************************************
+
+  // The variable was not added to the tree
+  
+  for (size_t i=0;i<_tree_vars_all_vars[_current_tree].size();i++)
+    if ( _tree_vars_all_vars[_current_tree][i]!="")
+      std::cout << i  << ": " << _tree_vars_all_vars[_current_tree][i] << std::endl;
+  
+}
