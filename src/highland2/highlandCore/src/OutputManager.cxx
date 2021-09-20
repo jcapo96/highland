@@ -1284,7 +1284,7 @@ void OutputManager::AddCounter(Int_t tree_index, Int_t counter_index, const std:
 void OutputManager::AddCounter(Int_t tree_index, Int_t index, Int_t counter_index, const std::string& counter_name, int size){
 //********************************************************************
 
-  if (GetCounterName(counter_index)!="" && GetCounterName(counter_index) != counter_name){
+  if (counter_index!=-1 && GetCounterName(counter_index)!="" && GetCounterName(counter_index) != counter_name){
     
     std::cout << "OutputManager::AddCounter(). " << "Adding counter with name '" << counter_name << "' and index " << counter_index << std::endl;
     std::cout << "A counter with the same index and a different name '" << GetCounterName(counter_index) << "' already exists !!!!" << std::endl;
