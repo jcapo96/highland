@@ -13,3 +13,7 @@
 - baseAnalysis calls anaUtils::FillCategories(&vtx, det, IsAntinu, GetSpill().GetIsSandMC()). If these variable have not been added by the analyzer, this gives errors. We should move this from baseAnalysis.
 
 - if we have a FillCategories method for each analysis, shouldn't we have also a DefineCategories method?
+
+- is DefineProductions necessary?
+
+- Why InitializeBase on AnalysisAlgorithm?
