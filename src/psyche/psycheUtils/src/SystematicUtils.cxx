@@ -9,34 +9,18 @@
 //! [SystematicUtils_eff-like]
 \htmlonly
 The way efficiency-like systematics are computed is based on studies comparing data and MC predictions in well known control samples. 
-Tracking and matching efficiencies can be easily computed using the redundancy between detectors. For example, the TPC2 track efficiency can be computed 
-using tracks with segments in FGD1 and FGD2. Similarly, the FGD1 track efficiency can be computed using tracks with segments in TPC1 and TPC2. 
-As these special requirements in general are not satisfied in the analysis sample, control samples are necessary. 
-As will be shown below, a very useful control sample is the one of through-going muons, consisting of events in which a single muon track crosses the 
-entire tracker. These muons, emerging from interactions in the sand surrounding the detector (sand muons), in the P0D or in the magnet, cover a limited 
-phase space (in general they have small angle and high energy). Furthermore, as only a single track is present in those events, the effect of other tracks 
-that may vary the efficiency cannot be taken into account. For these reasons it is 
-possible that the efficiencies computed using those control samples do not correspond to the ones of the analysis samples.
+Tracking and matching efficiencies can be easily computed using the redundancy between detectors. However, this redundacy cannot be always satisfied in the analysis sample 
+and control samples are necessary. In general control samples do not cover the same phase space as the analysis sample and/or have events with a different topology.  
+For these reasons it is possible that the efficiencies computed using those control samples do not correspond to the ones of the analysis samples.
 Thus, a model to extrapolate the control sample efficiency to the analysis sample is needed. The simplest model is the one assuming that the ratio between 
 the efficiencies in data and MC is the same in both the analysis and control samples. This is a reasonable assumption and will be used in this section. 
 The efficiency in the MC analysis sample can be computed using the truth information (given a true GEANT4 trajectory, it is always possible to know whether 
 it has been reconstructed or not), while the predicted efficiency in the analysis data sample can be computed as follows: 
 
-  \[ \varepsilon_{data} = \frac{^{CS}_{data}}{\varepsilon^{CS}_{MC}} \varepsilon_{MC} \]
+  \[ \varepsilon_{data} = \frac{\varepsilon^{CS}_{data}}{\varepsilon^{CS}_{MC}} \varepsilon_{MC}  =  r_{CS} \cdot \varepsilon_{MC} \]
 
 where \(\varepsilon^{CS}_{data}\) and \(\varepsilon^{CS}_{MC}\)  are efficiencies in the control samples and \(\varepsilon_{MC}\) is the efficiency in the MC 
-analysis sample. The statistical error of the efficiency computed using the control samples (\(\sigma_{\varepsilon^{CS}_{data}}\) and \(\sigma_{\varepsilon^{CS}_{MC}}\) 
-for data and MC, respectively) must be taken into account when propagating the systematic error. 
-Thus, the variation for the predicted data efficiency (\(\varepsilon^{\prime}_{data}\)) is given by: 
-
-\[
-  \varepsilon^{\prime}_{data} = \frac{\varepsilon^{CS}_{data} + \delta_{data} \cdot \sigma_{\varepsilon^{CS}_{data}}}
-  {\varepsilon^{CS}_{MC} + \delta_{MC} \cdot \sigma_{\varepsilon^{CS}_{MC}}}
-\]
-
-
-where \(\delta_{data}\) and \(\delta_{MC}\) are the variations in number of standard deviations in the data and MC control samples, respectively, and can 
-assume both positive and negative values.
+analysis sample. As deduced from the previous equation \(r_{CS}\) is the data/MC ratio of efficiencies in the control sample.  
 
 In order to convert the track-level efficiencies mentioned above into event-level efficiencies, which could be directly applied as event weights, the 
 following method is used. For each MC event a loop over all relevant GEANT4 truth trajectories is done. If the trajectory is successfully reconstructed 
@@ -44,18 +28,59 @@ it contributes to the efficiency calculation and therefore it is weighted by the
 efficiency is the one of the data. The weight to be applied in this case is: 
 
 \[
-  W_{\mathrm{eff}} = \frac{\varepsilon^{\prime}_{data}}{\varepsilon_{MC}}
+  W_{\mathrm{eff}} = \frac{\varepsilon_{data}}{\varepsilon_{MC}} = r_{CS}
 \]
 
-
-where \(\varepsilon^{\prime}_{data}\) is given by Eq. \ref{eq:effprime}.
 If, on the contrary, the truth trajectory is not successfully reconstructed, it contributes to the inefficiency and is weighted by the ratio of data 
 and MC inefficiencies. In this case the weight to be applied is given by:
 
 \[
-  W_{\mathrm{ineff}} = \frac{1 - \varepsilon^{\prime}_{data}}{1 - \varepsilon_{MC}}
+  W_{\mathrm{ineff}} = \frac{1 - \varepsilon_{data}}{1 - \varepsilon_{MC}} = \frac{1 - r_{CS} \cdot \varepsilon_{MC}}{1 - \varepsilon_{MC}} 
 \]
+
+
+Notice, that while the efficiency weight is independent of the efficiency on the MC analysis sample ( \(\varepsilon_{MC}\)), the inefficiency weight depends on it.  
+In the previous equations \( W_{\mathrm{eff}}\) and \( W_{\mathrm{ineff}}\) are nominal weights. When propagating systematics a variation needs to be done. The varied weights would be: 
+
+\[
+  W^{\prime}_{\mathrm{eff}} = r^{\prime}_{CS}
+\]
+
+
+\[
+  W^{\prime}_{\mathrm{ineff}} = \frac{1 - r^{\prime}_{CS} \cdot \varepsilon_{MC}}{1 - \varepsilon_{MC}} 
+\]
+
+
+
+The statistical error of the efficiency computed using the control samples (\(\sigma_{\varepsilon^{CS}_{data}}\) and \(\sigma_{\varepsilon^{CS}_{MC}}\) 
+for data and MC, respectively) must be taken into account when doing those variations. Efficiencies in data and MC can be varied independently: 
+
+\[
+  r^{\prime}_{CS} =  \frac{\varepsilon^{CS}_{data} + \delta_{data} \cdot \sigma_{\varepsilon^{CS}_{data}}}
+  {\varepsilon^{CS}_{MC} + \delta_{MC} \cdot \sigma_{\varepsilon^{CS}_{MC}}}
+\]
+
+where \(\delta_{data}\) and \(\delta_{MC}\) are the variations in number of standard deviations in the data and MC control samples, respectively, and can 
+assume both positive and negative values.
+
+Another option is to do variations in a single parameter instead of two, in the ratio of efficiencies. 
+
+\[
+    r^{\prime}_{CS} = r_{CS} + \delta \cdot \sigma_{r_{CS}}
+\]
+
+In this case the error on the ratio \(\sigma_{r_{CS}}\) should be computed using the errors on the data and MC control samples. 
+
+
 \endhtmlonly
+
+
+
+
+
+
+
 
 //! [SystematicUtils_eff-like]
 */
@@ -67,7 +92,7 @@ std::vector<std::vector<Int_t> > systUtils::BinnedParamsOffsets;
 
 //********************************************************************
 Weight_h systUtils::ComputeEffLikeWeight(bool found, Float_t variation_mc,  Float_t variation_data, const BinnedParamsParams& params){
-    //********************************************************************
+  //********************************************************************
 
     Weight_h weight = 1;
     // P_DATA_ANA=meanDATA/meanMC*meanMCANA
@@ -116,50 +141,54 @@ Weight_h systUtils::ComputeEffLikeWeight(bool found, Float_t variation, const Bi
 //********************************************************************
 
     Weight_h weight = 1;
-    // P_DATA_ANA=meanDATA/meanMC*meanMCANA
+    // eff_d_ana =eff_d/eff_mc*eff_mc_ana
     // weight = P_DATA_ANA/P_MC_ANA
     // weight = meanDATA/meanMC*meanMCANA/meanMCANA
     // weight = meanDATA/meanMC
     // the effweight are indpendent of the efficiency of the analysis sample
     // this is NOT the case for inefficiency weights!
 
-    Float_t PDATA=params.meanDATA, PMC=params.meanMC;
-    double ratio = 1;
-    if(params.meanMC!=0)
-      ratio = params.meanDATA/params.meanMC;
+    Float_t eff_mc_ana = params.meanMCANA;  // efficiency of the MC analysis sample
+    Float_t eff_d=params.meanDATA;  // efficiency of the data CONTROL sample
+    Float_t eff_mc=params.meanMC;   // efficiency of the MC   CONTROL sample
+
+    double eff_ratio = 1;  // control sample efficiency ratio
+    if(eff_mc!=0)
+      eff_ratio = eff_mc/eff_d;
 
     // this way we take the biggest stat error from error bars.
-    double PMC_error    = std::max(params.sigmaMCh,   params.sigmaMCl);
-    double PDATA_error  = std::max(params.sigmaDATAh, params.sigmaDATAl);
+    double eff_mc_error = std::max(params.sigmaMCh,   params.sigmaMCl);
+    double eff_d_error  = std::max(params.sigmaDATAh, params.sigmaDATAl);
 
     //stat err of MC are independant from the stat error of the data...
-    double errstat_ratio_2 = ratio*ratio*((PDATA_error*PDATA_error)/(PDATA*PDATA) + (PMC_error*PMC_error)/(PMC*PMC));
+    double errstat_eff_ratio_2 = eff_ratio*eff_ratio*((eff_d_error*eff_d_error)/(eff_d*eff_d) + (eff_mc_error*eff_mc_error)/(eff_mc*eff_mc));
 
-    double errsyst_ratio = ratio-1; 
-    double errsyst_ratio_2 = errsyst_ratio*errsyst_ratio; 
-    double err_ratio     = sqrt(errstat_ratio_2+errsyst_ratio_2);
+    // TODO. Add a systematic error on that ratio. being conservatives we take the difference to 1 as systematic error
+    double errsyst_eff_ratio = eff_ratio-1; 
+    double errsyst_eff_ratio_2 = errsyst_eff_ratio*errsyst_eff_ratio; 
+    double err_eff_ratio     = sqrt(errstat_eff_ratio_2+errsyst_eff_ratio_2);
     // to cross-check that it gives the same error than the other method
-    // double err_ratio     = sqrt(pow(errstat_ratio,2));
+    // double err_eff_ratio     = sqrt(pow(errstat_eff_ratio,2));
     
-    double Pvar_ratio=ratio+variation*err_ratio;
+    double varied_eff_ratio=eff_ratio + variation*err_eff_ratio;
 
     // Also not sure about this, shouldn't it be:
-    // double Pvar_ratio = variation*err_ratio + 1;
+    // double varied_eff_ratio = variation*err_eff_ratio + 1;
     //
     // Otherwise we are adding the data-MC difference in to the weight twice
     // MR: it depends what you want to do... if you want to compare to the nominal you will count it twice and in this case I agree that it is 1 that should be used
     //     or we decide, to correct the MC so that it looks like the data (as we do for the variation in fact...)
     if (found){
-      weight.Systematic = Pvar_ratio;
-      weight.Correction = ratio;
+      weight.Systematic = varied_eff_ratio;
+      weight.Correction =        eff_ratio;
     }
     else{
-      Float_t Pvar=Pvar_ratio*params.meanMCANA;
-      Float_t Pnom=ratio     *params.meanMCANA;
-      if(Pvar>1) Pvar=1.;
-      if((1-params.meanMCANA)!=0){
-        weight.Systematic = (1-Pvar)/(1-params.meanMCANA);
-        weight.Correction = (1-Pnom)/(1-params.meanMCANA);
+      Float_t varied_eff_d_ana=varied_eff_ratio*eff_mc_ana;
+      Float_t        eff_d_ana=       eff_ratio*eff_mc_ana;
+      if(varied_eff_d_ana>1) varied_eff_d_ana=1.;
+      if((1-eff_mc_ana)!=0){
+        weight.Systematic = (1-varied_eff_d_ana)/(1-eff_mc_ana);
+        weight.Correction = (1-       eff_d_ana)/(1-eff_mc_ana);
       }
       else 
         weight =1;
