@@ -169,6 +169,8 @@ int Parameters::TryLoadingParametersFile(std::string parameterName) {
   int pos = parameterName.find(".");
   TString packageName(parameterName.c_str(), pos);
 
+  std::cout << "Trying to load parameters file for package: " << packageName << std::endl;
+  
   // and the file name for parameters file
   TString fileName = packageName + ".parameters.dat";
 
