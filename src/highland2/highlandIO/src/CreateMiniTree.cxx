@@ -23,8 +23,6 @@ bool  Preselected;
 CreateMiniTree::CreateMiniTree(int argc, char *argv[]):SimpleLoopBase(argc, argv){
   //********************************************************************
 
-  // Add the different productions
-  //  ND::versioning().AddProduction(ProdId::MCC5,     "MCC5",     "v0r0",  "v1r0");
 
   // Add package versions to be saved in config tree
   /*
@@ -42,83 +40,23 @@ CreateMiniTree::CreateMiniTree(int argc, char *argv[]):SimpleLoopBase(argc, argv
 }
 //********************************************************************
 bool CreateMiniTree::Initialize(){
-  //********************************************************************
-  // save RooTrackerVtx tree
+//********************************************************************
+  
   _saveGeometry = (bool)ND::params().GetParameterI("highlandIO.FlatTree.SaveGeometry");
-
-  _saveSubdet2Info     = (bool)ND::params().GetParameterI("highlandIO.FlatTree.SaveSubdet2Info");
-  _saveSubdet1Info     = (bool)ND::params().GetParameterI("highlandIO.FlatTree.SaveSubdet1Info");
-
-
-  _useSubdet2_1     = (bool)ND::params().GetParameterI("highlandIO.FlatTree.UseSubdet2_1");
-  _useSubdet2_2     = (bool)ND::params().GetParameterI("highlandIO.FlatTree.UseSubdet2_2");
-  _useSubdet2_3     = (bool)ND::params().GetParameterI("highlandIO.FlatTree.UseSubdet2_3");
-  _useSubdet1_1     = (bool)ND::params().GetParameterI("highlandIO.FlatTree.UseSubdet1_1");
-  _useSubdet1_2     = (bool)ND::params().GetParameterI("highlandIO.FlatTree.UseSubdet1_2");
-
-  _useSubdet2_1outOfBunch     = (bool)ND::params().GetParameterI("highlandIO.FlatTree.UseSubdet2_1outOfBunch");
-  _useSubdet2_2outOfBunch     = (bool)ND::params().GetParameterI("highlandIO.FlatTree.UseSubdet2_2outOfBunch");
-  _useSubdet2_3outOfBunch     = (bool)ND::params().GetParameterI("highlandIO.FlatTree.UseSubdet2_3outOfBunch");
-  _useSubdet1_1outOfBunch     = (bool)ND::params().GetParameterI("highlandIO.FlatTree.UseSubdet1_1outOfBunch");
-  _useSubdet1_2outOfBunch     = (bool)ND::params().GetParameterI("highlandIO.FlatTree.UseSubdet1_2outOfBunch");
-
-  _saveTrueNuNC       = (bool)ND::params().GetParameterI("highlandIO.FlatTree.TrueVertex.NuNC");
-  _saveTrueAntiNuNC   = (bool)ND::params().GetParameterI("highlandIO.FlatTree.TrueVertex.AntiNuNC");
-  _saveTrueNumuCC     = (bool)ND::params().GetParameterI("highlandIO.FlatTree.TrueVertex.NumuCC");
-  _saveTrueAntiNumuCC = (bool)ND::params().GetParameterI("highlandIO.FlatTree.TrueVertex.AntiNumuCC");
-  _saveTrueNueCC      = (bool)ND::params().GetParameterI("highlandIO.FlatTree.TrueVertex.NueCC");
-  _saveTrueAntiNueCC  = (bool)ND::params().GetParameterI("highlandIO.FlatTree.TrueVertex.AntiNueCC");
-
-
-  _trackStartPreselection     = (bool)ND::params().GetParameterD("highlandIO.MiniTree.TrackStart.Preselection");
-
-  _trackStartMinX     = ND::params().GetParameterD("highlandIO.MiniTree.TrackStart.MinX");
-  _trackStartMaxX     = ND::params().GetParameterD("highlandIO.MiniTree.TrackStart.MaxX");
-  _trackStartMinY     = ND::params().GetParameterD("highlandIO.MiniTree.TrackStart.MinY");
-  _trackStartMaxY     = ND::params().GetParameterD("highlandIO.MiniTree.TrackStart.MaxY");
-  _trackStartMinZ     = ND::params().GetParameterD("highlandIO.MiniTree.TrackStart.MinZ");
-  _trackStartMaxZ     = ND::params().GetParameterD("highlandIO.MiniTree.TrackStart.MaxZ");
-
-  _beamTOFPreselection     = (bool)ND::params().GetParameterD("highlandIO.MiniTree.Beam.TOFPreselection");
- 
-  _beamMinTOF     = ND::params().GetParameterD("highlandIO.MiniTree.Beam.MinTOF");
-  _beamMaxTOF     = ND::params().GetParameterD("highlandIO.MiniTree.Beam.MaxTOF");
-
-
   _trueWithRecoPreselection          = (bool)ND::params().GetParameterD("highlandIO.MiniTree.Truth.WithRecoPreselection");
   _trueWithRecoDaughtersPreselection = (bool)ND::params().GetParameterD("highlandIO.MiniTree.Truth.IncludeTrueDaughters");
 
-  
-  
-  if (ND::params().GetParameterI("highlandIO.FlatTree.TrueVertex.Subdet2_1"))    _saveTrueVertexInDet.push_back(SubDetId::kSubdet2_1);
-  if (ND::params().GetParameterI("highlandIO.FlatTree.TrueVertex.Subdet2_2"))    _saveTrueVertexInDet.push_back(SubDetId::kSubdet2_2);
-  if (ND::params().GetParameterI("highlandIO.FlatTree.TrueVertex.Subdet2_3"))    _saveTrueVertexInDet.push_back(SubDetId::kSubdet2_3);
-  if (ND::params().GetParameterI("highlandIO.FlatTree.TrueVertex.Subdet1_1"))    _saveTrueVertexInDet.push_back(SubDetId::kSubdet1_1);
-  if (ND::params().GetParameterI("highlandIO.FlatTree.TrueVertex.Subdet1_2"))    _saveTrueVertexInDet.push_back(SubDetId::kSubdet1_2);
-
-
   _currentGeomID=999;
-
-
-  // Check software version compatibility between nd280AnalysisTools and current file
-  /*
-  if (_versionCheck){
-    if(!ND::versioning().CheckVersionCompatibility(ND::versioning().GetProduction(input().GetSoftwareVersion()),
-                                                   anaUtils::GetProductionIdFromReader())) return false;
-  }
-  */
-  // Dump the production used for corrections, bunching, systematics, etc
-  //  versionUtils::DumpProductions();
-
-
-  // Enable any corrections that have to be done while the mini tree is being created.
-  
-  if (ND::params().GetParameterI("highlandIO.FlatTree.EnableMomRangeCorrection")){
-    //    _corrections.AddCorrection(CorrId::kMomRangeCorr, "momrange_corr", new MomRangeCorrection());
-  }
 
   //  _file->mkdir("geom");
 
+  // initialize filtering counters
+  _totalParticles = 0;
+  _savedParticles = 0;
+  _totalTrueParticles = 0;
+  _savedTrueParticles = 0;
+  
+  
   return true;
 }
 
@@ -185,7 +123,7 @@ bool CreateMiniTree::Process(){
   _SpillsSincePreviousSavedSpill += _spill->Beam->SpillsSincePreviousSavedSpill; 
 
   // Delete the uninteresting bunches
-  //  DeleteUninterestingBunches();
+  DeleteUninterestingBunches();
 
   // Delete all particles we are not interested in
   DeleteUninterestingParticles();
@@ -223,7 +161,13 @@ bool CreateMiniTree::Process(){
 //********************************************************************
 void CreateMiniTree::Finalize(){
 //********************************************************************
-  // Save the last spill (if not save yet) such that we keep track of the total POT since the last saved entry.
+
+  // Dump info about true and reco filtering
+  std::cout << std::setprecision(2);
+  std::cout << "Reco particle filtering factor " << 100*double(_savedParticles)/_totalParticles << "%" << std::endl; 
+  std::cout << "True particle filtering factor " << 100*double(_savedTrueParticles)/_totalTrueParticles << "%" << std::endl; 
+
+  //---- Save the last spill (if not save yet) such that we keep track of the total POT since the last saved entry.
 
   if (_lastSpillSaved) return;
 
@@ -242,48 +186,11 @@ void CreateMiniTree::Finalize(){
 bool CreateMiniTree::CheckTruthFillMiniTree(const AnaSpill& spill){
 //********************************************************************
 
-  bool ok_det = false;
-  bool ok_reac = false;
-
   const std::vector<AnaTrueVertexB*>& vertices = spill.TrueVertices;
   for (std::vector<AnaTrueVertexB*>::const_iterator it = vertices.begin(); it!=vertices.end(); it++) {
     AnaTrueVertex& vtx = *static_cast<AnaTrueVertex*>(*it);
-
-    // Check the reaction code
-    ok_reac = CheckTrueVertexReaction(vtx);
-
-    // Check the detector only if the reaction is OK
-    if (ok_reac)
-      ok_det = CheckTrueVertexDetector(vtx.Detector);
-
-    // return true when it finds a tru vertex fulfilling both conditions
-    if (ok_reac && ok_det) return true;
+    if (CheckTrueVertex(vtx)) return true;
   }
-
-  return false;
-}
-
-//********************************************************************
-bool CreateMiniTree::CheckTrueVertexReaction(const AnaTrueVertex& vtx){
-//********************************************************************
-
-  // NuWro prod5 uses 70 for 2p2h code (Neut does not have 70 at all, and uses 2 instead)
-  // NuWro prod6 uses 2 as NEUT
-  if (_saveTrueNuNC       && vtx.ReacCode>=+30 && abs(vtx.ReacCode)!=70) return true;
-  if (_saveTrueAntiNuNC   && vtx.ReacCode<=-30 && abs(vtx.ReacCode)!=70) return true;
-  if (_saveTrueNumuCC     && vtx.NuPDG==+14 && ((vtx.ReacCode>0 && vtx.ReacCode<+30) || vtx.ReacCode==+70)) return true;
-  if (_saveTrueAntiNumuCC && vtx.NuPDG==-14 && ((vtx.ReacCode<0 && vtx.ReacCode>-30) || vtx.ReacCode==-70)) return true;
-  if (_saveTrueNueCC      && vtx.NuPDG==+12 && ((vtx.ReacCode>0 && vtx.ReacCode<+30) || vtx.ReacCode==+70)) return true;
-  if (_saveTrueAntiNueCC  && vtx.NuPDG==-12 && ((vtx.ReacCode<0 && vtx.ReacCode>-30) || vtx.ReacCode==-70)) return true;
-  return false;
-}
-
-//********************************************************************
-bool CreateMiniTree::CheckTrueVertexDetector(unsigned long det){
-//********************************************************************
-
-  for (unsigned int i = 0;i<_saveTrueVertexInDet.size();i++)
-    if (SubDetId::GetDetectorUsed(det,_saveTrueVertexInDet[i])) return true;
 
   return false;
 }
@@ -291,22 +198,6 @@ bool CreateMiniTree::CheckTrueVertexDetector(unsigned long det){
 //********************************************************************
 bool CreateMiniTree::CheckReconFillMiniTreeOutOfBunch(const AnaBunchB& bunch){
 //********************************************************************
-
-  for (std::vector<AnaParticleB*>::const_iterator it = bunch.Particles.begin(); it!=bunch.Particles.end(); it++) {
-
-    unsigned long bitfield = (*it)->Detector;
-
-    if (_useSubdet2_1outOfBunch)
-      if (SubDetId::GetDetectorUsed(bitfield, SubDetId::kSubdet2_1)) return true;
-    if (_useSubdet2_2outOfBunch)
-      if (SubDetId::GetDetectorUsed(bitfield, SubDetId::kSubdet2_2)) return true;
-    if (_useSubdet2_3outOfBunch)
-      if (SubDetId::GetDetectorUsed(bitfield, SubDetId::kSubdet2_3)) return true;
-    if (_useSubdet1_1outOfBunch)
-      if (SubDetId::GetDetectorUsed(bitfield, SubDetId::kSubdet1_1)) return true;
-    if (_useSubdet1_2outOfBunch)
-      if (SubDetId::GetDetectorUsed(bitfield, SubDetId::kSubdet1_2)) return true;
-  }
 
   return false;
 }
@@ -316,26 +207,7 @@ bool CreateMiniTree::CheckReconFillMiniTree(const AnaBunchB& bunch){
 //********************************************************************
 
   if (bunch.Bunch == -1) return CheckReconFillMiniTreeOutOfBunch(bunch);
-
-
-  for (std::vector<AnaParticleB*>::const_iterator it = bunch.Particles.begin(); it!=bunch.Particles.end(); it++) {
-
-    unsigned long bitfield = (*it)->Detector;
-
-    if (_useSubdet1_1)
-      if (SubDetId::GetDetectorUsed(bitfield, SubDetId::kSubdet1_1)) return true;
-    if (_useSubdet1_2)
-      if (SubDetId::GetDetectorUsed(bitfield, SubDetId::kSubdet1_2)) return true;
-    if (_useSubdet2_1)
-      if (SubDetId::GetDetectorUsed(bitfield, SubDetId::kSubdet2_1)) return true;
-    if (_useSubdet2_2)
-      if (SubDetId::GetDetectorUsed(bitfield, SubDetId::kSubdet2_2)) return true;
-    if (_useSubdet2_3)
-      if (SubDetId::GetDetectorUsed(bitfield, SubDetId::kSubdet2_3)) return true;
-
-  }
-
-  return false;
+  return true;
 }
 
 //********************************************************************
@@ -471,14 +343,12 @@ void CreateMiniTree::DeleteUninterestingBunches(){
 
 }
 
-
-
 //********************************************************************
 void CreateMiniTree::DeleteUninterestingParticles(){
 //********************************************************************
 
 
-  if (!_trackStartPreselection) return;
+//  if (!_trackStartPreselection) return;
   
   for (std::vector<AnaBunchC*>::iterator it=_spill->Bunches.begin();it!=_spill->Bunches.end();it++){
     AnaBunchB* bunch = static_cast<AnaBunchB*>(*it);    
@@ -486,11 +356,18 @@ void CreateMiniTree::DeleteUninterestingParticles(){
     std::vector<AnaParticleB*> goodParticles;
     std::vector<AnaParticleB*> badParticles;     
     for (std::vector<AnaParticleB*>::iterator it2=bunch->Particles.begin();it2!=bunch->Particles.end();it2++){      
-      AnaParticleB* part = *it2;
+      AnaParticleB* part = *it2;           
 
-      if (part->PositionStart[0]>= _trackStartMinX && part->PositionStart[0] <= _trackStartMaxX &&
-          part->PositionStart[1]>= _trackStartMinY && part->PositionStart[1] <= _trackStartMaxY &&
-          part->PositionStart[2]>= _trackStartMinZ && part->PositionStart[2] <= _trackStartMaxZ) {
+      // increment counter      
+      _totalParticles++;
+      
+      if (CheckSaveParticle(*part)) {        
+
+        // Filter information inside good particles
+        FilterParticleInfo(*part);
+
+        // increment counter
+        _savedParticles++;
         
         goodParticles.push_back(part);
       }
@@ -518,25 +395,14 @@ void CreateMiniTree::DeleteUninterestingTrueParticles(){
 
   std::set<AnaTrueParticleB*> goodTrueParticles;
   std::vector<AnaTrueParticleB*> badTrueParticles;
-  //  std::vector<Int_t> goodTrueDaughters;
-
-  //  std::cout << "1: True Particles:    " << _spill->TrueParticles.size() << std::endl;
-
-  // add the first true particle, since it is ussually the beam one
-  //  goodTrueParticles.insert(_spill->TrueParticles[0]);
-
-  AnaTrueParticle* beampart = FindBeamTrueParticle(*_spill);
-  if (beampart)   goodTrueParticles.insert(beampart);
   
   // Loop over all reconstructed particles in the spill      
   for (std::vector<AnaBunchC*>::iterator it=_spill->Bunches.begin();it!=_spill->Bunches.end();it++){
     AnaBunchB* bunch = static_cast<AnaBunchB*>(*it);    
 
-    //    std::cout << "1.5: Bunch Particles: " << bunch->Particles.size() << std::endl;
     for (std::vector<AnaParticleB*>::iterator it2=bunch->Particles.begin();it2!=bunch->Particles.end();it2++){      
       AnaParticleB* part = *it2;
 
-      //      std::cout <<  " - " << part->TrueObject << std::endl; 
       // If the particle has an associated true object add it
       if (part->TrueObject){
         AnaTrueParticle* truePart0 = static_cast<AnaTrueParticle*>(part->TrueObject);
@@ -546,7 +412,6 @@ void CreateMiniTree::DeleteUninterestingTrueParticles(){
           // Get all dauthers of this true particle recursively (all descendants) and add them 
           std::vector<AnaTrueParticle*> goodTrueDaughters = anaUtils::GetTrueDaughters(_spill->TrueParticles, truePart0, true);
           for (std::vector<AnaTrueParticle*>::iterator it3=goodTrueDaughters.begin();it3!=goodTrueDaughters.end();it3++){      
-            //          std::cout << "  - good daughter: " << (*it3)->ID << std::endl;
             goodTrueParticles.insert(*it3);
           }
         }
@@ -556,59 +421,5 @@ void CreateMiniTree::DeleteUninterestingTrueParticles(){
 
   // Transfer from the set to the vector
   _spill->TrueParticles.assign( goodTrueParticles.begin(), goodTrueParticles.end());
-
-  //  std::cout << "sizes: " << goodTrueParticles.size() << " " << _spill->TrueParticles.size() << std::endl;
-  //  std::cout << "4: Final True Part:   " << _spill->TrueParticles.size() << std::endl;
-
 }
 
-//********************************************************************
-bool CreateMiniTree::SpillLevelPreselection(){
-//********************************************************************
-
-  if (!_beamTOFPreselection) return true;
-
-  if (!_spill->Beam) return true;
-
-  // Don't apply tof cut for MC
-  if (!static_cast<AnaBeam*>(_spill->Beam)->BeamParticle) return true;
-  if (static_cast<AnaBeam*>(_spill->Beam)->BeamParticle->TrueObject) return true;
-  
-  //  double tof =  static_cast<AnaBeam*>(_spill->Beam)->TOF;
-  
-  //  if (tof > _beamMinTOF && tof < _beamMaxTOF) return true;
-  //  else return false;
-
-  return true;
-}
-
-
-//********************************************************************
-AnaTrueParticle* CreateMiniTree::FindBeamTrueParticle(const AnaSpillB& spill){  
-//********************************************************************
-
-
-  AnaTrueParticle* beampart=NULL;
-  
-  AnaBeam* beam         = static_cast<AnaBeam*>(spill.Beam);
-  AnaParticleMomB* beamPart = beam->BeamParticle;
-
-  Float_t beammom=0;
-  if (beamPart){
-    if (beamPart->TrueObject){
-      beammom = static_cast<AnaTrueParticleB*>(beamPart->TrueObject)->Momentum;
-    }
-  }
-  
-  if (spill.TrueParticles.size() > 0){
-    for (UInt_t i =0; i< spill.TrueParticles.size();i++){
-      if (beammom == spill.TrueParticles[i]->Momentum){
-        beampart = static_cast<AnaTrueParticle*> (spill.TrueParticles[i]);
-        break;
-      }
-    }
-  }
-
-  return beampart;
-
-}
