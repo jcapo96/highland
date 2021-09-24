@@ -35,8 +35,8 @@ protected:
   virtual bool CheckSaveParticle(const AnaParticleB& part) {return true;}
   virtual bool CheckSaveTrueParticle(const AnaTrueParticleB& part) {return true;}
 
-
   virtual void FilterParticleInfo(AnaParticleB& part){}
+  virtual void FilterTrueParticleInfo(AnaTrueParticleB& part){}
   
   virtual void FillMiniTree();
   virtual void FillRooTrackerVtxTree();

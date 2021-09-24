@@ -387,38 +387,65 @@ void CreateMiniTree::DeleteUninterestingParticles(){
 void CreateMiniTree::DeleteUninterestingTrueParticles(){
 //********************************************************************
 
-  // Keep the true particles associated to reconstructed particles and all its descendants
   // TODO: in principle no need to delete the true particles that are not kept since they will be deleted at the end of the event
   //       Since this is the final spill and not the raw spill we cannot delete particles !!!!
 
-  if (!_trueWithRecoPreselection) return;
-
   std::set<AnaTrueParticleB*> goodTrueParticles;
-  std::vector<AnaTrueParticleB*> badTrueParticles;
-  
-  // Loop over all reconstructed particles in the spill      
-  for (std::vector<AnaBunchC*>::iterator it=_spill->Bunches.begin();it!=_spill->Bunches.end();it++){
-    AnaBunchB* bunch = static_cast<AnaBunchB*>(*it);    
 
-    for (std::vector<AnaParticleB*>::iterator it2=bunch->Particles.begin();it2!=bunch->Particles.end();it2++){      
-      AnaParticleB* part = *it2;
+  // Loop over all true particles in the spill
+  for(std::vector<AnaTrueParticleB*>::iterator it = _spill->TrueParticles.begin(); it != _spill->TrueParticles.end(); it++){      
+    AnaTrueParticleB* truePart = static_cast<AnaTrueParticle*>(*it);
 
-      // If the particle has an associated true object add it
-      if (part->TrueObject){
-        AnaTrueParticle* truePart0 = static_cast<AnaTrueParticle*>(part->TrueObject);
-        goodTrueParticles.insert(truePart0);
+    // increment counter      
+    _totalTrueParticles++;
+    
+    if (CheckSaveTrueParticle(*truePart)) {        
 
-        if (_trueWithRecoDaughtersPreselection){
-          // Get all dauthers of this true particle recursively (all descendants) and add them 
-          std::vector<AnaTrueParticle*> goodTrueDaughters = anaUtils::GetTrueDaughters(_spill->TrueParticles, truePart0, true);
-          for (std::vector<AnaTrueParticle*>::iterator it3=goodTrueDaughters.begin();it3!=goodTrueDaughters.end();it3++){      
-            goodTrueParticles.insert(*it3);
+        // Filter information inside good true particles
+        FilterTrueParticleInfo(*truePart);
+
+        // increment counter
+        _savedTrueParticles++;
+
+     	goodTrueParticles.insert(truePart);   
+    }
+  }
+
+
+  // Keep the true particles associated to reconstructed particles and all its descendants
+
+  if (_trueWithRecoPreselection){
+    // Loop over all reconstructed particles in the spill      
+    for (std::vector<AnaBunchC*>::iterator it=_spill->Bunches.begin();it!=_spill->Bunches.end();it++){
+      AnaBunchB* bunch = static_cast<AnaBunchB*>(*it);    
+      
+      for (std::vector<AnaParticleB*>::iterator it2=bunch->Particles.begin();it2!=bunch->Particles.end();it2++){      
+        AnaParticleB* part = *it2;
+        
+        // If the particle has an associated true object add it
+        if (part->TrueObject){
+          AnaTrueParticle* truePart0 = static_cast<AnaTrueParticle*>(part->TrueObject);
+
+          if(std::find(goodTrueParticles.begin(), goodTrueParticles.end(), truePart0) == goodTrueParticles.end()){
+            FilterTrueParticleInfo(*truePart0);
+            goodTrueParticles.insert(truePart0);
+          }
+          
+          if (_trueWithRecoDaughtersPreselection){
+            // Get all dauthers of this true particle recursively (all descendants) and add them 
+            std::vector<AnaTrueParticle*> goodTrueDaughters = anaUtils::GetTrueDaughters(_spill->TrueParticles, truePart0, true);
+            for (std::vector<AnaTrueParticle*>::iterator it3=goodTrueDaughters.begin();it3!=goodTrueDaughters.end();it3++){      
+              if(std::find(goodTrueParticles.begin(), goodTrueParticles.end(), *it3) == goodTrueParticles.end()){
+                FilterTrueParticleInfo(**it3);
+                goodTrueParticles.insert(*it3);
+              }
+            }
           }
         }
       }
     }
   }
-
+  
   // Transfer from the set to the vector
   _spill->TrueParticles.assign( goodTrueParticles.begin(), goodTrueParticles.end());
 }
