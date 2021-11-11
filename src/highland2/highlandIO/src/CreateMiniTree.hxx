@@ -44,9 +44,9 @@ protected:
 
   virtual void WriteGeometry();
 
-  void DeleteUninterestingBunches();
-  void DeleteUninterestingParticles();
-  void DeleteUninterestingTrueParticles();
+  virtual void DeleteUninterestingBunches();
+  virtual void DeleteUninterestingParticles();
+  virtual void DeleteUninterestingTrueParticles();
 
   virtual bool SpillLevelPreselection() {return true;} 
 
