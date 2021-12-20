@@ -45,6 +45,7 @@ AnaTrueObjectC::AnaTrueObjectC(){
 //********************************************************************
 
   ID        = -999;
+  AccumLevel.clear();
 }
 
 //********************************************************************
@@ -57,7 +58,15 @@ AnaTrueObjectC::~AnaTrueObjectC(){
 AnaTrueObjectC::AnaTrueObjectC(const AnaTrueObjectC& trueObj){
 //********************************************************************
 
-    ID                = trueObj.ID;
+    ID = trueObj.ID;
+   
+    AccumLevel.resize(trueObj.AccumLevel.size());
+    for (UInt_t i=0;i<trueObj.AccumLevel.size();i++){
+      AccumLevel[i].resize(trueObj.AccumLevel[i].size());
+      for (UInt_t j=0;j<trueObj.AccumLevel[i].size();j++){
+	AccumLevel[i][j]=trueObj.AccumLevel[i][j];
+      }
+    }
 }
 
 //********************************************************************

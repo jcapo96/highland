@@ -187,7 +187,7 @@ AnaTrueVertex::AnaTrueVertex(): AnaTrueVertexB(){
   for (UInt_t i=0; i<(ParticleId::kLast+1); i++)
       NPrimaryParticles[i]=0;
 
-  AccumLevel.clear();
+  //AccumLevel.clear();
 
   ReconParticles.clear();
   ReconVertices.clear();
@@ -222,14 +222,14 @@ AnaTrueVertex::AnaTrueVertex(const AnaTrueVertex& vertex):AnaTrueVertexB(vertex)
   for (UInt_t i=0;i<vertex.PreFSIParticles.size();i++)
     PreFSIParticles.push_back(vertex.PreFSIParticles[i]);
 */
-  AccumLevel.resize(vertex.AccumLevel.size());
+/*  AccumLevel.resize(vertex.AccumLevel.size());
   for (UInt_t i=0;i<vertex.AccumLevel.size();i++){
     AccumLevel[i].resize(vertex.AccumLevel[i].size());
     for (UInt_t j=0;j<vertex.AccumLevel[i].size();j++){
       AccumLevel[i][j]=vertex.AccumLevel[i][j];
     }
   }
-
+*/
   ReconParticles.clear();
   /*
   for (UInt_t i=0;i<vertex.ReconParticles.size();i++)

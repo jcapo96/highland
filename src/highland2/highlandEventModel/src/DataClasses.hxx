@@ -43,7 +43,7 @@ public:
   Float_t NuParentDecPoint[4];
 
   /// Accumulated cut level for all selections and cut branches. Tell us if a true vertex has been selected or not
-  std::vector< std::vector<Int_t> > AccumLevel; //!
+  ///std::vector< std::vector<Int_t> > AccumLevel; //!
 
   /// The Q2 of the true interaction
   Float_t Q2;

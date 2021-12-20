@@ -49,6 +49,10 @@ class AnaTrueObjectC{
 
   /// The ID of the trueObj, which corresponds to the ID of the TTruthParticle that created it
   Int_t ID;
+
+  /// Accumulated cut level for all selections and cut branches. 
+  /// For efficiency calculation regardless of which trueobject type is being used for the event selection
+  std::vector< std::vector<Int_t> > AccumLevel; //!
 };
 
 class AnaRecObjectC{
