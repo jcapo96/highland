@@ -33,6 +33,8 @@ class StepBase{
   }; //!
 
   StepBase();
+  StepBase(Float_t lower_cut, Float_t upper_cut);
+  StepBase(Float_t equal_cut);
   virtual ~StepBase(){}
 
   StepBase(const StepBase& obj);
@@ -82,6 +84,11 @@ class StepBase{
 
   /// Return the index of this step
   Int_t Index() const{return _index;}
+
+  /// Return cut values
+  Int_t LowerCut() const{return _lower_cut;}
+  Int_t UpperCut() const{return _upper_cut;}
+  Int_t EqualCut() const{return _equal_cut;}
 
   /// Convert into a string the type of this step
   std::string ConvertType() const;
@@ -165,7 +172,12 @@ protected:
   std::vector<UInt_t> _branchUniqueIDs;
 
   /// Index of the step in the selection
-  Int_t _index; 
+  Int_t _index;
+
+  /// Cut limits for selection inheritance
+  Float_t _upper_cut;
+  Float_t _lower_cut;
+  Float_t _equal_cut;
 };
 
 

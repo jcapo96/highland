@@ -11,7 +11,43 @@ StepBase::StepBase(){
   _branchUniqueIDs.clear();
   _disabledInBranch.clear();
   _index=-1;
+  _lower_cut = -999;
+  _upper_cut = -999;
+  _equal_cut = -999;
+}
+
+//****************************************************
+StepBase::StepBase(Float_t lower_cut, Float_t upper_cut){
+//****************************************************
+
+  _title="";
+  _type=kUnknown;
+  _break=false;
+  _nextSteps.clear();
+  _branchUniqueIDs.clear();
+  _disabledInBranch.clear();
+  _index=-1;
+  _lower_cut = lower_cut;
+  _upper_cut = upper_cut;
+  _equal_cut = -999;
 }  
+
+//****************************************************
+StepBase::StepBase(Float_t equal_cut){
+//****************************************************
+
+  _title="";
+  _type=kUnknown;
+  _break=false;
+  _nextSteps.clear();
+  _branchUniqueIDs.clear();
+  _disabledInBranch.clear();
+  _index=-1;
+  _lower_cut = -999;
+  _upper_cut = -999;
+  _equal_cut = equal_cut;
+}  
+
 
 //****************************************************
 StepBase::StepBase(const StepBase& step){
@@ -21,6 +57,9 @@ StepBase::StepBase(const StepBase& step){
   _type  = step.Type();
   _break = step.Break();
   _index = step.Index();
+  _lower_cut = step.LowerCut();
+  _upper_cut = step.UpperCut();
+  _equal_cut = step.EqualCut();
   _nextSteps.clear();
   _branchUniqueIDs.clear();
   _disabledInBranch.clear(); 
@@ -45,6 +84,9 @@ void StepBase::CopyStep(const StepBase& step, Int_t branchID){
   _type  = step.Type();
   _break = step.Break();
   _index = step.Index();
+  _lower_cut = step.LowerCut();
+  _upper_cut = step.UpperCut();
+  _equal_cut = step.EqualCut();
   _nextSteps.clear();
   _branchUniqueIDs.clear();
   _disabledInBranch.clear(); 
