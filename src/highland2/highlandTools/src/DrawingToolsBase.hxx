@@ -535,6 +535,9 @@ public :
   /// Set the title that appears at the top of the plot.
   void SetTitle(const std::string& title){_title=title;}
 
+  /// CenterTitles
+  void CenterTitles(const bool centerTitles=true){_centerTitles=centerTitles;}
+
   /// Set the label for the data when drawing comparison plots. Defaults to "Data".
   /// Setting it to "" (empty string) will disable adding it to the legend.
   void SetDataLabel(const std::string& label, Color_t color = kBlack) {_data_label = label; _data_color = color;}
@@ -1065,6 +1068,7 @@ public :
   std::string _titleX;
   std::string _titleY;
   std::string _title;
+  bool _centerTitles;
   Color_t _data_color;
   Color_t _allmc_color;
   std::string _data_label;

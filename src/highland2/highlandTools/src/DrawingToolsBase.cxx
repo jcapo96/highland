@@ -138,6 +138,7 @@ DrawingToolsBase::DrawingToolsBase(const std::string& file, Int_t T2KstyleIndex)
   _titleX="";
   _titleY="";
   _title="";
+  _centerTitles=false;
 
   _data_color = kBlack;
   _allmc_color = kBlack;
@@ -566,7 +567,7 @@ TH1* DrawingToolsBase::Draw(TTree* tree, const std::string& var, int nx, double*
     CreateLegend(uopt);
   
   // Create the empty HistoStack
-  HistoStack* hs = new HistoStack(_title,_titleX,_titleY);
+  HistoStack* hs = new HistoStack(_title,_titleX,_titleY,_centerTitles);
   _saved_histoStacks.push_back(hs);
 
   // Project the trees
@@ -657,7 +658,7 @@ void DrawingToolsBase::Draw(TTree* tree, const std::string& var, int nx, double*
   if (!drawUtils::CheckOption(uopt,"NOLEG"))
     CreateLegend(uopt);
 
-  HistoStack* hs = new HistoStack(_title,_titleX,_titleY);
+  HistoStack* hs = new HistoStack(_title,_titleX,_titleY,_centerTitles);
   _saved_histoStacks.push_back(hs);
 
   Project(hs, tree, var, nx, xbins, ny, ybins, idVar, idSel, idName, idColor, cut, root_opt, opt, norm2, scale_errors);
@@ -727,7 +728,7 @@ void DrawingToolsBase::Draw(TTree* tree_mc, TTree* tree_data, const std::string&
   // mc
   //
 
-  HistoStack* hs = new HistoStack(_title,_titleX,_titleY);
+  HistoStack* hs = new HistoStack(_title,_titleX,_titleY,_centerTitles);
   _saved_histoStacks.push_back(hs);
 
 
@@ -957,8 +958,8 @@ void DrawingToolsBase::DrawEff(TTree* tree, const std::string& var, int nx, doub
   if (!drawUtils::ContainValidOptions(uopt)) return;
 
   // Create empty HistoStacks
-  HistoStack* hs1 = new HistoStack(_title,_titleX,_titleY);
-  HistoStack* hs2 = new HistoStack(_title,_titleX,_titleY);
+  HistoStack* hs1 = new HistoStack(_title,_titleX,_titleY,_centerTitles);
+  HistoStack* hs2 = new HistoStack(_title,_titleX,_titleY,_centerTitles);
   _saved_histoStacks.push_back(hs1);
   _saved_histoStacks.push_back(hs2);
 
@@ -1010,10 +1011,10 @@ void DrawingToolsBase::DrawDoubleEff(TTree* tree1, TTree* tree2, const std::stri
   if (!drawUtils::ContainValidOptions(uopt)) return;
 
   // Create empty HistoStacks
-  HistoStack* hs1_num = new HistoStack(_title,_titleX,_titleY);
-  HistoStack* hs1_den = new HistoStack(_title,_titleX,_titleY);
-  HistoStack* hs2_num = new HistoStack(_title,_titleX,_titleY);
-  HistoStack* hs2_den = new HistoStack(_title,_titleX,_titleY);
+  HistoStack* hs1_num = new HistoStack(_title,_titleX,_titleY,_centerTitles);
+  HistoStack* hs1_den = new HistoStack(_title,_titleX,_titleY,_centerTitles);
+  HistoStack* hs2_num = new HistoStack(_title,_titleX,_titleY,_centerTitles);
+  HistoStack* hs2_den = new HistoStack(_title,_titleX,_titleY,_centerTitles);
   _saved_histoStacks.push_back(hs1_num);
   _saved_histoStacks.push_back(hs1_den);
   _saved_histoStacks.push_back(hs2_num);
@@ -1360,8 +1361,8 @@ void DrawingToolsBase::Draw(TTree* tree1, TTree* tree2, const std::string& var, 
   if (!drawUtils::ContainValidOptions(uopt)) return;
 
   // Create empty HistoStacks
-  HistoStack* hs1 = new HistoStack(_title,_titleX,_titleY);
-  HistoStack* hs2 = new HistoStack(_title,_titleX,_titleY);
+  HistoStack* hs1 = new HistoStack(_title,_titleX,_titleY,_centerTitles);
+  HistoStack* hs2 = new HistoStack(_title,_titleX,_titleY,_centerTitles);
   _saved_histoStacks.push_back(hs1);
   _saved_histoStacks.push_back(hs2);
 
@@ -1383,8 +1384,8 @@ void DrawingToolsBase::DrawRatioTwoCuts(TTree* tree1, TTree* tree2, const std::s
   if (!drawUtils::ContainValidOptions(uopt)) return;
 
   // Create empty HistoStacks
-  HistoStack* hs1 = new HistoStack(_title,_titleX,_titleY);
-  HistoStack* hs2 = new HistoStack(_title,_titleX,_titleY);
+  HistoStack* hs1 = new HistoStack(_title,_titleX,_titleY,_centerTitles);
+  HistoStack* hs2 = new HistoStack(_title,_titleX,_titleY,_centerTitles);
   _saved_histoStacks.push_back(hs1);
   _saved_histoStacks.push_back(hs2);
 

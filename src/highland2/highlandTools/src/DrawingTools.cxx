@@ -1,5 +1,7 @@
 #include "DrawingTools.hxx"
+#include "SetProtoDUNEStyle.H"
 #include "SystematicTools.hxx"
+#include <TLatex.h>
 #include <iomanip>
 #include <iostream>
 #include <fstream>
@@ -16,6 +18,15 @@ DrawingTools::DrawingTools(Experiment& exp, Int_t T2KstyleIndex):DrawingToolsBas
 //********************************************************************
 
   _treeForSystErrors = NULL;
+}
+
+//********************************************************************
+void DrawingTools::ChangeToProtoDUNEStyle(const std::string& localStyleName){
+//********************************************************************
+
+  TStyle* protoDUNEstyle = SetProtoDUNEStyle(localStyleName);
+  gROOT->SetStyle(protoDUNEstyle->GetName());
+  CenterTitles();
 }
 
 //********************************************************************
@@ -2875,4 +2886,15 @@ Int_t DrawingTools::GetMinAccumLevelToSave(Experiment& exp, const std::string& u
     return max2;  
   else
     return -1;
+}
+
+
+//*********************************************************
+void DrawingTools::DrawTopLeftLabel(const std::string& label){
+//*********************************************************
+
+  TLatex tt;
+  tt.SetNDC();
+  tt.DrawLatex(0.10,0.94,("#bf{"+label+"}").c_str());
+
 }

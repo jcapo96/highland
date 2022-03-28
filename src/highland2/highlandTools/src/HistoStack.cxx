@@ -3,7 +3,7 @@
 #include "TCanvas.h"
 
 //********************************************************
-HistoStack::HistoStack(const std::string& title, const std::string& titleX, const std::string& titleY) {
+HistoStack::HistoStack(const std::string& title, const std::string& titleX, const std::string& titleY, bool centerTitles) {
 //*******************************************************
 
   _title = title;
@@ -18,6 +18,7 @@ HistoStack::HistoStack(const std::string& title, const std::string& titleX, cons
 
   _is1D = false;
   _is2D = false;
+  _centerTitles = centerTitles;
 
   _stack = NULL;
   _hall1D_draw = NULL;
@@ -201,7 +202,11 @@ void HistoStack::Draw(int lc, int lw, int fc, int fs, const std::string& root_op
       if (root_opt.find("same") == std::string::npos) {
         _stack->Draw(("HIST"+root_opt).c_str());
         _stack->GetXaxis()->SetTitle(_titleX.c_str());
-        _stack->GetYaxis()->SetTitle(_titleY.c_str());
+	_stack->GetYaxis()->SetTitle(_titleY.c_str());
+        if(_centerTitles){
+	  _stack->GetXaxis()->CenterTitle();
+	  _stack->GetYaxis()->CenterTitle();
+	}
         _stack->Draw(("HIST"+root_opt).c_str());
       } else {
         _stack->Draw("HIST same");

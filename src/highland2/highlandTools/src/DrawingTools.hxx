@@ -30,6 +30,8 @@ public :
   DrawingTools(Experiment& exp, Int_t T2KstyleIndex=0);
   virtual ~DrawingTools(){}
 
+  void ChangeToProtoDUNEStyle(const std::string& localStyleName="");
+
   using DrawingToolsBase::DrawToys;
   void DrawToys(DataSample& data, const std::string& cut="", const std::string& root_opt="", const std::string& opt="", const std::string& leg_name="");
 
@@ -531,6 +533,7 @@ public :
   
   void SetTreeForSystErrors(TTree* tree){_treeForSystErrors= tree;}
 
+  void DrawTopLeftLabel(const std::string& label);
 
  protected:
 
@@ -552,7 +555,7 @@ public :
 
 
   Int_t GetMinAccumLevelToSave(Experiment& exp, const std::string& uopt="");
-  
+
   TTree* _treeForSystErrors;
 
 

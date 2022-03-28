@@ -28,7 +28,7 @@ class HistoStack {
 
     /// Instantiate the object, setting the title of the plot, the X axis, and
     /// the Y axis.
-    HistoStack(const std::string& title, const std::string& titleX, const std::string& titleY);
+    HistoStack(const std::string& title, const std::string& titleX, const std::string& titleY, bool centerTitles = false);
 
     /// Destructor, which cleans up the cumulative histograms used internally
     /// by the class. The user should delete the histograms that were added to
@@ -183,6 +183,9 @@ class HistoStack {
 
     ///  is it 2D ?
     bool _is2D;
+
+    /// shall histogram titles be centered?
+    bool _centerTitles;
 
     /// Histos for updating systematics when using several files
     std::vector<std::string> _systHistoGroups;
