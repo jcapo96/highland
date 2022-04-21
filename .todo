@@ -19,3 +19,5 @@
 - Why InitializeBase on AnalysisAlgorithm?
 
 - We should tidy up CreateMiniTree stuff. Too many things on CreaMiniTree when it is supposed to be a base algorithm. Also, on CreaMiniTreePD there is some "FilterInfo" method that does nothing because it is called nowhere.
+
+- There's a problem when creating the event from the spill and the bunch. The Event.EventInfo is copied in BaseDataClasses from Spill->EventInfo (AnaEventInfoB) and hence all information from AnaEventInfo (EventTime) and AnaEventInfoPD (NominalBeamMom) is lost. This needs to be solved.
