@@ -916,10 +916,10 @@ class AnaEventB: public AnaEventC{
   virtual void Print() const;
 
   /// Return whether this event is from Monte Carlo or not.
-  bool GetIsMC() const {return EventInfo.GetIsMC();}
+  bool GetIsMC() const {return EventInfo->GetIsMC();}
 
   /// Return whether this event is from Sand Monte Carlo or not.
-  bool GetIsSandMC() const {return EventInfo.GetIsSandMC();}
+  bool GetIsSandMC() const {return EventInfo->GetIsSandMC();}
 
  protected:
 
@@ -929,7 +929,7 @@ class AnaEventB: public AnaEventC{
  public:
 
   /// Run, sunrun, event, time  stamp, etc
-  AnaEventInfoB EventInfo;
+  AnaEventInfoB* EventInfo;
 
   /// The Detector data quality flags for this event.
   AnaDataQualityB* DataQuality;

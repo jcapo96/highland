@@ -47,7 +47,7 @@ Int_t  BeamBunching::GetBunchPeriod(const AnaEventB& event){
   
   if( ! event.GetIsMC() ) {
     for(UInt_t j = 0 ; j < bunchrunperiod.size(); j++ ) {
-      if( event.EventInfo.Run <= bunchrunperiod[j].second && event.EventInfo.Run >= bunchrunperiod[j].first ){
+      if( event.EventInfo->Run <= bunchrunperiod[j].second && event.EventInfo->Run >= bunchrunperiod[j].first ){
 	bunchperiod = j; 
 	break; 
       }

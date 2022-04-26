@@ -1249,6 +1249,7 @@ AnaEventB::AnaEventB():AnaEventC(){
     nVertices = 0;
     nTrueParticles = 0;
     nTrueVertices = 0;
+    EventInfo = NULL;
     Beam = NULL;
     DataQuality = NULL;
 
@@ -1304,6 +1305,11 @@ AnaEventB::~AnaEventB(){
     if (Beam){
         delete Beam;
         Beam = NULL;
+    }
+    
+    if (EventInfo){
+        delete EventInfo;
+        EventInfo = NULL;
     }
 
     if (DataQuality){
@@ -1403,7 +1409,9 @@ void AnaEventB::Copy(const AnaEventC& eventC, bool copyBunchInfo, bool cloneTrut
     }
 
 
-    EventInfo = event.EventInfo;
+    EventInfo = NULL;
+    if (event.EventInfo)
+        EventInfo = event.EventInfo->Clone();
 
     Beam = NULL;
     if (event.Beam)
@@ -1429,7 +1437,7 @@ void AnaEventB::Print() const{
 
     std::cout << "-------- AnaEventB --------- " << std::endl;
 
-    EventInfo.Print();
+    EventInfo->Print();
 
     std::cout << "Bunch:              " << Bunch << std::endl;
     std::cout << "NParticles:         " << nParticles  << std::endl;
@@ -1467,6 +1475,7 @@ AnaEventB::AnaEventB(const AnaSpillB& spill, const AnaBunchB& bunch){
   nVertices = 0;
   nTrueParticles = 0;
   nTrueVertices = 0;
+  EventInfo = NULL;
   Beam = NULL;
   DataQuality = NULL;
   
@@ -1474,7 +1483,7 @@ AnaEventB::AnaEventB(const AnaSpillB& spill, const AnaBunchB& bunch){
 
   Weight      = bunch.Weight;
   Bunch       = bunch.Bunch;
-  EventInfo   = *spill.EventInfo;
+  EventInfo   = spill.EventInfo->Clone();
   Beam        = spill.Beam->Clone();
   DataQuality = spill.DataQuality->Clone();
 

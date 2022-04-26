@@ -296,7 +296,7 @@ AnaEventB* MiniTreeConverter::MakeEvent(AnaSpillB& spill, AnaBunchB& bunch) {
 
   event->Weight      = bunch.Weight;
   event->Bunch       = bunch.Bunch;
-  event->EventInfo   = *spill.EventInfo;
+  event->EventInfo   = spill.EventInfo->Clone();
   event->Beam        = spill.Beam->Clone();
   event->DataQuality = spill.DataQuality->Clone();
 
