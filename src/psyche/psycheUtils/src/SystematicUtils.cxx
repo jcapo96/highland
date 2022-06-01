@@ -154,8 +154,9 @@ Weight_h systUtils::ComputeEffLikeWeight(bool found, Float_t variation, const Bi
 
     double eff_ratio = 1;  // control sample efficiency ratio
     if(eff_mc!=0)
-      eff_ratio = eff_mc/eff_d;
-
+      //eff_ratio = eff_mc/eff_d;
+      eff_ratio = eff_d/eff_mc;
+    
     // this way we take the biggest stat error from error bars.
     double eff_mc_error = std::max(params.sigmaMCh,   params.sigmaMCl);
     double eff_d_error  = std::max(params.sigmaDATAh, params.sigmaDATAl);
