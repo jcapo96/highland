@@ -66,11 +66,11 @@ foreach(file0 ${dict_src0})
   string(REPLACE "${dir}/"     "" file2 ${file0})
   string(REPLACE _LinkDef.h    "" file3 ${file2})  
 
-#  root_generate_dictionary(dict/${file3}_Dict NODEPHEADERS ${file3}.hxx LINKDEF ${file0}  MODULE ${file3} DEPENDENCIES ${ROOT_LIBRARIES})
-  root_generate_dictionary(dict/${file3}_Dict ${dir}/${file3}.hxx LINKDEF ${file0}  MODULE ${file3} DEPENDENCIES ${ROOT_LIBRARIES})
+#  root_generate_dictionary(${file3}_Dict NODEPHEADERS ${file3}.hxx LINKDEF ${file0}  MODULE ${file3} DEPENDENCIES ${ROOT_LIBRARIES})
+  root_generate_dictionary(${file3}_Dict ${dir}/${file3}.hxx LINKDEF ${file0}  MODULE ${file3} DEPENDENCIES ${ROOT_LIBRARIES})
 
-  list(APPEND dict_list ${dir}/${file3}.cxx dict/${file3}_Dict.cxx)
-  list(APPEND dict_src  ${CMAKE_BINARY_DIR}/dict/${file3}_Dict.cxx)
+  list(APPEND dict_list ${dir}/${file3}.cxx ${file3}_Dict.cxx)
+  list(APPEND dict_src  ${CMAKE_BINARY_DIR}/${file3}_Dict.cxx)
 
   INSTALL(FILES "${CMAKE_BINARY_DIR}/lib${file3}_rdict.pcm" DESTINATION ${CMAKE_SOURCE_DIR}/lib)
   INSTALL(FILES "${CMAKE_BINARY_DIR}/lib${file3}.rootmap"   DESTINATION ${CMAKE_SOURCE_DIR}/lib)
