@@ -22,11 +22,20 @@ elif [[ -e /cvmfs/larsoft.opensciencegrid.org/products ]] ; then
     # environment for CERN and FERMILAB's machines
     products_dir=/cvmfs/larsoft.opensciencegrid.org/products
 
+    #this was used for the last root version. To be removed.
+    #gcc_version=v8_2_0         
+    #root_version=v6_18_04d         
+    #tbb_version=v2019_3
+    #make_version=v3_14_3
+
     gcc_version=v9_3_0         
     root_version=v6_22_08d         
     tbb_version=v2021_1_1
     cmake_version=v3_22_2
     
+    #this was used for the last root version. To be removed.
+    #root_compiler=Linux64bit+3.10-2.17-e19-prof                  
+    #tbb_compiler=Linux64bit+3.10-2.17-e19-prof
     gcc_compiler=Linux64bit+3.10-2.17
     root_compiler=Linux64bit+3.10-2.17-e20-p392-prof
     tbb_compiler=Linux64bit+3.10-2.17-e20
