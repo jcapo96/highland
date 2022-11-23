@@ -21,3 +21,5 @@
 - We should tidy up CreateMiniTree stuff. Too many things on CreaMiniTree when it is supposed to be a base algorithm. Also, on CreaMiniTreePD there is some "FilterInfo" method that does nothing because it is called nowhere.
 
 - There's a problem when creating the event from the spill and the bunch. The Event.EventInfo is copied in BaseDataClasses from Spill->EventInfo (AnaEventInfoB) and hence all information from AnaEventInfo (EventTime) and AnaEventInfoPD (NominalBeamMom) is lost. This needs to be solved.
+
+- Since moving to root 6_21, CMake17 complains about names/pahts with '/' → dictionaries cannot be saved in the build/dict folder. For the moment they are saved in build, but it is just a temporary walkaround. A proper solution is needed.
