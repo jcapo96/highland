@@ -23,3 +23,5 @@
 - There's a problem when creating the event from the spill and the bunch. The Event.EventInfo is copied in BaseDataClasses from Spill->EventInfo (AnaEventInfoB) and hence all information from AnaEventInfo (EventTime) and AnaEventInfoPD (NominalBeamMom) is lost. This needs to be solved.
 
 - Since moving to root 6_21, CMake17 complains about names/pahts with '/' → dictionaries cannot be saved in the build/dict folder. For the moment they are saved in build, but it is just a temporary walkaround. A proper solution is needed.
+
+- EventBoxB should be defined as an external class from CoreDataClasses, as ToyBoxB and SystBoxB are. And modify how object information is stored. Using fixed sized arrays feels horrible.
