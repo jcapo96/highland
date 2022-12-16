@@ -9,7 +9,7 @@ namespace EventBoxId{
     kEventBoxDUNE,
     kEventBoxPD,
     kEventBox1,
-    kEventBox2,
+    //kEventBox2,
     kEventBoxKaon,
     kEventBoxdEdx
   };
