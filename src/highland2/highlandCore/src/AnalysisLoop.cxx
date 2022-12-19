@@ -327,6 +327,7 @@ void AnalysisLoop::InitializeToy(){
 
     // Get the current Toy Experiment
     ToyExperiment* toy = ana().conf().GetCurrentConfiguration()->GetToyMaker().GetToyExperiment(ana().conf().GetToyIndex());
+    toy->SetToyIndex(ana().conf().GetToyIndex());
 
     // Apply  systematic variations for systematic error propagation
     ana().evar().ApplyEventVariations(*toy, *_event);
