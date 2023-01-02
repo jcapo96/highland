@@ -27,3 +27,5 @@
 - EventBoxB should be defined as an external class from CoreDataClasses, as ToyBoxB and SystBoxB are. And modify how object information is stored. Using fixed sized arrays feels horrible.
 
 - The number of EventBoxes stored in a AnaEvent can't be a fixed number, it should be a std::vector. If you add a new EventBox in EventBoxId and the id > NMAXBOXES everything crashes and you don't know why :)
+
+- Add option to AnalysisLoop and SimpleLoopBase to run up to N *saved* entries
