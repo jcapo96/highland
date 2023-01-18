@@ -2,6 +2,7 @@
 #include "Parameters.hxx"
 #include "Header.hxx"
 #include <sys/time.h>
+#include <climits>
 
 // save all trees every 5000 entries
 const int NENTRIES_TREESAVE_SIMPLE=5000;
@@ -13,6 +14,8 @@ SimpleLoopBase::SimpleLoopBase(int argc, char *argv[]){
   std::string paramFile = "";
   _entry_nmax = 0;
   _entry_imin = 0;
+  _entry_saved_count = 0;
+  _entry_saved_max = INT_MAX; //arbitrarily large number
   _outputFileName = "";
   _inputFileName = "";
   _cosmicMode = false;
@@ -20,7 +23,7 @@ SimpleLoopBase::SimpleLoopBase(int argc, char *argv[]){
   bool logMemory = false;
 
   for (;;) {
-    int c = getopt(argc, argv, "cvmn:o:p:s:");
+    int c = getopt(argc, argv, "cvmn:u:o:p:s:");
     if (c < 0)
       break;
     switch (c) {
@@ -39,6 +42,11 @@ SimpleLoopBase::SimpleLoopBase(int argc, char *argv[]){
       case 'n': {
         std::istringstream tmp(optarg);
         tmp >> _entry_nmax;
+        break;
+      }
+      case 'u': {
+        std::istringstream tmp(optarg);
+        tmp >> _entry_saved_max;
         break;
       }
       case 'o': {
@@ -162,6 +170,9 @@ bool SimpleLoopBase::InitializeSpill(){
   // Dump info about number of entries run
   if (_entry_count%1000==0 || _entry_count == _entry_nmax)
     std::cout << "entry: " <<  _entry_count  << " of " << _entry_nmax << " (" << (100*_entry_count/_entry_nmax) << "%) --> " << _entry << std::endl;
+  // Dump info about number of entries run
+  if (_entry_saved_count%1000==0 || _entry_saved_count == _entry_saved_max)
+    std::cout << "saved entries: " <<  _entry_saved_count  << " of " << _entry_saved_max << " (" << (100*_entry_saved_count/_entry_saved_max) << "%) --> " << _entry << std::endl;
 
   // return if the read spill is not OK
   if (!spillOK) return false;
@@ -268,6 +279,7 @@ void SimpleLoopBase::Loop(int nmax,int imin){
   else
     std::cout << "SimpleLoopBase::Loop(). input tree has " << nentries << " entries (POT counted on the fly)" << std::endl;
   std::cout << "SimpleLoopBase::Loop(). loop over " << _entry_nmax << " entries from entry number "<< _entry_imin << std::endl;
+  std::cout << "SimpleLoopBase::Loop(). or until saving " << _entry_saved_max << std::endl;
 
   // Initialize clock
   timeval tim;
@@ -277,7 +289,7 @@ void SimpleLoopBase::Loop(int nmax,int imin){
   //--------- Loop over entries in the tree ----------------------------------
   _entry=_entry_imin;
 
-  while (_entry<_entry_imax) {
+  while (_entry<_entry_imax && _entry_saved_count<_entry_saved_max) {
     if (!SimpleLoopBase::InitializeSpill()) continue;    
     Process();      
     SimpleLoopBase::FinalizeSpill();
