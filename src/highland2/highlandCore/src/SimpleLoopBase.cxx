@@ -171,7 +171,7 @@ bool SimpleLoopBase::InitializeSpill(){
   if (_entry_count%1000==0 || _entry_count == _entry_nmax)
     std::cout << "entry: " <<  _entry_count  << " of " << _entry_nmax << " (" << (100*_entry_count/_entry_nmax) << "%) --> " << _entry << std::endl;
   // Dump info about number of entries run
-  if (_entry_saved_count%1000==0 || _entry_saved_count == _entry_saved_max)
+  if ((_entry_saved_count%1000==0 || _entry_saved_count == _entry_saved_max) && _entry_saved_max != INT_MAX)
     std::cout << "saved entries: " <<  _entry_saved_count  << " of " << _entry_saved_max << " (" << (100*_entry_saved_count/_entry_saved_max) << "%) --> " << _entry << std::endl;
 
   // return if the read spill is not OK
