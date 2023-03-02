@@ -29,3 +29,5 @@
 - The number of EventBoxes stored in a AnaEvent can't be a fixed number, it should be a std::vector. If you add a new EventBox in EventBoxId and the id > NMAXBOXES everything crashes and you don't know why :)
 
 - Add option to AnalysisLoop and SimpleLoopBase to run up to N *saved* entries
+
+- in PsycheUtils/src/SystematicUtils.cxx, the systematic error of efficiency systematics is computed as 1-r. This doens't work when r is far away from 1 (p.e 0.5). This has to be changed, or include the option to already provide a systematic error.

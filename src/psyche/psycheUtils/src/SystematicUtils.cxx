@@ -156,16 +156,18 @@ Weight_h systUtils::ComputeEffLikeWeight(bool found, Float_t variation, const Bi
     if(eff_mc!=0)
       //eff_ratio = eff_mc/eff_d;
       eff_ratio = eff_d/eff_mc;
-    
-    // this way we take the biggest stat error from error bars.
+
+     // this way we take the biggest stat error from error bars.
     double eff_mc_error = std::max(params.sigmaMCh,   params.sigmaMCl);
     double eff_d_error  = std::max(params.sigmaDATAh, params.sigmaDATAl);
 
-    //stat err of MC are independant from the stat error of the data...
+     //stat err of MC are independant from the stat error of the data...
     double errstat_eff_ratio_2 = eff_ratio*eff_ratio*((eff_d_error*eff_d_error)/(eff_d*eff_d) + (eff_mc_error*eff_mc_error)/(eff_mc*eff_mc));
 
     // TODO. Add a systematic error on that ratio. being conservatives we take the difference to 1 as systematic error
-    double errsyst_eff_ratio = eff_ratio-1; 
+    // TODO: change this. If the ratio is large, (p.e. 0.5) the systematic error is TOO BIG.
+    double errsyst_eff_ratio = eff_ratio-1;
+    if(abs(errsyst_eff_ratio)>0.05)errsyst_eff_ratio = 0.05;
     double errsyst_eff_ratio_2 = errsyst_eff_ratio*errsyst_eff_ratio; 
     double err_eff_ratio     = sqrt(errstat_eff_ratio_2+errsyst_eff_ratio_2);
     // to cross-check that it gives the same error than the other method
