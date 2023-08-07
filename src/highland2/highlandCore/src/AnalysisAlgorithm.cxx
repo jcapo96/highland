@@ -58,6 +58,8 @@ AnalysisAlgorithm::AnalysisAlgorithm(AnalysisAlgorithm* ana){
 
   // Version check enabled by default
   _versionCheck = true;
+
+  _current_weight = 1;
 }
 
 //********************************************************************

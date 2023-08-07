@@ -167,7 +167,7 @@ Weight_h systUtils::ComputeEffLikeWeight(bool found, Float_t variation, const Bi
     // TODO. Add a systematic error on that ratio. being conservatives we take the difference to 1 as systematic error
     // TODO: change this. If the ratio is large, (p.e. 0.5) the systematic error is TOO BIG.
     double errsyst_eff_ratio = eff_ratio-1;
-    if(abs(errsyst_eff_ratio)>0.05)errsyst_eff_ratio = 0.05;
+    if(abs(errsyst_eff_ratio)>0.1)errsyst_eff_ratio = 0.1;
     double errsyst_eff_ratio_2 = errsyst_eff_ratio*errsyst_eff_ratio; 
     double err_eff_ratio     = sqrt(errstat_eff_ratio_2+errsyst_eff_ratio_2);
     // to cross-check that it gives the same error than the other method

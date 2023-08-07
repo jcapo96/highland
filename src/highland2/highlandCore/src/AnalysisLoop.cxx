@@ -357,6 +357,7 @@ void AnalysisLoop::FinalizeSelection(const SelectionBase& selec){
   if (_toy_passed && _event->GetIsMC() && ana().eweight().GetNEnabledEventWeights()>0){      
     // Get the current Toy Experiment
     ToyExperiment* toy = ana().conf().GetCurrentConfiguration()->GetToyMaker().GetToyExperiment(ana().conf().GetToyIndex());
+    toy->SetToyIndex(ana().conf().GetToyIndex());
     // Apply the relevant weight systematics for the current selection. Internally loops over branches in the selection and compute the weights only 
     // for the succesfull branches
     ana().eweight().ComputeEventWeights(selec,*toy, *_event, selec.GetPreviousToyBox(*_event), _weightSyst);
@@ -1317,6 +1318,7 @@ void AnalysisLoop::FillToyVarsInMicroTrees(){
       ana().output().FillToyVar(AnalysisAlgorithm::weight_corr_total, weight_corr_total);
     }
     ana().output().FillVar(AnalysisAlgorithm::NWEIGHTSYST, nWeightSyst);
+    ana().SetCurrentEventWeight(weight_syst_total);
   }
 
   // Fill the user toy experiment variables
