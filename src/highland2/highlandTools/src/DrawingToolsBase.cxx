@@ -139,6 +139,8 @@ DrawingToolsBase::DrawingToolsBase(const std::string& file, Int_t T2KstyleIndex)
   _titleY="";
   _title="";
   _centerTitles=false;
+  _titleXoffset=1.0;
+  _titleYoffset=1.0;
 
   _data_color = kBlack;
   _allmc_color = kBlack;
@@ -2075,6 +2077,12 @@ void DrawingToolsBase::DrawHisto(TH1* h, int lc, int lw, int fc, int fs, const s
   h->GetXaxis()->SetTitle(_titleX.c_str());
   h->GetYaxis()->SetTitle(_titleY.c_str());
   h->SetTitle(_title.c_str());
+
+  h->GetXaxis()->SetTitleOffset(_titleXoffset);
+  h->GetYaxis()->SetTitleOffset(_titleYoffset);
+
+  if (drawUtils::CheckInternalOption(uopt,"ISDATA"))
+    h->SetLineWidth(3);
   
   //---------- Put the right statistics box, with no variable binning normalization --------------
   TH1_h* hp = new TH1_h(*((TH1_h*)h));
@@ -3043,7 +3051,7 @@ TH1_h* DrawingToolsBase::GetEventsVSCut(TTree* tree, const std::string& name, co
 
     // Build the cut
     std::string cut= cut0 + " && " + BuildAccumLevelCut(std::string(tree->GetName()), sel().GetNEnabledSelections(), isel, ibranch,icut);
-    
+
     // Apply event weights
     std::string cutp = weightTools::ApplyWeights(tree,cut,uopt);
 

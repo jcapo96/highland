@@ -535,6 +535,12 @@ public :
   /// Set the title that appears at the top of the plot.
   void SetTitle(const std::string& title){_title=title;}
 
+  /// Set the title offset in X
+  void SetTitleOffsetX(double offset){_titleXoffset=offset;}
+
+  /// Set the title offset in Y
+  void SetTitleOffsetY(double offset){_titleYoffset=offset;}
+
   /// CenterTitles
   void CenterTitles(const bool centerTitles=true){_centerTitles=centerTitles;}
 
@@ -1068,6 +1074,8 @@ public :
   std::string _titleX;
   std::string _titleY;
   std::string _title;
+  double _titleXoffset;
+  double _titleYoffset;
   bool _centerTitles;
   Color_t _data_color;
   Color_t _allmc_color;
