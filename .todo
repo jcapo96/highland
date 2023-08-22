@@ -31,3 +31,5 @@
 - Add option to AnalysisLoop and SimpleLoopBase to run up to N *saved* entries
 
 - in PsycheUtils/src/SystematicUtils.cxx, the systematic error of efficiency systematics is computed as 1-r. This doens't work when r is far away from 1 (p.e 0.5). This has to be changed, or include the option to already provide a systematic error.
+
+- in ManagerBase, the branch address for analysisloop classes (selection, categories, systematics...) is set using a void pointer. This gives problems depending on the distribution/compiler of the computer. A temporary fix has been implemented so that the void pointer is casted into the appropriate class (std::vector<SelectionBase*>, std::vector<SystematicBase*>...) before the branch address is set. This allows to run everywhere. However, it is a hotfix, a rigorous solution is needed.
