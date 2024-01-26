@@ -348,7 +348,13 @@ void drawUtils::BuildOptions(){
   drawUtils::AddOption("NOEXTW",       "Don't apply external weights");
   drawUtils::AddOption("EFFDEF",       "Use Default tree for efficiencies");
   drawUtils::AddOption("CATNAME",      "Use category name as legend title");
+  drawUtils::AddOption("SAMPLENORM",   "Use category name as legend title");
   drawUtils::AddOption("NORMBYWIDTH1", "For 1D histos normalization to 1 considering bin width. Corresponds to a probability distribution");
+  drawUtils::AddOption("WEi",        "Include the specified (ith) external weight(s) (\"WE0 WES1 ... \")");
+  drawUtils::AddOption("NWEi",      "Exclude the specified (ith) external weight(s) (\"NWE0 NWE1 ... \")");
+  drawUtils::AddOption("NOEXTW",    "Don't apply external weights");
+  drawUtils::AddOption("EFFDEF",    "Use Default tree for efficiencies");
+  drawUtils::AddOption("CATNAME",   "Use category name as legend title");
   //! [DrawingToolsOptions]
 }
 
