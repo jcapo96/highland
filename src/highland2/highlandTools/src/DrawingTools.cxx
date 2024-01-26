@@ -2898,3 +2898,26 @@ void DrawingTools::DrawTopLeftLabel(const std::string& label){
   tt.DrawLatex(0.10,0.94,("#bf{"+label+"}").c_str());
 
 }
+
+//*********************************************************
+void DrawingTools::SetAlphanumericLabels(const int n,  const std::string* labels, const float size){
+//*********************************************************
+
+  if(_saved_histoStacks.empty()){
+    std::cout << "No histograms drawn yet!" << std::endl;
+    std::cout << "This function can only be called AFTER drawing" << std::endl;
+    return;
+  }
+
+  for(int ihh = 0; ihh < (int)_saved_histoStacks.size(); ihh++){
+    if(!_saved_histoStacks[ihh]->GetRootStack())continue;
+    int nx = _saved_histoStacks[ihh]->GetRootStack()->GetXaxis()->GetNbins();
+    if(n != nx){
+      std::cout << "labels array and histogram number of bins don't match!" << std::endl;
+      return;
+    }
+    for(int ibin = 0; ibin < nx; ibin++)
+      _saved_histoStacks[ihh]->GetRootStack()->GetXaxis()->SetBinLabel(ibin+1,labels[ibin].c_str());
+    _saved_histoStacks[ihh]->GetRootStack()->GetXaxis()->SetLabelSize(size);
+  }
+}
