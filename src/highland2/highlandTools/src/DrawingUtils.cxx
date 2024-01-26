@@ -348,6 +348,7 @@ void drawUtils::BuildOptions(){
   drawUtils::AddOption("NOEXTW",    "Don't apply external weights");
   drawUtils::AddOption("EFFDEF",    "Use Default tree for efficiencies");
   drawUtils::AddOption("CATNAME",   "Use category name as legend title");
+  drawUtils::AddOption("SAMPLENORM",   "Use category name as legend title");
   //! [DrawingToolsOptions]
 }
 

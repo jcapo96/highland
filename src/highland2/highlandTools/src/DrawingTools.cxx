@@ -144,9 +144,10 @@ void DrawingTools::Project(HistoStack* hs1, HistoStack* hs2, SampleGroup& sample
   DataSample* sample1 = NULL;
   if (hs1){
     sample1 = sampleGroup.GetDataSample();
-    if (sample1)
+    if (sample1){
       //      Project(hs1, "sample1", *sample1,var,nx,xbins,ny,ybins,"all",cut,root_opt,opt+" NOSYS",1   ,scale_errors);
       Project(hs1, "sample1", *sample1,var,nx,xbins,ny,ybins,"all",cut,root_opt,opt,1   ,scale_errors);
+    }
   }
 
   if (hs2){
@@ -1150,9 +1151,9 @@ void DrawingTools::GetNormalisationFactor(DataSample* sample1,DataSample* sample
 //*********************************************************
 
   std::string uopt = drawUtils::ToUpper(opt);
-
-  ////---------- Normalization factor for sample 2 ----------------------
   
+  ////---------- Normalization factor for sample 2 ----------------------
+
   // The option NOPOTNORM disables POT normalization
   if (drawUtils::CheckOption(uopt,"NOPOTNORM")){
     norm2=1;
@@ -1165,9 +1166,13 @@ void DrawingTools::GetNormalisationFactor(DataSample* sample1,DataSample* sample
   else if (norm2>0 && sample2 && drawUtils::CheckOption(uopt,"POTNORM")){
     norm2 = GetPOTRatio(*sample2, *sample2, norm2);  // sample1 may not exist, thus we give sample2 as dummy first argument
   }
-  // otherwise, if the factor is still negative  don't normalize
-  else if (norm2<=0)
+  // Check otherwise if the sample has some fixed normalization
+  else if (drawUtils::CheckOption(uopt,"SAMPLENORM")){
+    norm2 = sample2->GetNorm();
+  }
+  else if (norm2<=0){
     norm2=1;
+  }
 
   // Otherwise the normalization factor is used to directly scale sample2 regardless of its POT
   
@@ -1176,12 +1181,13 @@ void DrawingTools::GetNormalisationFactor(DataSample* sample1,DataSample* sample
   
   if (drawUtils::CheckOption(uopt,"NOPOTNORM")){
     norm1=1;
+    std::cout << 4 << std::endl;
   }
   // When norm>0 and the POTNORM option is given, the second sample is normalized to the POT indicated by norm, regardless of the POT of sample 1
   else if (norm1!=1 && drawUtils::CheckOption(uopt,"POTNORM")){
     norm1 = GetPOTRatio(*sample1, *sample1, norm1);  // sample1 may not exist, thus we give sample2 as dummy first argument
+    std::cout << 5 << std::endl;
   }
-  
   // Otherwise the normalization factor is used to directly scale sample1 regardless of its POT
 }
 
