@@ -3,18 +3,20 @@ export MAKEFLAGS=-j8 QUICK=1
 # automatically find the highland source directory
 export HIGHLANDPATH="$(cd -P -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd -P)"
 echo "HIGHLANDPATH=${HIGHLANDPATH}"
+export HOSTNAME=${HOST}
+echo ${HOSTNAME}
 
 if [[ ${HOSTNAME} =~ "neutrinos" ]] ; then
     # environment for IFIC's machines
     products_dir=/data4/NEXT/software/scisoft
 
-    gcc_version=v7_3_0         
-    root_version=v6_18_04         
+    gcc_version=v7_3_0
+    root_version=v6_18_04
     tbb_version=v2019_3
     cmake_version=v3_14_3
-    
+
     gcc_compiler=Linux64bit+2.6-2.12
-    root_compiler=Linux64bit+2.6-2.12-e17-prof                
+    root_compiler=Linux64bit+2.6-2.12-e17-prof
     tbb_compiler=Linux64bit+2.6-2.12-e17-prof
     cmake_compiler=Linux64bit+2.6-2.12
 
@@ -23,18 +25,18 @@ elif [[ -e /cvmfs/larsoft.opensciencegrid.org/products ]] ; then
     products_dir=/cvmfs/larsoft.opensciencegrid.org/products
 
     #this was used for the last root version. To be removed.
-    #gcc_version=v8_2_0         
-    #root_version=v6_18_04d         
+    #gcc_version=v8_2_0
+    #root_version=v6_18_04d
     #tbb_version=v2019_3
     #make_version=v3_14_3
 
-    gcc_version=v9_3_0         
-    root_version=v6_22_08d         
+    gcc_version=v9_3_0
+    root_version=v6_22_08d
     tbb_version=v2021_1_1
     cmake_version=v3_22_2
-    
+
     #this was used for the last root version. To be removed.
-    #root_compiler=Linux64bit+3.10-2.17-e19-prof                  
+    #root_compiler=Linux64bit+3.10-2.17-e19-prof
     #tbb_compiler=Linux64bit+3.10-2.17-e19-prof
     gcc_compiler=Linux64bit+3.10-2.17
     root_compiler=Linux64bit+3.10-2.17-e20-p392-prof
@@ -43,9 +45,15 @@ elif [[ -e /cvmfs/larsoft.opensciencegrid.org/products ]] ; then
 elif [[ ${HOSTNAME} =~ "portcervera.ific.uv.es" ||  ${HOSTNAME} =~ "Anselmo-Cerveras-MacBook-Pro-II.local" ]]; then
     # environment for Anselmo's laptop
     root_dir=/hep/sw/root-6.12.06/myroot
+elif [[ ${HOSTNAME} =~ "eduroamnat57-255.eduroamnat.uv.es" ||  ${HOSTNAME} =~ "Jordis-MacBook-Pro.local" || ${HOST} =~ "Jordis-MacBook-Pro-3.local" ]]; then
+    # environment for Jordi's laptop
+    root_dir=/Applications/root_v6.34.04
+#    root_dir=/Users/jcapo/cernbox/DUNE-IFIC/Software/root
+    echo ${root_dir}
 else
-    echo "ENVIRONMENT NOT AVAILABLE FOR THIS MACHINE !!! ADD APPROPRIATE ENVIRONMENT TO scripts/setup.sh" 
-    return
+    root_dir=/Applications/root_v6.34.04
+    echo "ENVIRONMENT NOT AVAILABLE FOR THIS MACHINE !!! ADD APPROPRIATE ENVIRONMENT TO scripts/setup.sh"
+#    return
 fi
 
 if [[ x$products_dir != x ]] && [[ -z "$TBBROOT" ]] ; then
@@ -54,25 +62,25 @@ if [[ x$products_dir != x ]] && [[ -z "$TBBROOT" ]] ; then
     export root_dir=$products_dir/root/$root_version/$root_compiler
     export cmake_dir=$products_dir/cmake/$cmake_version/$cmake_compiler
 
-    export LD_LIBRARY_PATH=$gcc_dir/lib64:$gcc_dir/lib:$tbb_dir/lib:$LD_LIBRARY_PATH         
+    export LD_LIBRARY_PATH=$gcc_dir/lib64:$gcc_dir/lib:$tbb_dir/lib:$LD_LIBRARY_PATH
     export PATH=$cmake_dir/bin/:$gcc_dir/bin/:$PATH
 fi
 
 if [[ -z "$ROOTSYS" ]]; then
     # tell the system where ROOT is
     export ROOTSYS=$root_dir
-    export PATH=$ROOTSYS/bin:$PATH    
+    export PATH=$ROOTSYS/bin:$PATH
     export DYLD_LIBRARY_PATH=$ROOTSYS/lib:$DYLD_LIBRARY_PATH
     export   LD_LIBRARY_PATH=$ROOTSYS/lib:$LD_LIBRARY_PATH
 
-    
-    # necessary for root to find headers in dictionaries 
+
+    # necessary for root to find headers in dictionaries
     # (see https://root.cern/doc/v618/release-notes.html#header-location-and-root_generate_dictionary-root_standard_library_package)
     export ROOT_INCLUDE_PATH=$HIGHLANDPATH/include
 fi
 
 
-export PATH=$HIGHLANDPATH/bin:$PATH    
+export PATH=$HIGHLANDPATH/bin:$PATH
 export DYLD_LIBRARY_PATH=$HIGHLANDPATH/lib:$DYLD_LIBRARY_PATH
 export   LD_LIBRARY_PATH=$HIGHLANDPATH/lib:$LD_LIBRARY_PATH
 
