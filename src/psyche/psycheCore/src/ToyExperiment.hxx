@@ -55,7 +55,13 @@ public:
       std::cout << " ToyExperiment::SetToyVariation(): variation with index " << index << " does not exist " << std::endl;   
     }
     _toyVariations[index]->Variations[0] = var;_toyVariations[index]->Weights[0] = weight;
-  } 
+  }
+
+  /// Set the index of this toy
+  void SetToyIndex(UInt_t index){_toyIndex = index;}
+
+  /// Get the index of this toy
+  UInt_t GetToyIndex() const {return _toyIndex;};
 
 public:
 
@@ -64,6 +70,8 @@ public:
 
   /// Total number of toyVariations
   UInt_t _nToyVariations;
+
+  UInt_t _toyIndex;
 };
 
 #endif

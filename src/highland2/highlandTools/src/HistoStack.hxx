@@ -102,6 +102,9 @@ class HistoStack {
     /// Fill the legend with info in the HistoStack
     void FillLegend(TLegend* leg);
 
+    /// Return the number of 1D histos
+    Int_t GetNHisto1D() const {return _histos1D.size();}
+  
     /// Returns one of the histos in the 1D stack. The title is used for comparison
     TH1_h* GetHisto1D(const std::string& title);
 
@@ -120,6 +123,9 @@ class HistoStack {
     /// normalize all histos in the stack by area
     void NormalizeByArea(const std::string& uopt, double area=1);
 
+    /// normalize all histos in the stack to 1 considering bin widht. Resulting histogram correponds to a probability distribution
+    void NormalizeByBinWidthTo1(const std::string& uopt);
+
     /// delete all temporary histos used for drawing the stak (with variable binning normalization) 
     void ResetDrawHistos();
 
@@ -137,6 +143,9 @@ class HistoStack {
 
     /// Set the title in Y
     void SetTitleY(const std::string& title){_titleY=title;}
+
+    /// Get Root Stack
+    THStack* GetRootStack() {return _stack;}
   
   protected:
 

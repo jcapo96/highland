@@ -242,6 +242,7 @@ void CreateMiniTree::FillMiniTree(){
   
   // Fill the tree
   FillTree(minitree);
+  _entry_saved_count++;
 
   // Reset to 0
   _POTSincePreviousSavedSpill   =0;

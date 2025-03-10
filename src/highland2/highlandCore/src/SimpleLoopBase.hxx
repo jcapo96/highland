@@ -106,6 +106,9 @@ class SimpleLoopBase: public OutputManager {
   /// Total number of entries run so far
   int _entry_count;
 
+  /// Total number of entries to be saved 
+  int _entry_saved_max;
+
   HighlandInputManager _input;
 
   enum enumConfigTree_SimpleLoopBase{
@@ -116,6 +119,10 @@ class SimpleLoopBase: public OutputManager {
     OriginalFile,
     enumConfigTreeLast_SimpleLoopBase
   };
+
+ protected:
+  /// Total number of entries saved so far
+  int _entry_saved_count;
 
 };
 

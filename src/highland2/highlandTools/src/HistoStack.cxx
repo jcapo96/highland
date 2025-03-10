@@ -520,6 +520,39 @@ void HistoStack::NormalizeByArea(const std::string& uopt, double area){
 
 }
 
+//********************************************************
+void HistoStack::NormalizeByBinWidthTo1(const std::string& uopt){
+//*******************************************************
+
+  if (!drawUtils::CheckOption(uopt, "NORMBYWIDTH1")) return;
+
+  if (_hall1D){
+    double integral = _hall1D->Integral("width");    
+    if(integral > 0.){ 
+      _hall1D->Sumw2();
+      _hall1D->Scale(1/integral);      
+
+      if (_hall1D_syst){
+        _hall1D_syst->Sumw2();
+        _hall1D_syst->Scale(1/integral);      
+      }
+
+      if (_hall1D_stat){
+        _hall1D_stat->Sumw2();
+        _hall1D_stat->Scale(1/integral);      
+      }
+
+      if (_histos1D.size() > 0) {
+        std::vector<TH1_h*>::iterator it1;
+        for (it1 = _histos1D.begin(); it1 != _histos1D.end(); it1++) {
+          TH1_h* ht = *it1;
+          ht->Scale(1/integral);      
+        }
+      }
+    }
+  }
+}
+
 
 //*********************************************************
 double HistoStack::GetMaximum(const std::string& opt){

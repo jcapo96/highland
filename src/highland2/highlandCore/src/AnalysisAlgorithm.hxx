@@ -148,6 +148,8 @@ public:
   /// Set the point of the analysis at which AnalysisLoop is
   void SetAnalysisPoint(enumAnalysisPoint point);
 
+  void SetCurrentEventWeight(Float_t weight){_current_weight = weight;}
+
 public:
 
   HighlandInputManager& input()  {return *_inputManager;}
@@ -223,6 +225,8 @@ public:
   bool _versionCheck;
 
   enumAnalysisPoint _analysisPoint;
+
+  Float_t _current_weight;
   
 public:
 

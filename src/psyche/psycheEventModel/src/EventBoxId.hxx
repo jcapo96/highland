@@ -1,7 +1,9 @@
 #ifndef EventBoxId_hxx_seen
 #define EventBoxId_hxx_seen
 
-// TODO 
+// TODO
+
+// maximum number of boxes 6 in order for the software to run
 namespace EventBoxId{
 
   enum EventBoxEnum{
@@ -9,8 +11,9 @@ namespace EventBoxId{
     kEventBoxDUNE,
     kEventBoxPD,
     kEventBox1,
-    kEventBox2,
-    kEventBoxKaon
+    //kEventBox2,
+    kEventBoxKaon,
+    kEventBoxdEdx
   };
 }
 

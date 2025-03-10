@@ -535,6 +535,8 @@ public :
 
   void DrawTopLeftLabel(const std::string& label);
 
+  void SetAlphanumericLabels(const int n, const std::string *labels, const float size);
+
  protected:
 
   Double_t DrawErrorsBase(TTree* tree, const std::string& var, int nx, double* xbins, 

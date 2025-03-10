@@ -3,6 +3,13 @@
 #include <stdio.h>
 #include <iostream>
 
+#include <SystematicBase.hxx>
+#include <SelectionBase.hxx>
+#include <CategoryClasses.hxx>
+#include <CorrectionBase.hxx>
+#include <ConfigurationBase.hxx>
+#include <DocString.hxx>
+#include <VersionManager.hxx>
 
 //********************************************************************
 ManagerBase::ManagerBase(const std::string& tree_name, const std::string& vector_name, const std::string& class_name, void* ptr){
@@ -42,8 +49,40 @@ void ManagerBase::ReadTreeVector(const std::string& file){
   _chain = new TChain(_treeName.c_str());
   _chain->AddFile(file.c_str());
 
-  // Set the branch address
-  _chain->SetBranchAddress(_vectorName.c_str(), &_pointer, &_branch);
+  // Depending on the distribution, ROOT does not allow to set branch addresses with void pointers.
+  // This is a walkaround for the moment, although a proper one is needed.
+  //_chain->SetBranchAddress(_vectorName.c_str(), &_pointer, &_branch);
+
+  if(_vectorName=="SEL"){
+    std::vector<SelectionBase*> *v = static_cast<std::vector<SelectionBase*>*>(_pointer);
+    _chain->SetBranchAddress(_vectorName.c_str(), &v, &_branch);
+  }
+  else if(_vectorName=="SYST"){
+    std::vector<SystematicBase*> *v = static_cast<std::vector<SystematicBase*>*>(_pointer);
+    _chain->SetBranchAddress(_vectorName.c_str(), &v, &_branch);
+  }
+  else if(_vectorName=="CATEG"){
+    std::map<std::string, TrackCategoryDefinition*> *v = static_cast<std::map<std::string, TrackCategoryDefinition*>*>(_pointer);
+    _chain->SetBranchAddress(_vectorName.c_str(), &v, &_branch);
+  }
+  else if(_vectorName=="CORR"){
+    std::vector<CorrectionBase*> *v = static_cast<std::vector<CorrectionBase*>*>(_pointer);
+    _chain->SetBranchAddress(_vectorName.c_str(), &v, &_branch);
+  }
+  else if(_vectorName=="CONF"){
+    std::vector<ConfigurationBase* > *v = static_cast<std::vector<ConfigurationBase*>*>(_pointer);
+    _chain->SetBranchAddress(_vectorName.c_str(), &v, &_branch);
+  }
+  else if(_vectorName=="DocString"){
+    std::vector<DocString*> *v = static_cast<std::vector<DocString*>*>(_pointer);
+    _chain->SetBranchAddress(_vectorName.c_str(), &v, &_branch);
+  }
+  else if(_vectorName=="VERSION"){
+    std::vector<PackageVersion*> *v = static_cast<std::vector<PackageVersion*>*>(_pointer);
+    _chain->SetBranchAddress(_vectorName.c_str(), &v, &_branch);
+  }
+  else
+    std::cout << "ManagerBase::SetProperBranchAddress(). unknown class '" << _vectorName << "', exiting now !!!" << std::endl;
   
   // Read one entry
   Long64_t centry = _chain->LoadTree(0);
@@ -76,3 +115,4 @@ void ManagerBase::WriteTreeMap(TTree& tree){
   
   tree.Bronch(_vectorName.c_str(), ("map<std::string, "+_className+"*>").c_str(), &_pointer);
 }
+
