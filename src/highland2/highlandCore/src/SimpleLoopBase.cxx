@@ -1,6 +1,7 @@
 #include "SimpleLoopBase.hxx"
 #include "Parameters.hxx"
 #include "Header.hxx"
+#include "CoreUtils.hxx"
 #include <sys/time.h>
 #include <climits>
 
@@ -18,12 +19,13 @@ SimpleLoopBase::SimpleLoopBase(int argc, char *argv[]){
   _entry_saved_max = INT_MAX; //arbitrarily large number
   _outputFileName = "";
   _inputFileName = "";
+  _inputSkimFileName = "";
   _cosmicMode = false;
   _versionCheck = true;
   bool logMemory = false;
 
   for (;;) {
-    int c = getopt(argc, argv, "cvmn:u:o:p:s:");
+    int c = getopt(argc, argv, "cvmn:u:o:p:s:e:");
     if (c < 0)
       break;
     switch (c) {
@@ -62,6 +64,10 @@ SimpleLoopBase::SimpleLoopBase(int argc, char *argv[]){
         tmp >> _entry_imin;
         break;
       }
+      case 'e': {
+        _inputSkimFileName = optarg;
+        break;
+      }
       default: {
         PrintUsage(programName);
       }
@@ -94,6 +100,9 @@ SimpleLoopBase::SimpleLoopBase(int argc, char *argv[]){
   // Make sure no parameters have been accessed yet
   ND::params().SetReadParamOverrideFilePointPassed();
 
+  // Set the skim file name if provided
+  anaUtils::skimFileName = _inputSkimFileName;
+
   _memory.Enable(logMemory);
 
   /*
@@ -117,9 +126,9 @@ bool SimpleLoopBase::Initialize(){
   // Read corrections from the input file
 
   // When running over a FlatTree corrections may already exist in it.
-  // It that case corrections are read from the input file (config tree) and added to the CorrectionManager. 
-  // In this case each correction is stored as 
-  // "appliedInInput" and "disabled", such that it is not applied twice. 
+  // It that case corrections are read from the input file (config tree) and added to the CorrectionManager.
+  // In this case each correction is stored as
+  // "appliedInInput" and "disabled", such that it is not applied twice.
   if (!_input.InputIsOriginalTree()){
     _corrections.ReadCorrections(_inputFileName, true);
   }
@@ -156,7 +165,7 @@ bool SimpleLoopBase::InitializeSpill(){
 
   // To compute the entry increment
   Int_t entry0 = _entry;
-  
+
   // Fill the spill structure for the current spill from the input tree
   // The previous succesfully read spill is deleted internally if the current spill is OK
   bool spillOK = input().LoadSpill(_entry);
@@ -176,7 +185,7 @@ bool SimpleLoopBase::InitializeSpill(){
 
   // return if the read spill is not OK
   if (!spillOK) return false;
-  
+
   // Apply corrections
   _corrections.ApplyCorrections(input().GetCorrectedSpill());
 
@@ -211,7 +220,7 @@ void SimpleLoopBase::FinalizeSpill(){
   _memory.LogMemory();
 
   // Finalize the input manager (delete Spill and RawSpill)
-  //  input().FinalizeSpill();  
+  //  input().FinalizeSpill();
 }
 
 //********************************************************************
@@ -222,9 +231,9 @@ void SimpleLoopBase::Finalize(){
   Finalize();
 
   // Create and fill the header tree with a single entry
-  AddTreeWithName(OutputManager::header,"header");  
+  AddTreeWithName(OutputManager::header,"header");
   Header* headerp = &_input.header();
-  GetTree(OutputManager::header)->Branch("POTInfo","Header",&headerp,32000,0);  
+  GetTree(OutputManager::header)->Branch("POTInfo","Header",&headerp,32000,0);
   GetTree(OutputManager::header)->Fill();
 
   // Save all trees after looping over all events
@@ -252,18 +261,18 @@ void SimpleLoopBase::DefineOutputTree(){
 
   DefineOutputTree();
 }
-  
+
 //********************************************************************
 void SimpleLoopBase::Loop(int nmax,int imin){
 //********************************************************************
-  
+
   if (!SimpleLoopBase::Initialize()) return;
-  
+
   // Get the number of entries in the tree
-  Long64_t nentries = _input.GetEntries();  
+  Long64_t nentries = _input.GetEntries();
 
   if (imin>nentries){
-    std::cout << "SimpleLoopBase::Loop(). input tree has " << nentries << " entries. You cannot start from entry " << imin << std::endl;    
+    std::cout << "SimpleLoopBase::Loop(). input tree has " << nentries << " entries. You cannot start from entry " << imin << std::endl;
     return;
   }
 
@@ -271,7 +280,7 @@ void SimpleLoopBase::Loop(int nmax,int imin){
   if (nmax==0 || imin+nmax>nentries) _entry_nmax = nentries-imin;
   else                               _entry_nmax = nmax;
 
-  // Compute the number of the last entry to be run  
+  // Compute the number of the last entry to be run
   _entry_imax = _entry_imin+_entry_nmax;
 
   if (input().InputIsFlatTree())
@@ -290,17 +299,17 @@ void SimpleLoopBase::Loop(int nmax,int imin){
   _entry=_entry_imin;
 
   while (_entry<_entry_imax && _entry_saved_count<_entry_saved_max) {
-    if (!SimpleLoopBase::InitializeSpill()) continue;    
-    Process();      
+    if (!SimpleLoopBase::InitializeSpill()) continue;
+    Process();
     SimpleLoopBase::FinalizeSpill();
   }
   SimpleLoopBase::Finalize();
 
   gettimeofday(&tim, NULL);
   double t1=tim.tv_sec+(tim.tv_usec/1000000.0);
-  
+
   std::cout << "--------- time profile --------------" << std::endl;
-  std::cout << _entry_nmax << " entries processed in " << t1-t0 << " seconds" << std::endl;    
+  std::cout << _entry_nmax << " entries processed in " << t1-t0 << " seconds" << std::endl;
 
 }
 
@@ -315,38 +324,38 @@ void SimpleLoopBase::FillConfigTree(){
   SetFillSingleTree(OutputManager::config);
 
   // The $HIGHLANDPATH
-  AddVar(OutputManager::config, SimpleLoopBase::HIGHLANDPATH,   "HIGHLANDPATH",   "C", "the HIGHLANDPATH used to produce the output file");  
-  FillVar(SimpleLoopBase::HIGHLANDPATH, (std::string)getenv("HIGHLANDPATH") );  
+  AddVar(OutputManager::config, SimpleLoopBase::HIGHLANDPATH,   "HIGHLANDPATH",   "C", "the HIGHLANDPATH used to produce the output file");
+  FillVar(SimpleLoopBase::HIGHLANDPATH, (std::string)getenv("HIGHLANDPATH") );
 
   // The Machine name
-  AddVar(OutputManager::config, SimpleLoopBase::HOSTNAME,   "HOSTNAME",   "C", "the machine used to produce the output file");  
+  AddVar(OutputManager::config, SimpleLoopBase::HOSTNAME,   "HOSTNAME",   "C", "the machine used to produce the output file");
   if (getenv("HOSTNAME"))
-    FillVar(SimpleLoopBase::HOSTNAME, (std::string)getenv("HOSTNAME") );  
-  else 
-    FillVar(SimpleLoopBase::HOSTNAME, "unknown" );  
+    FillVar(SimpleLoopBase::HOSTNAME, (std::string)getenv("HOSTNAME") );
+  else
+    FillVar(SimpleLoopBase::HOSTNAME, "unknown" );
 
   // The input file name
-  AddVar(OutputManager::config, SimpleLoopBase::INPUTFILE,   "InputFile",   "C", "the input file used to produce the output file");  
-  FillVar(SimpleLoopBase::INPUTFILE, _inputFileName );  
+  AddVar(OutputManager::config, SimpleLoopBase::INPUTFILE,   "InputFile",   "C", "the input file used to produce the output file");
+  FillVar(SimpleLoopBase::INPUTFILE, _inputFileName );
 
   // The original file (i.e. the recon output file)
-  AddVar(OutputManager::config, SimpleLoopBase::OriginalFile,   "OriginalFile",   "C", "the original file used to produce the output file");  
+  AddVar(OutputManager::config, SimpleLoopBase::OriginalFile,   "OriginalFile",   "C", "the original file used to produce the output file");
 
   if (!_input.InputIsOriginalTree()){
     TChain* chain = new TChain("config");
-    chain->AddFile(_inputFileName.c_str());    
+    chain->AddFile(_inputFileName.c_str());
     char OriginalFile[200]="unknown";
-    if (chain->FindLeaf("OriginalFile")){        
+    if (chain->FindLeaf("OriginalFile")){
       chain->SetBranchAddress("OriginalFile", OriginalFile);
       Long64_t centry = chain->LoadTree(0);
       Int_t nb = chain->GetEntry(0);
       (void) centry;
       (void) nb;
     }
-    FillVar(SimpleLoopBase::OriginalFile, OriginalFile );  
+    FillVar(SimpleLoopBase::OriginalFile, OriginalFile );
   }
   else
-    FillVar(SimpleLoopBase::OriginalFile, _inputFileName );  
+    FillVar(SimpleLoopBase::OriginalFile, _inputFileName );
 
 
   SetFillAllTrees();
@@ -376,6 +385,7 @@ void SimpleLoopBase::PrintUsage(const std::string& programName){
   std::cout << "    -n <cnt>          Only read <cnt> events" << std::endl;
   std::cout << "    -o <file>         Set the name of an output file (mandatory)" << std::endl;
   std::cout << "    -s <cnt>          Skip <cnt> events" << std::endl;
+  std::cout << "    -e <file>         Set the name of file containing events to skim (format: run subrun event)" << std::endl;
   std::cout << "    -p <file>         Set the name of a parameter override file" << std::endl;
   std::cout << "    -v                Don't Check version compatibility between oaAnalysisReader and oaAnalysis file" << std::endl;
   std::cout << "    -m                Log memory usage (written to histograms in output file)" << std::endl;

@@ -1,7 +1,18 @@
 #include "DrawingTools.hxx"
+#include "EventDisplayBase.hxx"
 #include "SetProtoDUNEStyle.H"
 #include "SystematicTools.hxx"
+#include "Parameters.hxx"
+#include <TClass.h>
 #include <TLatex.h>
+#include <TPolyLine3D.h>
+#include <TPolyMarker3D.h>
+#include <TGLViewer.h>
+#include <TView3D.h>
+#include <TAxis3D.h>
+#include <TMarker.h>
+#include <TLine.h>
+#include <TEllipse.h>
 #include <iomanip>
 #include <iostream>
 #include <fstream>
@@ -11,6 +22,8 @@ DrawingTools::DrawingTools(const std::string& file, Int_t T2KstyleIndex):Drawing
 //********************************************************************
 
   _treeForSystErrors = NULL;
+  _eventDisplay = NULL;
+  _autoCreatedEventDisplay = false;
 }
 
 //********************************************************************
@@ -18,6 +31,8 @@ DrawingTools::DrawingTools(Experiment& exp, Int_t T2KstyleIndex):DrawingToolsBas
 //********************************************************************
 
   _treeForSystErrors = NULL;
+  _eventDisplay = NULL;
+  _autoCreatedEventDisplay = false;
 }
 
 //********************************************************************
@@ -62,17 +77,17 @@ void DrawingTools::ChangeToProtoDUNEStyle(const std::string& localStyleName){
 
   }
   else{
-    std::cout << "avg systematic  error: " << std::endl; 
+    std::cout << "avg systematic  error: " << std::endl;
     std::map< std::string, std::map< std::string, bool > >::iterator it;
     for (it= GetTrees().begin();it!=GetTrees().end();it++){
       if (!TreeEnabled(it->first)) continue;
       GetCounter(it->first, name).ComputeAvgErrors();
       std::cout << " - " << it->first <<  "\t" <<  GetCounter(it->first, name).GetAvgRelSystError() << std::endl;
     }
-    std::cout << "avg statistical error (default):  " << GetCounter("default", name).GetAvgRelStatError() << std::endl; 
+    std::cout << "avg statistical error (default):  " << GetCounter("default", name).GetAvgRelStatError() << std::endl;
     if (CheckHistoConf("all_syst", name,"all")){
-      std::cout << "avg statistical error (all syst): " << GetCounter("all_syst", name).GetAvgRelStatError() << std::endl; 
-      std::cout << "avg total  error:                 " << GetCounter("all_syst", name).GetAvgRelTotalError() << std::endl; 
+      std::cout << "avg statistical error (all syst): " << GetCounter("all_syst", name).GetAvgRelStatError() << std::endl;
+      std::cout << "avg total  error:                 " << GetCounter("all_syst", name).GetAvgRelTotalError() << std::endl;
     }
   }
 
@@ -89,7 +104,7 @@ void DrawingTools::ChangeToProtoDUNEStyle(const std::string& localStyleName){
 std::string DrawingTools::GetCombinedCut(DataSample& sample, const std::string& cut){
 //*********************************************************
 
-  std::string cut1 = cut;  
+  std::string cut1 = cut;
   if (sample.GetCut() !="") cut1 = cut+" && ("+sample.GetCut()+")";
   return cut1;
 }
@@ -100,11 +115,11 @@ void DrawingTools::Project(HistoStack* hs, const std::string& sample_name,DataSa
 //*********************************************************
 
   std::string opt2 = opt + " EXP";
-  DrawingToolsBase::Project(hs, sample_name, sample.GetTree(),var,nx,xbins,ny,ybins,categ,GetCombinedCut(sample,cut),root_opt,opt2,norm,scale_errors);  
+  DrawingToolsBase::Project(hs, sample_name, sample.GetTree(),var,nx,xbins,ny,ybins,categ,GetCombinedCut(sample,cut),root_opt,opt2,norm,scale_errors);
 }
 
 //*********************************************************
-void DrawingTools::Project(HistoStack* hs1, HistoStack* hs2, DataSample* sample1, DataSample* sample2, 
+void DrawingTools::Project(HistoStack* hs1, HistoStack* hs2, DataSample* sample1, DataSample* sample2,
                            const std::string& var, int nx, double* xbins, int ny, double* ybins, const std::string& categ,
                            const std::string& cut,  const std::string& root_opt, const std::string& opt, bool scale_errors, double norm1, double norm2){
 //*********************************************************
@@ -114,7 +129,7 @@ void DrawingTools::Project(HistoStack* hs1, HistoStack* hs2, DataSample* sample1
   Project(hs1,hs2,exp,"all","all",                var,nx,xbins,ny,ybins,categ,cut,root_opt,opt,norm1, scale_errors);
   //  Project(hs1, hs2, exp, groupName, mcSampleName, var,nx,xbins,ny,ybins,categ,cut,root_opt,uopt,norm, norm2, scale_errors);
   /*
-  
+
   if (!sample1 || !sample2) return;
 
   // Get the normalisation factor for sample2
@@ -127,13 +142,13 @@ void DrawingTools::Project(HistoStack* hs1, HistoStack* hs2, DataSample* sample1
 }
 
 //*********************************************************
-void DrawingTools::Project(HistoStack* hs1, HistoStack* hs2, SampleGroup& sampleGroup, const std::string& mcSampleName,  
+void DrawingTools::Project(HistoStack* hs1, HistoStack* hs2, SampleGroup& sampleGroup, const std::string& mcSampleName,
                            const std::string& var, int nx, double* xbins, int ny, double* ybins, const std::string& categ,
                            const std::string& cut,  const std::string& root_opt, const std::string& opt, double norm, bool scale_errors){
 //*********************************************************
 
   if (!HasCategory(categ)) return;
-  
+
   if (mcSampleName!="all"){
     if (!sampleGroup.HasMCSample(mcSampleName)) return;
   }
@@ -172,13 +187,13 @@ void DrawingTools::Project(HistoStack* hs1, HistoStack* hs2, SampleGroup& sample
 }
 
 //*********************************************************
-void DrawingTools::Project(HistoStack* hs1, HistoStack* hs2, Experiment& exp,  const std::string& groupName, const std::string& mcSampleName, 
+void DrawingTools::Project(HistoStack* hs1, HistoStack* hs2, Experiment& exp,  const std::string& groupName, const std::string& mcSampleName,
                            const std::string& var, int nx, double* xbins, int ny, double* ybins, const std::string& categ,
                            const std::string& cut,  const std::string& root_opt, const std::string& opt, double norm, bool scale_errors){
 //*********************************************************
 
   if (!HasCategory(categ)) return;
-  
+
   std::string uopt = drawUtils::ToUpper(opt);
 
   // Loop over SampleGroup's in the experiment
@@ -226,7 +241,7 @@ void DrawingTools::PrintPurities(Experiment& exp, const std::string& categ,  con
   }
 
   std::string uopt = drawUtils::ToUpper(opt);
-  
+
   int i=0;
 
   std::vector<TrackTypeDefinition>::iterator it;
@@ -234,7 +249,7 @@ void DrawingTools::PrintPurities(Experiment& exp, const std::string& categ,  con
   double dummy1, dummy2, nev1, nev2;
   // Just to get the total number of events
   dummy1 = GetEff(exp, false, dummy1, dummy2, nev1, nev2, cut, cut,"",uopt+" PUR");
-  
+
   std::cout << " --------------------------------------------------------" << std::endl;
   std::cout << " Experiment Purities (not POT normalized):  " << std::endl;
   std::cout << "  Category: " << categ << std::endl;
@@ -283,7 +298,7 @@ void DrawingTools::PrintPurities(Experiment& exp, const std::string& categ,  con
 }
 
 //*********************************************************
-void DrawingTools::Draw(DataSample& sample, const std::string& var, int nx, double xmin, double xmax, 
+void DrawingTools::Draw(DataSample& sample, const std::string& var, int nx, double xmin, double xmax,
 			const std::string& categ, const std::string& cut,  const std::string& root_opt, const std::string& opt, double norm, bool scale_errors){
 //*********************************************************
 
@@ -292,7 +307,7 @@ void DrawingTools::Draw(DataSample& sample, const std::string& var, int nx, doub
 }
 
 //*********************************************************
-void DrawingTools::Draw(DataSample& sample, const std::string& var, int nbins, double* xbins, 
+void DrawingTools::Draw(DataSample& sample, const std::string& var, int nbins, double* xbins,
 			const std::string& categ, const std::string& cut,  const std::string& root_opt, const std::string& opt, double norm,  bool scale_errors){
 //*********************************************************
 
@@ -301,7 +316,7 @@ void DrawingTools::Draw(DataSample& sample, const std::string& var, int nbins, d
 }
 
 //*********************************************************
-void DrawingTools::Draw(DataSample& sample, const std::string& var, int nx, double xmin, double xmax, int ny, double ymin, double ymax, 
+void DrawingTools::Draw(DataSample& sample, const std::string& var, int nx, double xmin, double xmax, int ny, double ymin, double ymax,
 			const std::string& categ, const std::string& cut,  const std::string& root_opt, const std::string& opt, double norm){
 //*********************************************************
 
@@ -310,7 +325,7 @@ void DrawingTools::Draw(DataSample& sample, const std::string& var, int nx, doub
 }
 
 //*********************************************************
-void DrawingTools::Draw(DataSample& sample, const std::string& var, int nx, double* xbins, int ny, double* ybins, 
+void DrawingTools::Draw(DataSample& sample, const std::string& var, int nx, double* xbins, int ny, double* ybins,
 			const std::string& categ, const std::string& cut,  const std::string& root_opt, const std::string& opt, double norm){
 //*********************************************************
 
@@ -319,7 +334,7 @@ void DrawingTools::Draw(DataSample& sample, const std::string& var, int nx, doub
 }
 
 //*********************************************************
-void DrawingTools::DrawEff(DataSample& sample, const std::string& var, int nx, double xmin, double xmax, 
+void DrawingTools::DrawEff(DataSample& sample, const std::string& var, int nx, double xmin, double xmax,
 			   const std::string& cut1, const std::string& cut2, const std::string& root_opt, const std::string& opt, const std::string& leg_name){
 //*********************************************************
 
@@ -328,7 +343,7 @@ void DrawingTools::DrawEff(DataSample& sample, const std::string& var, int nx, d
 }
 
 //*********************************************************
-void DrawingTools::DrawEff(DataSample& sample, const std::string& var, int nx, double* xbins, 
+void DrawingTools::DrawEff(DataSample& sample, const std::string& var, int nx, double* xbins,
 			   const std::string& cut1, const std::string& cut2, const std::string& root_opt, const std::string& opt, const std::string& leg_name){
 //*********************************************************
 
@@ -354,7 +369,7 @@ void DrawingTools::DrawEff(DataSample& sample, const std::string& var, int nx, d
   //  std::string slevel = GetSameLevel(root_opt);
 
   std::cout << "COMPUTE EFFICIENCY USING '" << sample.GetCurrentTreeName() << "' TREE FOR NUMERATOR AND 'truth' TREE FOR DENOMINATOR:" << std::endl;
-  
+
   // Check that the variable is present in both trees
   if (!drawUtils::TreeHasVar(sample.GetTree(),var)){
     std::cout << "ERROR: Tree '" << sample.GetCurrentTreeName() <<"' does not have variable " << var
@@ -366,7 +381,7 @@ void DrawingTools::DrawEff(DataSample& sample, const std::string& var, int nx, d
               << ". This variable should have been defined in both '" << sample.GetCurrentTreeName()  << "' and 'truth' trees !!!!" <<  std::endl;
     return;
   }
-    
+
   // Project both trees
   // use cut2 for the truth tree (used for denominator)
   // use cut1 && cut2 for default/syst tree (used for numerator)
@@ -397,7 +412,7 @@ void DrawingTools::DrawEff(DataSample& sample, const std::string& var, int nx, d
 }
 
 //*********************************************************
-void DrawingTools::DrawDoubleEff(DataSample& sample1, DataSample& sample2, const std::string& var, int nx, double xmin, double xmax, 
+void DrawingTools::DrawDoubleEff(DataSample& sample1, DataSample& sample2, const std::string& var, int nx, double xmin, double xmax,
 				 const std::string& cut1, const std::string& cut2, const std::string& root_opt, const std::string& opt, const std::string& leg_name){
 //*********************************************************
 
@@ -405,7 +420,7 @@ void DrawingTools::DrawDoubleEff(DataSample& sample1, DataSample& sample2, const
 }
 
 //*********************************************************
-void DrawingTools::DrawDoubleEff(DataSample& sample1, DataSample& sample2, const std::string& var, int nx, double* xbins, 
+void DrawingTools::DrawDoubleEff(DataSample& sample1, DataSample& sample2, const std::string& var, int nx, double* xbins,
 				 const std::string& cut1, const std::string& cut2, const std::string& root_opt, const std::string& opt, const std::string& leg_name){
 //*********************************************************
 
@@ -439,7 +454,7 @@ void DrawingTools::DrawEff(Experiment& exp, bool usedata, const std::string& var
 
 //*********************************************************
 void DrawingTools::DrawEffNew(Experiment& exp, bool usedata, const std::string& var, int nx, double xmin, double xmax,
-			      const std::string& cut1, const std::string& cut2, const std::string& root_opt, const std::string& opt1, const std::string& opt2, 
+			      const std::string& cut1, const std::string& cut2, const std::string& root_opt, const std::string& opt1, const std::string& opt2,
 			      const std::string& leg_name) {
 //*********************************************************
   double xbins[NMAXBINS];
@@ -448,7 +463,7 @@ void DrawingTools::DrawEffNew(Experiment& exp, bool usedata, const std::string& 
 
 //*********************************************************
 void DrawingTools::DrawEffNew(Experiment& exp, bool usedata, const std::string& var, int nx, double* xbins,
-			      const std::string& cut1, const std::string& cut2, const std::string& root_opt, const std::string& opt1, 
+			      const std::string& cut1, const std::string& cut2, const std::string& root_opt, const std::string& opt1,
 			      const std::string& opt2, const std::string& leg) {
 //*********************************************************
   double dummy1, dummy2;
@@ -495,7 +510,7 @@ void DrawingTools::DrawPur(Experiment& exp, const std::string& var, int nx, doub
 }
 
 //*********************************************************
-void DrawingTools::DrawSignificance(DataSample& sample, const std::string& var, int nx, double xmin, double xmax, 
+void DrawingTools::DrawSignificance(DataSample& sample, const std::string& var, int nx, double xmin, double xmax,
 				    const std::string& cut1, const std::string& cut2, double norm, double rel_syst, const std::string& root_opt, const std::string& opt, const std::string& leg_name){
 //*********************************************************
 
@@ -503,7 +518,7 @@ void DrawingTools::DrawSignificance(DataSample& sample, const std::string& var, 
 }
 
 //*********************************************************
-void DrawingTools::DrawSignificance(DataSample& sample, const std::string& var, int nx, double* xbins, const std::string& cut1, const std::string& cut2, 
+void DrawingTools::DrawSignificance(DataSample& sample, const std::string& var, int nx, double* xbins, const std::string& cut1, const std::string& cut2,
 				    double norm, double rel_syst, const std::string& root_opt, const std::string& opt, const std::string& leg_name){
 //*********************************************************
 
@@ -511,7 +526,7 @@ void DrawingTools::DrawSignificance(DataSample& sample, const std::string& var, 
 }
 
 //*********************************************************
-void DrawingTools::DrawRatio(DataSample& sample, const std::string& var, int nx, double xmin, double xmax, 
+void DrawingTools::DrawRatio(DataSample& sample, const std::string& var, int nx, double xmin, double xmax,
 			     const std::string& cut1, const std::string& cut2, const std::string& root_opt, const std::string& opt, const std::string& leg_name){
 //*********************************************************
 
@@ -526,7 +541,7 @@ void DrawingTools::PrintEventNumbers(DataSample& sample, const std::string& cut,
 }
 
 //*********************************************************
-void DrawingTools::DrawRatio(DataSample& sample, const std::string& var, int nx, double* xbins, 
+void DrawingTools::DrawRatio(DataSample& sample, const std::string& var, int nx, double* xbins,
 			     const std::string& cut1, const std::string& cut2, const std::string& root_opt, const std::string& opt, const std::string& leg_name){
 //*********************************************************
 
@@ -534,7 +549,7 @@ void DrawingTools::DrawRatio(DataSample& sample, const std::string& var, int nx,
 }
 
 //**************************************************
-void DrawingTools::Draw(DataSample& sample1, DataSample& sample2, const std::string& var, int nx, double xmin, double xmax, 
+void DrawingTools::Draw(DataSample& sample1, DataSample& sample2, const std::string& var, int nx, double xmin, double xmax,
 			const std::string& categ, const std::string& cut, const std::string& root_opt, const std::string& opt, double norm, bool scale_errors){
 //**************************************************
 
@@ -544,7 +559,7 @@ void DrawingTools::Draw(DataSample& sample1, DataSample& sample2, const std::str
 }
 
 //**************************************************
-void DrawingTools::Draw(DataSample& sample1, DataSample& sample2, const std::string& var, int nx, double* xbins, 
+void DrawingTools::Draw(DataSample& sample1, DataSample& sample2, const std::string& var, int nx, double* xbins,
 			const std::string& categ, const std::string& cut, const std::string& root_opt, const std::string& opt, double norm, bool scale_errors){
 //**************************************************
 
@@ -555,7 +570,7 @@ void DrawingTools::Draw(DataSample& sample1, DataSample& sample2, const std::str
 }
 
 //**************************************************
-void DrawingTools::Draw(DataSample& sample1, DataSample& sample2, const std::string& var, int nx, double xmin, double xmax, 
+void DrawingTools::Draw(DataSample& sample1, DataSample& sample2, const std::string& var, int nx, double xmin, double xmax,
                         const std::string& categ, const std::string& cut, const std::string& root_opt, const std::string& opt, double norm1, double norm2, bool scale_errors){
 //**************************************************
 
@@ -565,7 +580,7 @@ void DrawingTools::Draw(DataSample& sample1, DataSample& sample2, const std::str
 }
 
 //**************************************************
-void DrawingTools::Draw(DataSample& sample1, DataSample& sample2, const std::string& var, int nx, double* xbins, 
+void DrawingTools::Draw(DataSample& sample1, DataSample& sample2, const std::string& var, int nx, double* xbins,
                         const std::string& categ, const std::string& cut, const std::string& root_opt, const std::string& opt, double norm1, double norm2, bool scale_errors){
 //**************************************************
 
@@ -575,7 +590,7 @@ void DrawingTools::Draw(DataSample& sample1, DataSample& sample2, const std::str
   Draw(sample1,sample2,var,nx,xbins,ny,ybins,categ,cut,root_opt, opt,norm1,norm2,scale_errors);
 }
 //**************************************************
-void DrawingTools::Draw(DataSample& sample1, DataSample& sample2, const std::string& var, int nx, double xmin, double xmax, int ny, double ymin, double ymax, 
+void DrawingTools::Draw(DataSample& sample1, DataSample& sample2, const std::string& var, int nx, double xmin, double xmax, int ny, double ymin, double ymax,
 			const std::string& categ, const std::string& cut, const std::string& root_opt, const std::string& opt, double norm, bool scale_errors){
 //**************************************************
 
@@ -586,7 +601,7 @@ void DrawingTools::Draw(DataSample& sample1, DataSample& sample2, const std::str
 }
 
 //**************************************************
-void DrawingTools::Draw(DataSample& sample1, DataSample& sample2, const std::string& var, int nx, double xmin, double xmax, int ny, double ymin, double ymax, 
+void DrawingTools::Draw(DataSample& sample1, DataSample& sample2, const std::string& var, int nx, double xmin, double xmax, int ny, double ymin, double ymax,
                         const std::string& categ, const std::string& cut, const std::string& root_opt, const std::string& opt, double norm1, double norm2, bool scale_errors){
 //**************************************************
 
@@ -597,7 +612,7 @@ void DrawingTools::Draw(DataSample& sample1, DataSample& sample2, const std::str
 }
 
 //**************************************************
-void DrawingTools::Draw(DataSample& sample1, DataSample& sample2, const std::string& var, int nx, double* xbins, int ny, double* ybins, 
+void DrawingTools::Draw(DataSample& sample1, DataSample& sample2, const std::string& var, int nx, double* xbins, int ny, double* ybins,
                         const std::string& categ, const std::string& cut, const std::string& root_opt, const std::string& opt, double norm2, bool scale_errors){
 //**************************************************
 
@@ -606,16 +621,16 @@ void DrawingTools::Draw(DataSample& sample1, DataSample& sample2, const std::str
 }
 
 //**************************************************
-void DrawingTools::Draw(DataSample& sample1, DataSample& sample2, const std::string& var, int nx, double* xbins, int ny, double* ybins, 
+void DrawingTools::Draw(DataSample& sample1, DataSample& sample2, const std::string& var, int nx, double* xbins, int ny, double* ybins,
                         const std::string& categ, const std::string& cut, const std::string& root_opt, const std::string& opt, double norm1, double norm2, bool scale_errors){
 //**************************************************
- 
+
   Experiment exp("exp", &sample1, &sample2);
   Draw(exp,"all","all", var,nx,xbins,ny,ybins,categ,cut,root_opt,opt,norm2, scale_errors);
   /*
-  
+
   if (!HasCategory(categ)) return;
-  
+
   std::string uopt = drawUtils::ToUpper(opt);
 
   // Check that all user options are valid
@@ -624,13 +639,13 @@ void DrawingTools::Draw(DataSample& sample1, DataSample& sample2, const std::str
   // Create empty Histo Stacks
   HistoStack* hs1 = new HistoStack(_title,_titleX,_titleY);
   HistoStack* hs2 = new HistoStack(_title,_titleX,_titleY);
-  _saved_histoStacks.push_back(hs1);  
-  _saved_histoStacks.push_back(hs2);  
+  _saved_histoStacks.push_back(hs1);
+  _saved_histoStacks.push_back(hs2);
 
   std::string slevel = GetSameLevel(root_opt);
 
   // Project the first sample with normalization 1 and the second sample normalized to the first one
-  Project(hs1, hs2, &sample1, &sample2, var,nx,xbins,ny,ybins,categ,cut,root_opt,opt,scale_errors,norm1,norm2);  
+  Project(hs1, hs2, &sample1, &sample2, var,nx,xbins,ny,ybins,categ,cut,root_opt,opt,scale_errors,norm1,norm2);
 
   // Draw the Total Stack after all samples have been projected
   DrawingToolsBase::DrawHistoStacks(hs1,hs2,categ,root_opt,opt,1);
@@ -638,7 +653,7 @@ void DrawingTools::Draw(DataSample& sample1, DataSample& sample2, const std::str
 }
 
 //**************************************************
-void DrawingTools::DrawRatio(DataSample& sample1, DataSample& sample2, const std::string& var, int nx, double xmin, double xmax, 
+void DrawingTools::DrawRatio(DataSample& sample1, DataSample& sample2, const std::string& var, int nx, double xmin, double xmax,
 			     const std::string& cut1, const std::string& cut2, double norm, const std::string& root_opt, const std::string& opt, const std::string& leg_name){
 //**************************************************
 
@@ -647,7 +662,7 @@ void DrawingTools::DrawRatio(DataSample& sample1, DataSample& sample2, const std
 }
 
 //**************************************************
-void DrawingTools::DrawRatio(DataSample& sample1, DataSample& sample2, const std::string& var, int nx, double* xbins, 
+void DrawingTools::DrawRatio(DataSample& sample1, DataSample& sample2, const std::string& var, int nx, double* xbins,
 			     const std::string& cut1, const std::string& cut2, double norm, const std::string& root_opt, const std::string& opt, const std::string& leg_name){
 //**************************************************
 
@@ -656,7 +671,7 @@ void DrawingTools::DrawRatio(DataSample& sample1, DataSample& sample2, const std
 }
 
 //**************************************************
-void DrawingTools::DrawRatio(DataSample& sample1, DataSample& sample2, const std::string& var, int nx, double xmin, double xmax, 
+void DrawingTools::DrawRatio(DataSample& sample1, DataSample& sample2, const std::string& var, int nx, double xmin, double xmax,
 			     const std::string& cut, double norm, const std::string& root_opt, const std::string& opt, const std::string& leg_name){
 //**************************************************
 
@@ -665,7 +680,7 @@ void DrawingTools::DrawRatio(DataSample& sample1, DataSample& sample2, const std
 }
 
 //**************************************************
-void DrawingTools::DrawRatio(DataSample& sample1, DataSample& sample2, const std::string& var, int nx, double* xbins, 
+void DrawingTools::DrawRatio(DataSample& sample1, DataSample& sample2, const std::string& var, int nx, double* xbins,
 			     const std::string& cut, double norm, const std::string& root_opt, const std::string& opt, const std::string& leg_name){
 //**************************************************
 
@@ -681,7 +696,7 @@ void DrawingTools::DrawToys(DataSample& sample, const std::string& cut, const st
 }
 
 //*********************************************************
-void DrawingTools::DrawToysRatio(DataSample& sample1, DataSample& sample2, const std::string& cut, 
+void DrawingTools::DrawToysRatio(DataSample& sample1, DataSample& sample2, const std::string& cut,
 				    const std::string& root_opt, const std::string& opt, const std::string& leg_name, double norm){
 //*********************************************************
 
@@ -690,7 +705,7 @@ void DrawingTools::DrawToysRatio(DataSample& sample1, DataSample& sample2, const
 }
 
 //*********************************************************
-void DrawingTools::DrawToysRatioTwoCuts(DataSample& sample1, DataSample& sample2, const std::string& cut1, const std::string& cut2, 
+void DrawingTools::DrawToysRatioTwoCuts(DataSample& sample1, DataSample& sample2, const std::string& cut1, const std::string& cut2,
 				    const std::string& root_opt, const std::string& opt, const std::string& leg_name, double norm){
 //*********************************************************
 
@@ -778,7 +793,7 @@ void DrawingTools::DrawEffVSCut(DataSample& sample, int isel, int ibranch, const
 
   // Read the min accum level to save from the config tree
   ReadOther(sample.GetTree("config"));
-  
+
   std::string numer = "";
   if (signal == "") {
     numer = precut;
@@ -829,7 +844,7 @@ void DrawingTools::DrawEffPurVSCut(DataSample& sample, int isel, int branch, con
 }
 
 //*********************************************************
-void DrawingTools::DrawEffPurVSCut(DataSample& sample, int isel, int ibranch, const std::string& signal, const std::string& precut, 
+void DrawingTools::DrawEffPurVSCut(DataSample& sample, int isel, int ibranch, const std::string& signal, const std::string& precut,
 				   int first_cut_pur, int last_cut_pur, int first_cut_eff, int last_cut_eff,
 				   const std::string& root_opt, const std::string& opt, const std::string& leg){
 //*********************************************************
@@ -837,7 +852,7 @@ void DrawingTools::DrawEffPurVSCut(DataSample& sample, int isel, int ibranch, co
   Experiment exp("exp", NULL, &sample);
   DrawEffPurVSCut(exp,isel,ibranch,signal,precut,first_cut_pur,last_cut_pur,first_cut_eff,last_cut_eff,root_opt,opt,leg);
 
-  /*  
+  /*
   // Check if selection exists
   if (!sel().GetSelection(isel,true)) return;
 
@@ -850,14 +865,14 @@ void DrawingTools::DrawEffPurVSCut(DataSample& sample, int isel, int ibranch, co
     std::cout << "truth tree does not exists. Efficiency cannot be computed !!!" << std::endl;
     return;
   }
-  
+
   // Read the min accum level to save from the config tree
   ReadOther(sample.GetTree("config"));
 
   // save the current legend size
   double sizex = _legendSize[0];
   double sizey = _legendSize[1];
-  
+
   // small legend size
   SetLegendSize(0.1,0.1);
 
@@ -873,7 +888,7 @@ void DrawingTools::DrawEffPurVSCut(DataSample& sample, int isel, int ibranch, co
 }
 
 //*********************************************************
-TH1_h* DrawingTools::GetHisto(DataSample& sample,const std::string& name, const std::string& var, int nx, double* xbins, 
+TH1_h* DrawingTools::GetHisto(DataSample& sample,const std::string& name, const std::string& var, int nx, double* xbins,
 			     const std::string& cut, const std::string& root_opt, const std::string& opt, double scale, bool scale_errors){
 //*********************************************************
 
@@ -881,12 +896,12 @@ TH1_h* DrawingTools::GetHisto(DataSample& sample,const std::string& name, const 
 }
 
 //*********************************************************
-TH1_h* DrawingTools::GetHisto(HistoStack* hs, TTree* tree,const std::string& name, const std::string& var, int nx, double* xbins, 
+TH1_h* DrawingTools::GetHisto(HistoStack* hs, TTree* tree,const std::string& name, const std::string& var, int nx, double* xbins,
 			     const std::string& cut, const std::string& root_opt, const std::string& opt, double scale, bool scale_errors, int toy_ref){
 //*********************************************************
 
-  // This function overwrides the one of the base class. 
-  // If an option (ST, SYS, DIS) is given only the reference toy experiment is plotted. 
+  // This function overwrides the one of the base class.
+  // If an option (ST, SYS, DIS) is given only the reference toy experiment is plotted.
 
   toy_ref=-1;
   //  if (opt.find("ST")!= std::string::npos || opt.find("SYS")!= std::string::npos || opt.find("DIS")!= std::string::npos)
@@ -898,17 +913,17 @@ TH1_h* DrawingTools::GetHisto(HistoStack* hs, TTree* tree,const std::string& nam
 
 
 //*********************************************************
-TH1_h* DrawingTools::GetRatioHisto(TTree* tree1,TTree* tree2,const std::string& name, const std::string& var, int nx, double* xbins, 
+TH1_h* DrawingTools::GetRatioHisto(TTree* tree1,TTree* tree2,const std::string& name, const std::string& var, int nx, double* xbins,
                                   const std::string& cut1, const std::string& cut2, const std::string& root_opt, const std::string& opt, double norm, double scale, bool scale_errors, int toy_ref){
 //*********************************************************
 
-  // This function overwrides the one of the base class. 
-  // If an option (ST, SYS, DIS) is given only the reference toy experiment is plotted. 
+  // This function overwrides the one of the base class.
+  // If an option (ST, SYS, DIS) is given only the reference toy experiment is plotted.
 
   toy_ref=-1;
   //  if (opt.find("ST")!= std::string::npos || opt.find("SYS")!= std::string::npos || opt.find("DIS")!= std::string::npos)
   //    toy_ref = GetToy_Reflysis(tree1);
-    
+
 
   // Call the base class function (the only thing it changed is the cut)
   return DrawingToolsBase::GetRatioHisto(tree1, tree2, name,var,nx,xbins,cut1,cut2,root_opt,opt,norm,scale,scale_errors,toy_ref);
@@ -924,14 +939,14 @@ void DrawingTools::FillGraphErrors(HistoStack* hs1, HistoStack* hs2, TGraphAsymm
   Int_t nx = hs2->GetTotal1D()->GetNbinsX();
 
   std::string uopt2=uopt;
-  if (hs1) uopt2 += " RELATIVE";  
+  if (hs1) uopt2 += " RELATIVE";
   TMatrixD cov = syst_tools().GetSystematicCov(hs1,hs2, uopt2);
 
   // Set the sqrt of the diagonal as error
   for (int i=0;i<nx;i++){
     double err_low  = cov(i,i);
     double err_high = err_low;
-    if (!drawUtils::CheckOption(uopt,"NOSTERROR")) {	
+    if (!drawUtils::CheckOption(uopt,"NOSTERROR")) {
       err_low += graph->GetErrorYlow(i)*graph->GetErrorYlow(i);
       err_high += graph->GetErrorYhigh(i)*graph->GetErrorYhigh(i);
     }
@@ -951,14 +966,14 @@ void DrawingTools::FillHistoErrors(HistoStack* hs1, HistoStack* hs2, TH1_h* hist
   Int_t nx = hs2->GetTotal1D()->GetNbinsX();
 
   std::string uopt2=uopt;
-  if (hs1) uopt2 += " RELATIVE";  
+  if (hs1) uopt2 += " RELATIVE";
   TMatrixD cov = syst_tools().GetSystematicCov(hs1,hs2, uopt2);
-  
+
 
   // Set the sqrt of the diagonal as error
   for (int i=0;i<nx;i++){
     double err  = cov(i,i);
-    if (!drawUtils::CheckOption(uopt,"NOSTERROR")) {	
+    if (!drawUtils::CheckOption(uopt,"NOSTERROR")) {
       err+= histo->GetBinError(i+1)*histo->GetBinError(i+1);
     }
     histo->SetBinError(i+1,sqrt(err));
@@ -967,7 +982,7 @@ void DrawingTools::FillHistoErrors(HistoStack* hs1, HistoStack* hs2, TH1_h* hist
 }
 
 //*********************************************************
-void DrawingTools::FillHistoErrors(HistoStack* hs1, HistoStack* hs2, TTree* tree1, TTree* tree2, const std::string& name, const std::string& var, int nx, double* xbins, 
+void DrawingTools::FillHistoErrors(HistoStack* hs1, HistoStack* hs2, TTree* tree1, TTree* tree2, const std::string& name, const std::string& var, int nx, double* xbins,
 				   const std::string& cut1, const std::string& cut2, const std::string& opt, double norm, TH1_h* hstat, TH1_h*& hsyst){
 //*********************************************************
 
@@ -978,7 +993,7 @@ void DrawingTools::FillHistoErrors(HistoStack* hs1, HistoStack* hs2, TTree* tree
   // ST: plot only stat errors
   // ST SYS: plot stat and syst errors in quadrature
   // SYS: plot only systematic errors
-  // DIS: the error bar is the dispersion 
+  // DIS: the error bar is the dispersion
   // ST DIS: plot stat error and dispersion in quadrature
   if(syst_tools().errdebug)  std::cout<<"FillHistoErrors \n=============== "<<std::endl;
 
@@ -992,7 +1007,7 @@ void DrawingTools::FillHistoErrors(HistoStack* hs1, HistoStack* hs2, TTree* tree
 }
 
 //*********************************************************
-TH1_h* DrawingTools::GetHistoWithSystErrors(HistoStack* hs1, HistoStack* hs2, TTree* tree1, TTree* tree2, const std::string& name, const std::string& var, int nx, double* xbins, 
+TH1_h* DrawingTools::GetHistoWithSystErrors(HistoStack* hs1, HistoStack* hs2, TTree* tree1, TTree* tree2, const std::string& name, const std::string& var, int nx, double* xbins,
                                            const std::string& cut1, const std::string& cut2, const std::string& opt, double norm){
 //*********************************************************
   if(syst_tools().errdebug)    std::cout<<"GetHistoWithSystErrors \n======================== "<<std::endl;
@@ -1009,23 +1024,23 @@ TH1_h* DrawingTools::GetHistoWithSystErrors(HistoStack* hs1, HistoStack* hs2, TT
 
   // Update the internal histograms in the HistoStacks used for systematic calculations
   UpdateSystInfo(hs1,hs2,tree1,tree2,var,nx,xbins,cut1,cut2,opt,norm);
-     
+
   // compute the covariance matrix using the SystematicsTools
   TMatrix cov = syst_tools().GetSystematicCov(hs1,hs2, uopt);
-  
+
   // Create histo to store systematics
   TH1_h *hsyst = new TH1_h(GetUniqueName("hsyst_"+name).c_str(),"hsyst",nx,xbins);
   _saved_histos.push_back(hsyst);
-  
+
   // Set the sqrt of the diagonal as error
   for (int i=0;i<nx;i++)
     hsyst->SetBinError(i+1,sqrt(cov(i,i)));
- 
-  return hsyst;    
+
+  return hsyst;
 }
 
 //*********************************************************
-void DrawingTools::UpdateSystInfo(HistoStack* hs1, HistoStack* hs2, TTree* tree1, TTree* tree2, const std::string& var, int nx, double* xbins, 
+void DrawingTools::UpdateSystInfo(HistoStack* hs1, HistoStack* hs2, TTree* tree1, TTree* tree2, const std::string& var, int nx, double* xbins,
                                   const std::string& cut1, const std::string& cut2, const std::string& opt, double norm){
 //*********************************************************
 
@@ -1037,7 +1052,7 @@ void DrawingTools::UpdateSystInfo(HistoStack* hs1, HistoStack* hs2, TTree* tree1
   // option ST  = statistics only
   // option SYS = systematics only
   // option SYS ST = systematics + statistical errors
-  
+
   std::string uopt = drawUtils::ToUpper(opt);
   if (!drawUtils::CheckOption(uopt,"SYS")) return;
 
@@ -1046,13 +1061,13 @@ void DrawingTools::UpdateSystInfo(HistoStack* hs1, HistoStack* hs2, TTree* tree1
     tree_syst = _treeForSystErrors;
   else
     tree_syst = tree2;
-    
+
   // update syst related histograms in the stacks using the Systematics Tools singleton
   syst_tools().UpdateSystematicCov(hs2, tree_syst, var, nx, xbins, cut2, drawUtils::GetNToys(tree_syst), uopt);
-  
+
   if (tree1){
     syst_tools().UpdateSystematicCov(hs1, tree1, var, nx, xbins, cut1, drawUtils::GetNToys(tree1), uopt);
-  }  
+  }
 }
 
 //*********************************************************
@@ -1099,7 +1114,7 @@ double DrawingTools::GetPOTRatio(DataSample& sample1, DataSample& sample2, doubl
   if (POTsample1<0){
     POTsample1 = sample1.GetNorm();
     if (POTsample1==0){
-      POTsample1 = sample1.GetPOT();      
+      POTsample1 = sample1.GetPOT();
     }
   }
 
@@ -1151,14 +1166,14 @@ void DrawingTools::GetNormalisationFactor(DataSample* sample1,DataSample* sample
 //*********************************************************
 
   std::string uopt = drawUtils::ToUpper(opt);
-  
+
   ////---------- Normalization factor for sample 2 ----------------------
 
   // The option NOPOTNORM disables POT normalization
   if (drawUtils::CheckOption(uopt,"NOPOTNORM")){
     norm2=1;
   }
-  // By default POT normalization is used unless a valid normalization factor is given  
+  // By default POT normalization is used unless a valid normalization factor is given
   else if (norm2<=0 && sample1 && sample2){
     norm2 = GetPOTRatio(*sample1, *sample2);
   }
@@ -1175,10 +1190,10 @@ void DrawingTools::GetNormalisationFactor(DataSample* sample1,DataSample* sample
   }
 
   // Otherwise the normalization factor is used to directly scale sample2 regardless of its POT
-  
+
   ////---------- Normalization factor for sample 1 ----------------------
 
-  
+
   if (drawUtils::CheckOption(uopt,"NOPOTNORM")){
     norm1=1;
     std::cout << 4 << std::endl;
@@ -1207,27 +1222,27 @@ void DrawingTools::DrawToys(Experiment& exp, const std::string& cut, const std::
 
   int ntoys = drawUtils::GetVarFromExperiment("NTOYS",exp);
   if (ntoys<=0) return;
-  
+
   // Create temporary empty Histo Stacks
   HistoStack* hs2 = new HistoStack("dummy","","");
   HistoStack* hsw2 = new HistoStack("dummy","","");
 
   double xbins[NMAXBINS];
-  
+
   // Project the Experiment into the HistoStack. Using 0 norm means that POT normalization is used when both samples are available
   // Project with no toy experiment weights
-  Project(NULL,      hs2,      exp, "all","all", "toy_index",ntoys,GetVariableBins(ntoys,0,ntoys,xbins),0,NULL,"all",cut,root_opt,uopt+ " NOTOYW",0.,true);    
+  Project(NULL,      hs2,      exp, "all","all", "toy_index",ntoys,GetVariableBins(ntoys,0,ntoys,xbins),0,NULL,"all",cut,root_opt,uopt+ " NOTOYW",0.,true);
 
   // Get the total histogram from the HistoStack
   TH1_h* h1 = hs2->GetTotal1D();
   TH1_h* hw = NULL;
-  
+
   std::string cut2=cut;
   if (cut2=="") cut2="1==1";
 
   // Project the toy experiment PDF weights
   if (true){//(drawUtils::TreeHasVar(tree,"toy_weight")){
-    Project(NULL,      hsw2,      exp, "all","all", "toy_index",ntoys,GetVariableBins(ntoys,0,ntoys,xbins),0,NULL,"all",cut,root_opt,uopt,0.,true);    
+    Project(NULL,      hsw2,      exp, "all","all", "toy_index",ntoys,GetVariableBins(ntoys,0,ntoys,xbins),0,NULL,"all",cut,root_opt,uopt,0.,true);
     hw = hsw2->GetTotal1D();
   }
   else
@@ -1245,7 +1260,7 @@ void DrawingTools::DrawToys(Experiment& exp, const std::string& cut, const std::
 }
 
 //*********************************************************
-void DrawingTools::Draw(Experiment& exp, const std::string& var, int nx, double xmin, double xmax, 
+void DrawingTools::Draw(Experiment& exp, const std::string& var, int nx, double xmin, double xmax,
 			const std::string& categ, const std::string& cut,  const std::string& root_opt, const std::string& opt, double norm, bool scale_errors){
 //*********************************************************
 
@@ -1254,7 +1269,7 @@ void DrawingTools::Draw(Experiment& exp, const std::string& var, int nx, double 
 }
 
 //*********************************************************
-void DrawingTools::Draw(Experiment& exp, const std::string& var, int nx, double xmin, double xmax, int ny, double ymin, double ymax, 
+void DrawingTools::Draw(Experiment& exp, const std::string& var, int nx, double xmin, double xmax, int ny, double ymin, double ymax,
 			const std::string& categ, const std::string& cut,  const std::string& root_opt, const std::string& opt, double norm, bool scale_errors){
 //*********************************************************
 
@@ -1273,7 +1288,7 @@ void DrawingTools::Draw(Experiment& exp, const std::string& var, int nx, double*
 }
 
 //*********************************************************
-void DrawingTools::Draw(Experiment& exp, const std::string& var, int nx, double* xbins, int ny, double* ybins, 
+void DrawingTools::Draw(Experiment& exp, const std::string& var, int nx, double* xbins, int ny, double* ybins,
 			const std::string& categ, const std::string& cut,  const std::string& root_opt, const std::string& opt, double norm, bool scale_errors){
 //*********************************************************
 
@@ -1281,7 +1296,7 @@ void DrawingTools::Draw(Experiment& exp, const std::string& var, int nx, double*
 }
 
 //*********************************************************
-void DrawingTools::Draw(Experiment& exp, const std::string& groupName, const std::string& var, int nx, double xmin, double xmax, 
+void DrawingTools::Draw(Experiment& exp, const std::string& groupName, const std::string& var, int nx, double xmin, double xmax,
 			const std::string& categ, const std::string& cut,  const std::string& root_opt, const std::string& opt, double norm, bool scale_errors){
 //*********************************************************
 
@@ -1290,7 +1305,7 @@ void DrawingTools::Draw(Experiment& exp, const std::string& groupName, const std
 }
 
 //*********************************************************
-void DrawingTools::Draw(Experiment& exp, const std::string& groupName, const std::string& var, int nx, double xmin, double xmax, int ny, double ymin, double ymax, 
+void DrawingTools::Draw(Experiment& exp, const std::string& groupName, const std::string& var, int nx, double xmin, double xmax, int ny, double ymin, double ymax,
 			const std::string& categ, const std::string& cut,  const std::string& root_opt, const std::string& opt, double norm, bool scale_errors){
 //*********************************************************
 
@@ -1309,7 +1324,7 @@ void DrawingTools::Draw(Experiment& exp, const std::string& groupName, const std
 }
 
 //*********************************************************
-void DrawingTools::Draw(Experiment& exp, const std::string& groupName, const std::string& var, int nx, double* xbins, int ny, double* ybins, 
+void DrawingTools::Draw(Experiment& exp, const std::string& groupName, const std::string& var, int nx, double* xbins, int ny, double* ybins,
 			const std::string& categ, const std::string& cut,  const std::string& root_opt, const std::string& opt, double norm, bool scale_errors){
 //*********************************************************
 
@@ -1317,7 +1332,7 @@ void DrawingTools::Draw(Experiment& exp, const std::string& groupName, const std
 }
 
 //*********************************************************
-void DrawingTools::Draw(Experiment& exp, const std::string& groupName, const std::string& mcSampleName, const std::string& var, int nx, double xmin, double xmax, 
+void DrawingTools::Draw(Experiment& exp, const std::string& groupName, const std::string& mcSampleName, const std::string& var, int nx, double xmin, double xmax,
 			const std::string& categ, const std::string& cut,  const std::string& root_opt, const std::string& opt, double norm, bool scale_errors){
 //*********************************************************
 
@@ -1326,7 +1341,7 @@ void DrawingTools::Draw(Experiment& exp, const std::string& groupName, const std
 }
 
 //*********************************************************
-void DrawingTools::Draw(Experiment& exp, const std::string& groupName, const std::string& mcSampleName, const std::string& var, int nx, double xmin, double xmax, int ny, double ymin, double ymax, 
+void DrawingTools::Draw(Experiment& exp, const std::string& groupName, const std::string& mcSampleName, const std::string& var, int nx, double xmin, double xmax, int ny, double ymin, double ymax,
 			const std::string& categ, const std::string& cut,  const std::string& root_opt, const std::string& opt, double norm, bool scale_errors){
 //*********************************************************
 
@@ -1345,12 +1360,12 @@ void DrawingTools::Draw(Experiment& exp, const std::string& groupName, const std
 }
 
 //*********************************************************
-void DrawingTools::Draw(Experiment& exp, const std::string& groupName, const std::string& mcSampleName, const std::string& var, int nx, double* xbins, int ny, double* ybins, 
+void DrawingTools::Draw(Experiment& exp, const std::string& groupName, const std::string& mcSampleName, const std::string& var, int nx, double* xbins, int ny, double* ybins,
                         const std::string& categ, const std::string& cut,  const std::string& root_opt, const std::string& opt, double norm, bool scale_errors){
 //*********************************************************
 
   if (!HasCategory(categ)) return;
-  
+
   std::string uopt = drawUtils::ToUpper(opt);
 
   // Check that all user options are valid
@@ -1388,7 +1403,7 @@ void DrawingTools::Draw(Experiment& exp, const std::string& groupName, const std
 }
 
 //*********************************************************
-void DrawingTools::DrawRatio(Experiment& exp, const std::string& groupName, const std::string& mcSampleName, const std::string& var, int nx, double* xbins, 
+void DrawingTools::DrawRatio(Experiment& exp, const std::string& groupName, const std::string& mcSampleName, const std::string& var, int nx, double* xbins,
 			     const std::string& cut,  const std::string& root_opt, const std::string& opt, const std::string& leg){
 //*********************************************************
 
@@ -1397,7 +1412,7 @@ void DrawingTools::DrawRatio(Experiment& exp, const std::string& groupName, cons
 }
 
 //*********************************************************
-void DrawingTools::DrawRatio(Experiment& exp, const std::string& groupName, const std::string& mcSampleName, const std::string& var, int nx, double xmin, double xmax,  
+void DrawingTools::DrawRatio(Experiment& exp, const std::string& groupName, const std::string& mcSampleName, const std::string& var, int nx, double xmin, double xmax,
 			     const std::string& cut,  const std::string& root_opt, const std::string& opt, const std::string& leg){
 //*********************************************************
 
@@ -1407,7 +1422,7 @@ void DrawingTools::DrawRatio(Experiment& exp, const std::string& groupName, cons
 }
 
 //*********************************************************
-void DrawingTools::DrawRatio(Experiment& exp, const std::string& var, int nx, double* xbins, 
+void DrawingTools::DrawRatio(Experiment& exp, const std::string& var, int nx, double* xbins,
 			     const std::string& cut,  const std::string& root_opt, const std::string& opt, const std::string& leg){
 //*********************************************************
 
@@ -1415,7 +1430,7 @@ void DrawingTools::DrawRatio(Experiment& exp, const std::string& var, int nx, do
 }
 
 //*********************************************************
-void DrawingTools::DrawRatio(Experiment& exp, const std::string& var, int nx, double xmin, double xmax, 
+void DrawingTools::DrawRatio(Experiment& exp, const std::string& var, int nx, double xmin, double xmax,
 			     const std::string& cut,  const std::string& root_opt, const std::string& opt, const std::string& leg){
 //*********************************************************
 
@@ -1423,7 +1438,7 @@ void DrawingTools::DrawRatio(Experiment& exp, const std::string& var, int nx, do
 }
 
 //*********************************************************
-void DrawingTools::DrawRatio(Experiment& exp, const std::string& groupName, const std::string& mcSampleName, const std::string& var, int nx, double* xbins, int ny, double* ybins, 
+void DrawingTools::DrawRatio(Experiment& exp, const std::string& groupName, const std::string& mcSampleName, const std::string& var, int nx, double* xbins, int ny, double* ybins,
 			     const std::string& cut,  const std::string& root_opt, const std::string& opt, const std::string& leg){
 //*********************************************************
 
@@ -1439,11 +1454,11 @@ void DrawingTools::DrawRatio(Experiment& exp, const std::string& groupName, cons
   // Create empty Histo Stacks
   HistoStack* hs1 = new HistoStack(_title,_titleX,_titleY);
   HistoStack* hs2 = new HistoStack(_title,_titleX,_titleY);
-  _saved_histoStacks.push_back(hs1);  
-  _saved_histoStacks.push_back(hs2);  
+  _saved_histoStacks.push_back(hs1);
+  _saved_histoStacks.push_back(hs2);
 
   // Project the Experiment into the HistoStacks. Using 0 norm means that POT normalization is used when both samples are available
-  Project(hs1, hs2, exp, groupName, mcSampleName, var,nx,xbins,ny,ybins,"all",cut,root_opt,uopt,0.,true);  
+  Project(hs1, hs2, exp, groupName, mcSampleName, var,nx,xbins,ny,ybins,"all",cut,root_opt,uopt,0.,true);
 
   // Draw the HistoStacks
   DrawRatioHistoStacks(hs1,hs2,root_opt,uopt,0.,leg);
@@ -1472,18 +1487,18 @@ void DrawingTools::AnalysisResults(Experiment& exp, const std::string& groupName
 
   if (!drawUtils::CheckOption(uopt,"NODATA")){
     hs1 = new HistoStack(_title,_titleX,_titleY);
-    _saved_histoStacks.push_back(hs1);  
+    _saved_histoStacks.push_back(hs1);
   }
   if (!drawUtils::CheckOption(uopt,"NOMC")){
     hs2 = new HistoStack(_title,_titleX,_titleY);
-    _saved_histoStacks.push_back(hs2);  
+    _saved_histoStacks.push_back(hs2);
   }
 
   double xbins[2]={0.,1.};
   double *ybins = NULL;
-  
+
   // Project the Experiment into the HistoStack. Using 0 norm means that POT normalization is used when both samples are available
-  Project(hs1,      hs2,      exp, groupName, mcSampleName, "0.5",1,xbins,0,ybins,"all",cut,"",opt,0.,true);  
+  Project(hs1,      hs2,      exp, groupName, mcSampleName, "0.5",1,xbins,0,ybins,"all",cut,"",opt,0.,true);
 
   double N1 = hs1->GetTotal1D()->GetBinContent(1);
   double N2 = hs2->GetTotal1D()->GetBinContent(1);
@@ -1494,24 +1509,24 @@ void DrawingTools::AnalysisResults(Experiment& exp, const std::string& groupName
     est2  = hs2->GetTotalStat1D()->GetBinError(1);
     esys2 = hs2->GetTotalSyst1D()->GetBinError(1);
   }
-    
+
 
   // compute data/MC ratio and its error
   Double_t ratio = N1/N2;
   Double_t ratio_stat = sqrt(pow(est1/N2,2)+ pow(N1/(N2*N2)*est2,2));
   Double_t ratio_syst = N1/(N2*N2)*esys2;
-			    
+
   std::cout << " --------------------------------------------------------" << std::endl;
   std::cout << " Analysis results for " << cut << std::endl;
   std::cout << " --------------------------------------------------------" << std::endl;
-  char out1[256];  
-  char out2[256];  
-  char out3[256];  
-  char out4[256];  
+  char out1[256];
+  char out2[256];
+  char out3[256];
+  char out4[256];
   sprintf(out1,"%-10s: %-12s %-12s %-12s", "sample","events", "stat error", "syst error");
   sprintf(out2,"%-10s: %-12.2f %-12.2f %-12.2f", "data", N1, est1, 0.);
   sprintf(out3,"%-10s: %-12.2f %-12.2f %-12.2f", "mc",   N2, est2, esys2);
-  sprintf(out4,"%-10s: %-12.3f %-12.3f %-12.4f", "ratio",ratio, ratio_stat, ratio_syst);  
+  sprintf(out4,"%-10s: %-12.3f %-12.3f %-12.4f", "ratio",ratio, ratio_stat, ratio_syst);
   std::cout << out1 << std::endl;
   std::cout << " --------------------------------------------------------" << std::endl;
   std::cout << out2 << std::endl;
@@ -1520,11 +1535,11 @@ void DrawingTools::AnalysisResults(Experiment& exp, const std::string& groupName
 
   // Print purities when requested
   if (drawUtils::CheckOption(uopt,"PUR") && categ!="all")
-    PrintPurities(exp,categ,cut,uopt);  
+    PrintPurities(exp,categ,cut,uopt);
 }
 
 //**************************************************
-void DrawingTools::DrawEventsVSCut(Experiment& exp, const std::string& cut_norm, int first_cut, int last_cut, 
+void DrawingTools::DrawEventsVSCut(Experiment& exp, const std::string& cut_norm, int first_cut, int last_cut,
 				   const std::string& root_opt, const std::string& opt, const std::string& leg){
 //**************************************************
 
@@ -1532,7 +1547,7 @@ void DrawingTools::DrawEventsVSCut(Experiment& exp, const std::string& cut_norm,
 }
 
 //**************************************************
-void DrawingTools::DrawEventsVSCut(Experiment& exp, int branch, const std::string& cut_norm, int first_cut, int last_cut, 
+void DrawingTools::DrawEventsVSCut(Experiment& exp, int branch, const std::string& cut_norm, int first_cut, int last_cut,
 				   const std::string& root_opt, const std::string& opt, const std::string& leg){
 //**************************************************
 
@@ -1540,7 +1555,7 @@ void DrawingTools::DrawEventsVSCut(Experiment& exp, int branch, const std::strin
 }
 
 //**************************************************
-void DrawingTools::DrawEventsVSCut(Experiment& exp, int isel, int ibranch, const std::string& cut_norm, int first_cut, int last_cut, 
+void DrawingTools::DrawEventsVSCut(Experiment& exp, int isel, int ibranch, const std::string& cut_norm, int first_cut, int last_cut,
 				   const std::string& root_opt, const std::string& opt, const std::string& leg){
 //**************************************************
 
@@ -1559,19 +1574,19 @@ void DrawingTools::DrawEventsVSCut(Experiment& exp, int isel, int ibranch, const
   // save the current legend size
   double sizex = _legendSize[0];
   double sizey = _legendSize[1];
-  
+
   // small legend size
   if ( hdata  && hmc) SetLegendSize(0.2,0.2);
-  
+
   if      ( hdata)         DrawingToolsBase::DrawEventsVSCut(hdata,root_opt,        uopt,("data "+leg).c_str());
   if      (!hdata  && hmc) DrawingToolsBase::DrawEventsVSCut(hmc,  root_opt,        uopt,("MC "  +leg).c_str());
   else if ( hdata  && hmc) DrawingToolsBase::DrawEventsVSCut(hmc,  root_opt+" same",uopt,("MC "  +leg).c_str());
 
   // go back to previous size
   SetLegendSize(sizex,sizey);
-  
+
   // Print numbers on the screen
-  PrintValueVSCut(first_cut,hdata,hmc,"#events", uopt);  
+  PrintValueVSCut(first_cut,hdata,hmc,"#events", uopt);
 }
 
 //**************************************************
@@ -1718,15 +1733,15 @@ void DrawingTools::DrawEffVSCut(Experiment& exp, int isel, int ibranch, const st
     std::cout << "Cannot compute efficiency because the experiment does not have any MC sample" << std::endl;
     return;
   }
-  
+
   // ----- Histogram for cut2 (denominator)
   first_cut2=-1;
   TH1_h* hmc2_0;
   std::string tree_name = exp.GetCurrentTree();    // Get the current tree name
   if (!drawUtils::CheckOption(opt,"EFFDEF"))
-    exp.SetCurrentTree("truth");    // use the "truth" tree for denominator 
+    exp.SetCurrentTree("truth");    // use the "truth" tree for denominator
   GetEventsVSCut(exp,"eff2_0",numer,isel,ibranch,first_cut2, last_cut,root_opt,uopt+ " NODATA",hdata,hmc2_0);
-  exp.SetCurrentTree(tree_name);   // go back to the previous tree name     
+  exp.SetCurrentTree(tree_name);   // go back to the previous tree name
 
   // This is a copy of hmc1 with the same contents in all bins, corresponding to the first bin of hmc2_0
   TH1_h* hmc2 = CloneHistoFromFirstBin(hmc1,hmc2_0,"eff2");
@@ -1761,7 +1776,7 @@ void DrawingTools::DrawEffPurVSCut(Experiment& exp, int isel, int ibranch, const
 }
 
 //*********************************************************
-void DrawingTools::DrawEffPurVSCut(Experiment& exp, int isel, int ibranch, const std::string& signal, const std::string& precut, 
+void DrawingTools::DrawEffPurVSCut(Experiment& exp, int isel, int ibranch, const std::string& signal, const std::string& precut,
 				   int first_cut_pur, int last_cut_pur, int first_cut_eff, int last_cut_eff,
 				   const std::string& root_opt, const std::string& opt, const std::string& leg){
 //*********************************************************
@@ -1777,7 +1792,7 @@ void DrawingTools::DrawEffPurVSCut(Experiment& exp, int isel, int ibranch, const
   // save the current legend size
   double sizex = _legendSize[0];
   double sizey = _legendSize[1];
-  
+
   // small legend size
   SetLegendSize(0.1,0.1);
 
@@ -1869,18 +1884,18 @@ TGraphAsymmErrors* DrawingTools::GetEff(Experiment& exp, bool usedata, const std
 
   // use the "truth" tree for efficiencies and "default" for purities. TODO: What is the NOTRUTH ?
   if (newopt.find("PUR")==std::string::npos && newopt.find("NOTRUTH")==std::string::npos && !drawUtils::CheckOption(opt,"EFFDEF"))
-    exp.SetCurrentTree("truth");   
- 
+    exp.SetCurrentTree("truth");
+
   int ny = 0;
   double ybins[1] = {0};
 
   // Project the Experiment into the HistoStacks. Using 0 norm means that POT normalization is used when both samples are available
-  Project(hs1d, hs1m, exp, groupName, mcSampleName, var,nx,xbins,ny,ybins,categ,(cut1+" && "+cut2),root_opt,newopt,0.,scale_errors);  
-  Project(hs2d, hs2m, exp, groupName, mcSampleName, var,nx,xbins,ny,ybins,categ, cut2,             root_opt,newopt,0.,scale_errors);  
+  Project(hs1d, hs1m, exp, groupName, mcSampleName, var,nx,xbins,ny,ybins,categ,(cut1+" && "+cut2),root_opt,newopt,0.,scale_errors);
+  Project(hs2d, hs2m, exp, groupName, mcSampleName, var,nx,xbins,ny,ybins,categ, cut2,             root_opt,newopt,0.,scale_errors);
 
   // go back to the previous tree name
   if (newopt.find("PUR")==std::string::npos && newopt.find("NOTRUTH")==std::string::npos && !drawUtils::CheckOption(opt,"EFFDEF"))
-    exp.SetCurrentTree(tree_name);    
+    exp.SetCurrentTree(tree_name);
 
   // h1 = Histogram for cut1+cut2 (numerator)
   // h2 = Histogram for cut2 (denominator)
@@ -1913,8 +1928,8 @@ TGraphAsymmErrors* DrawingTools::GetEff(Experiment& exp, bool usedata, const std
   // compute the efficiency
   TGraphAsymmErrors* eff = new TGraphAsymmErrors(h1);
   _saved_graphs.push_back(eff);
-  eff->Divide(h1, h2, _eff_params.c_str()); //the options are explicitely provided by SetEffDivideParams(const std::string&), root_opt not used to avoid possible confusions 
-  
+  eff->Divide(h1, h2, _eff_params.c_str()); //the options are explicitely provided by SetEffDivideParams(const std::string&), root_opt not used to avoid possible confusions
+
   // Put the errors into the ratio
   if (usedata)
     FillGraphErrors(hs1d, hs2d, eff, opt);
@@ -1933,7 +1948,7 @@ TGraphAsymmErrors* DrawingTools::GetEff(Experiment& exp, bool usedata, const std
 
 //*********************************************************
 TGraphAsymmErrors* DrawingTools::GetEffNew(Experiment& exp, bool usedata, const std::string& var, int nx, double* xbins, double& nev1, double& nev2,
-					   const std::string& cut1, const std::string& cut2, const std::string& root_opt, const std::string& opt1, 
+					   const std::string& cut1, const std::string& cut2, const std::string& root_opt, const std::string& opt1,
 					   const std::string& opt2, bool scale_errors) {
 //*********************************************************
 
@@ -1966,11 +1981,11 @@ TGraphAsymmErrors* DrawingTools::GetEffNew(Experiment& exp, bool usedata, const 
   double ybins[1] = {0};
 
   // Project the Experiment into the HistoStacks. Using 0 norm means that POT normalization is used when both samples are available
-  Project(hs1d, hs1m, exp, groupName, mcSampleName, var,nx,xbins,ny,ybins,categ,cut1,root_opt,newopt1,0.,scale_errors);  
-  Project(hs2d, hs2m, exp, groupName, mcSampleName, var,nx,xbins,ny,ybins,categ,cut2,root_opt,newopt2,0.,scale_errors);  
+  Project(hs1d, hs1m, exp, groupName, mcSampleName, var,nx,xbins,ny,ybins,categ,cut1,root_opt,newopt1,0.,scale_errors);
+  Project(hs2d, hs2m, exp, groupName, mcSampleName, var,nx,xbins,ny,ybins,categ,cut2,root_opt,newopt2,0.,scale_errors);
 
   // go back to the previous tree name
-  //  exp.SetCurrentTree(tree_name);    
+  //  exp.SetCurrentTree(tree_name);
 
   // h1 = Histogram for cut1+cut2 (numerator)
   // h2 = Histogram for cut2 (denominator)
@@ -1994,7 +2009,7 @@ TGraphAsymmErrors* DrawingTools::GetEffNew(Experiment& exp, bool usedata, const 
   // compute the efficiency
   TGraphAsymmErrors* eff = new TGraphAsymmErrors(h1);
   _saved_graphs.push_back(eff);
-  eff->Divide(h1, h2, _eff_params.c_str()); //the options are explicitely provided by SetEffDivideParams(const std::string&), root_opt not used to avoid possible confusions 
+  eff->Divide(h1, h2, _eff_params.c_str()); //the options are explicitely provided by SetEffDivideParams(const std::string&), root_opt not used to avoid possible confusions
 
   // Put the errors into the ratio
   if (usedata)
@@ -2022,7 +2037,7 @@ void DrawingTools::DrawRatioNew(Experiment& exp, bool usedata, const std::string
 
 //*********************************************************
 void DrawingTools::DrawRatioNew(Experiment& exp, bool usedata, const std::string& var, int nx, double* xbins,
-			      const std::string& cut1, const std::string& cut2, const std::string& root_opt, const std::string& opt1, 
+			      const std::string& cut1, const std::string& cut2, const std::string& root_opt, const std::string& opt1,
 			      const std::string& opt2) {
 //*********************************************************
   double dummy1, dummy2;
@@ -2035,7 +2050,7 @@ void DrawingTools::DrawRatioNew(Experiment& exp, bool usedata, const std::string
 
 //*********************************************************
 void DrawingTools::DrawRatioNew(Experiment& exp, bool usedata, const std::string& var, int nx, double* xbins, double& nev1, double& nev2,
-				const std::string& cut1, const std::string& cut2, const std::string& root_opt, const std::string& opt1, 
+				const std::string& cut1, const std::string& cut2, const std::string& root_opt, const std::string& opt1,
 				const std::string& opt2, bool scale_errors) {
 //*********************************************************
 
@@ -2079,11 +2094,11 @@ void DrawingTools::DrawRatioNew(Experiment& exp, bool usedata, const std::string
   double ybins[1] = {0};
 
   // Project the Experiment into the HistoStacks. Using 0 norm means that POT normalization is used when both samples are available
-  Project(hs1d, hs1m, exp, groupName, mcSampleName, var,nx,xbins,ny,ybins,categ,cut1,root_opt,newopt1,0.,scale_errors);  
-  Project(hs2d, hs2m, exp, groupName, mcSampleName, var,nx,xbins,ny,ybins,categ,cut2,root_opt,newopt2,0.,scale_errors);  
+  Project(hs1d, hs1m, exp, groupName, mcSampleName, var,nx,xbins,ny,ybins,categ,cut1,root_opt,newopt1,0.,scale_errors);
+  Project(hs2d, hs2m, exp, groupName, mcSampleName, var,nx,xbins,ny,ybins,categ,cut2,root_opt,newopt2,0.,scale_errors);
 
   // go back to the previous tree name
-  //  exp.SetCurrentTree(tree_name);    
+  //  exp.SetCurrentTree(tree_name);
 
   // h1 = Histogram for cut1+cut2 (numerator)
   // h2 = Histogram for cut2 (denominator)
@@ -2128,9 +2143,9 @@ void DrawingTools::GetEventsVSCut(Experiment& exp, const std::string& name, cons
 
   Int_t minAccumLevelToSave=GetMinAccumLevelToSave(exp,uopt);
   if (exp.GetCurrentTree() != "truth" && !drawUtils::CheckOption(uopt,"DRAWALLCUTS")) first_cut = std::max(minAccumLevelToSave-1, first_cut);
-  
+
   // Deal properly with first and last cuts
-  if (last_cut>(int)(sel().GetSelection(isel)->GetNCuts(ibranch)-1) || last_cut == -1) last_cut=sel().GetSelection(isel)->GetNCuts(ibranch)-1; 
+  if (last_cut>(int)(sel().GetSelection(isel)->GetNCuts(ibranch)-1) || last_cut == -1) last_cut=sel().GetSelection(isel)->GetNCuts(ibranch)-1;
   if (first_cut<-1 || first_cut>last_cut ) first_cut=-1;
 
   // Output Histrogram attributes
@@ -2154,7 +2169,7 @@ void DrawingTools::GetEventsVSCut(Experiment& exp, const std::string& name, cons
 
   for (int i=0;i<nx;i++ ){
     int icut = first_cut+i;
-    
+
     // Define the cuts
     std::string cut= cut0 + " && " + BuildAccumLevelCut(exp.GetCurrentTree(), sel().GetNEnabledSelections(), isel, ibranch, icut);
 
@@ -2167,12 +2182,12 @@ void DrawingTools::GetEventsVSCut(Experiment& exp, const std::string& name, cons
     if (!drawUtils::CheckOption(uopt,"NOMC")){
       hs2 = new HistoStack((_title+"cut2").c_str(),_titleX,_titleY);
     }
-    
+
     double xbins_dummy[2]={0,1};
     double ybins_dummy[1];
 
     // Project the Experiment into the HistoStacks. Using 0 norm means that POT normalization is used when both samples are available
-    Project(hs1, hs2, exp, "all", "all", "0.5",1,xbins_dummy,0,ybins_dummy,"all",cut,root_opt,opt,0.,false);  
+    Project(hs1, hs2, exp, "all", "all", "0.5",1,xbins_dummy,0,ybins_dummy,"all",cut,root_opt,opt,0.,false);
 
     if (hs2 && hs2->GetTotal1D()){
       ballmc[i] = (double)hs2->GetTotal1D()->Integral();
@@ -2204,7 +2219,7 @@ void DrawingTools::GetEventsVSCut(Experiment& exp, const std::string& name, cons
     for (int i=0;i<nx;i++ )
       mc->SetBinContent(i+1,ballmc[i]);
     SetCutNames(mc,first_cut,isel,ibranch);
-  }  
+  }
 }
 
 //*********************************************************
@@ -2347,7 +2362,7 @@ void DrawingTools::CompareSampleGroups(Experiment& exp, const std::string& mcSam
       if (!drawUtils::CheckInternalOption(uopt,"NOCREATELEG")) {
         _drawleg = true;
       }
-      
+
       SetStatPos((0.8-0.4*count-gStyle->GetPadRightMargin()),(1.04-gStyle->GetPadTopMargin()));
       DrawHisto(hs->GetTotal1D(),lc,2,lc,3004+count, uroot_opt + " HIST", uopt, "f");
       if (!drawUtils::CheckOption(uopt,"NODRAW"))
@@ -2390,7 +2405,7 @@ Double_t DrawingTools::DrawRelativeErrors(TTree* tree, const std::string& var, i
 }
 
 //*********************************************************
-Double_t DrawingTools::DrawErrors(TTree* tree, const std::string& var, int nx, double* xbins, 
+Double_t DrawingTools::DrawErrors(TTree* tree, const std::string& var, int nx, double* xbins,
 			      const std::string& cut, const std::string& root_opt, const std::string& opt, const std::string& leg, double norm, bool scale_errors){
 //*********************************************************
 
@@ -2400,7 +2415,7 @@ Double_t DrawingTools::DrawErrors(TTree* tree, const std::string& var, int nx, d
 }
 
 //*********************************************************
-Double_t DrawingTools::DrawRelativeErrors(TTree* tree, const std::string& var, int nx, double* xbins, 
+Double_t DrawingTools::DrawRelativeErrors(TTree* tree, const std::string& var, int nx, double* xbins,
 				      const std::string& cut, const std::string& root_opt, const std::string& opt, const std::string& leg, double norm, bool scale_errors){
 //*********************************************************
 
@@ -2420,7 +2435,7 @@ Double_t DrawingTools::DrawRelativeErrors(TTree* tree1, TTree* tree2, const std:
 }
 
 //*********************************************************
-Double_t DrawingTools::DrawRelativeErrors(TTree* tree1, TTree* tree2, const std::string& var, int nx, double* xbins, 
+Double_t DrawingTools::DrawRelativeErrors(TTree* tree1, TTree* tree2, const std::string& var, int nx, double* xbins,
 				      const std::string& cut, const std::string& root_opt, const std::string& opt, const std::string& leg, double norm, bool scale_errors){
 //*********************************************************
 
@@ -2451,7 +2466,7 @@ Double_t DrawingTools::DrawRelativeErrors(Experiment& exp, const std::string& va
 }
 
 //*********************************************************
-Double_t DrawingTools::DrawErrors(Experiment& exp, const std::string& var, int nx, double* xbins, 
+Double_t DrawingTools::DrawErrors(Experiment& exp, const std::string& var, int nx, double* xbins,
 			      const std::string& cut, const std::string& root_opt, const std::string& opt, const std::string& leg, bool scale_errors){
 //*********************************************************
 
@@ -2461,7 +2476,7 @@ Double_t DrawingTools::DrawErrors(Experiment& exp, const std::string& var, int n
 }
 
 //*********************************************************
-Double_t DrawingTools::DrawRelativeErrors(Experiment& exp, const std::string& var, int nx, double* xbins, 
+Double_t DrawingTools::DrawRelativeErrors(Experiment& exp, const std::string& var, int nx, double* xbins,
 				      const std::string& cut, const std::string& root_opt, const std::string& opt, const std::string& leg, bool scale_errors){
 //*********************************************************
 
@@ -2491,7 +2506,7 @@ Double_t DrawingTools::DrawRelativeErrors(Experiment& exp, const std::string& gr
 }
 
 //*********************************************************
-Double_t DrawingTools::DrawErrors(Experiment& exp, const std::string& groupName, const std::string& mcSampleName, const std::string& var, int nx, double* xbins, 
+Double_t DrawingTools::DrawErrors(Experiment& exp, const std::string& groupName, const std::string& mcSampleName, const std::string& var, int nx, double* xbins,
 			      const std::string& cut, const std::string& root_opt, const std::string& opt, const std::string& leg, bool scale_errors){
 //*********************************************************
 
@@ -2501,7 +2516,7 @@ Double_t DrawingTools::DrawErrors(Experiment& exp, const std::string& groupName,
 }
 
 //*********************************************************
-Double_t DrawingTools::DrawRelativeErrors(Experiment& exp, const std::string& groupName, const std::string& mcSampleName, const std::string& var, int nx, double* xbins, 
+Double_t DrawingTools::DrawRelativeErrors(Experiment& exp, const std::string& groupName, const std::string& mcSampleName, const std::string& var, int nx, double* xbins,
 				      const std::string& cut, const std::string& root_opt, const std::string& opt, const std::string& leg, bool scale_errors){
 //*********************************************************
 
@@ -2516,9 +2531,9 @@ Double_t DrawingTools::DrawErrorsBase(Experiment& exp, const std::string& groupN
 //*********************************************************
 
   (void) scale_errors;  // TODO
-  
+
   std::string uopt = drawUtils::ToUpper(opt);
-  
+
   HistoStack* hs = GetCovMatrixHistoStack(exp, groupName, mcSampleName, var, nx, xbins, cut, uopt);
   if (!hs) return 0;
 
@@ -2526,7 +2541,7 @@ Double_t DrawingTools::DrawErrorsBase(Experiment& exp, const std::string& groupN
 }
 
 //*********************************************************
-Double_t DrawingTools::DrawErrorsBase(TTree* tree, const std::string& var, int nx, double* xbins, 
+Double_t DrawingTools::DrawErrorsBase(TTree* tree, const std::string& var, int nx, double* xbins,
 				  const std::string& cut, bool relative,  const std::string& root_opt, const std::string& opt, const std::string& leg, double norm,  bool scale_errors){
 //*********************************************************
 
@@ -2558,7 +2573,7 @@ Double_t DrawingTools::DrawErrorsBase(HistoStack* hs, bool relative, const std::
 
   TH1_h* herrors = new TH1_h(*hall);
   herrors->SetName(name3.c_str());
-  _saved_histos.push_back(herrors);  
+  _saved_histos.push_back(herrors);
 
   Double_t ntotal =0;
   Double_t avg_error =0;
@@ -2577,7 +2592,7 @@ Double_t DrawingTools::DrawErrorsBase(HistoStack* hs, bool relative, const std::
 
     ntotal += hall->GetBinContent(i+1);
     herrors->SetBinError(i+1, 0);
-  }     
+  }
 
   avg_error/=ntotal;
   std::cout << "average differential error = " << avg_error << std::endl;
@@ -2617,7 +2632,7 @@ void DrawingTools::DrawCovMatrix(TTree* tree, const std::string& var, int nx, do
   TMatrixD mcov = GetCovMatrix(tree, var, nx, xbins, cut, uopt);
 
   // Draw the histo
-  DrawMatrix(mcov, _auto_colors[_same_level], _line_width, _line_color, _fill_style, root_opt, uopt);    
+  DrawMatrix(mcov, _auto_colors[_same_level], _line_width, _line_color, _fill_style, root_opt, uopt);
 }
 
 //*********************************************************
@@ -2625,52 +2640,52 @@ void DrawingTools::DrawCovMatrix(TTree* tree, const std::string& var, int nx, do
 				 const std::string& cut, const std::string& root_opt, const std::string& uopt){
 //*********************************************************
 
-  double xbins[NMAXBINS];  
-  DrawCovMatrix(tree, var, nx, GetVariableBins(nx, xmin, xmax, xbins), cut, root_opt, uopt);     
+  double xbins[NMAXBINS];
+  DrawCovMatrix(tree, var, nx, GetVariableBins(nx, xmin, xmax, xbins), cut, root_opt, uopt);
 }
 
 //*********************************************************
-void DrawingTools::DrawCovMatrix(Experiment& exp, const std::string& groupName, const std::string& mcSampleName, const std::string& var, int nx, double* xbins, 
+void DrawingTools::DrawCovMatrix(Experiment& exp, const std::string& groupName, const std::string& mcSampleName, const std::string& var, int nx, double* xbins,
 				 const std::string& cut, const std::string& root_opt, const std::string& uopt){
 //*********************************************************
   TMatrixD mcov = GetCovMatrix(exp, groupName, mcSampleName, var, nx, xbins, cut, uopt);
-  
+
   // Draw the histo
-  DrawMatrix(mcov, _auto_colors[_same_level], _line_width, _line_color, _fill_style, root_opt, uopt); 
+  DrawMatrix(mcov, _auto_colors[_same_level], _line_width, _line_color, _fill_style, root_opt, uopt);
 }
 
 //*********************************************************
-void DrawingTools::DrawCovMatrix(Experiment& exp, const std::string& groupName, const std::string& mcSampleName, const std::string& var, int nx, double xmin, double xmax,  
+void DrawingTools::DrawCovMatrix(Experiment& exp, const std::string& groupName, const std::string& mcSampleName, const std::string& var, int nx, double xmin, double xmax,
 				 const std::string& cut, const std::string& root_opt, const std::string& uopt){
 //*********************************************************
   TMatrixD mcov = GetCovMatrix(exp, groupName, mcSampleName, var, nx, xmin, xmax, cut, uopt);
-  
+
   // Draw the histo
-  DrawMatrix(mcov, _auto_colors[_same_level], _line_width, _line_color, _fill_style, root_opt, uopt); 
+  DrawMatrix(mcov, _auto_colors[_same_level], _line_width, _line_color, _fill_style, root_opt, uopt);
 }
- 
+
 //*********************************************************
-void DrawingTools::DrawCovMatrix(Experiment& exp, const std::string& var, int nx, double* xbins,  
+void DrawingTools::DrawCovMatrix(Experiment& exp, const std::string& var, int nx, double* xbins,
 				 const std::string& cut, const std::string& root_opt, const std::string& uopt){
 //*********************************************************
   TMatrixD mcov = GetCovMatrix(exp, var, nx, xbins, cut, uopt);
-  
+
   // Draw the histo
-  DrawMatrix(mcov, _auto_colors[_same_level], _line_width, _line_color, _fill_style, root_opt, uopt); 
+  DrawMatrix(mcov, _auto_colors[_same_level], _line_width, _line_color, _fill_style, root_opt, uopt);
 }
 
 //*********************************************************
-void DrawingTools::DrawCovMatrix(Experiment& exp, const std::string& var, int nx, double xmin, double xmax,  
+void DrawingTools::DrawCovMatrix(Experiment& exp, const std::string& var, int nx, double xmin, double xmax,
 				 const std::string& cut, const std::string& root_opt, const std::string& uopt){
 //*********************************************************
   TMatrixD mcov = GetCovMatrix(exp, var, nx, xmin, xmax, cut, uopt);
-  
+
   // Draw the histo
-  DrawMatrix(mcov, _auto_colors[_same_level], _line_width, _line_color, _fill_style, root_opt, uopt); 
+  DrawMatrix(mcov, _auto_colors[_same_level], _line_width, _line_color, _fill_style, root_opt, uopt);
 }
 
 //*********************************************************
-TMatrixD DrawingTools::GetCovMatrix(Experiment& exp, const std::string& groupName, const std::string& mcSampleName, const std::string& var, int nx, double* xbins, 
+TMatrixD DrawingTools::GetCovMatrix(Experiment& exp, const std::string& groupName, const std::string& mcSampleName, const std::string& var, int nx, double* xbins,
 					   const std::string& cut, const std::string& opt){
 //*********************************************************
 
@@ -2678,14 +2693,14 @@ TMatrixD DrawingTools::GetCovMatrix(Experiment& exp, const std::string& groupNam
 
   // Check that all user options are valid
   if (!drawUtils::ContainValidOptions(uopt)) return syst_tools().GetSystematicCov(NULL, "DUMMY");
-  
-  std::string uopt_tmp=uopt;  
-  uopt_tmp += " CAT"; //not to fill histos with errors  
+
+  std::string uopt_tmp=uopt;
+  uopt_tmp += " CAT"; //not to fill histos with errors
   uopt_tmp += " MATRIX"; //matrix mode, still update the histo stack histograms related to systematics
- 
+
   HistoStack* hs = GetCovMatrixHistoStack(exp, groupName, mcSampleName, var, nx, xbins, cut, uopt_tmp);
   if (!hs) return syst_tools().GetSystematicCov(NULL, "DUMMY");
-    
+
   // Experiment was projected so can calculate the covariance matrix
   // Get the covariance matrix using systematic tools
   return syst_tools().GetSystematicCov(hs, uopt);
@@ -2700,11 +2715,11 @@ TMatrixD DrawingTools::GetCovMatrix(TTree* tree, const std::string& var, int nx,
 
   // Check that all user options are valid
   if (!drawUtils::ContainValidOptions(uopt)) return syst_tools().GetSystematicCov(NULL, "DUMMY");
-  
-  std::string uopt_tmp=uopt;  
-  uopt_tmp += " CAT"; //not to fill histos with errors  
+
+  std::string uopt_tmp=uopt;
+  uopt_tmp += " CAT"; //not to fill histos with errors
   uopt_tmp += " MATRIX"; //matrix mode, still update the histo stack histograms related to systematics
-  
+
   HistoStack* hs = GetCovMatrixHistoStack(tree, var, nx, xbins, cut, uopt_tmp);
   if (!hs) return syst_tools().GetSystematicCov(NULL, "DUMMY");
 
@@ -2713,37 +2728,37 @@ TMatrixD DrawingTools::GetCovMatrix(TTree* tree, const std::string& var, int nx,
 }
 
 //*********************************************************
-TMatrixD DrawingTools::GetCovMatrix(Experiment& exp, const std::string& groupName, const std::string& mcSampleName, const std::string& var, int nx, double xmin, double xmax,  
+TMatrixD DrawingTools::GetCovMatrix(Experiment& exp, const std::string& groupName, const std::string& mcSampleName, const std::string& var, int nx, double xmin, double xmax,
 					   const std::string& cut, const std::string& uopt){
 //*********************************************************
   double xbins[NMAXBINS];
 
   return  GetCovMatrix(exp, groupName, mcSampleName, var, nx, GetVariableBins(nx, xmin, xmax, xbins), cut, uopt);
-} 
+}
 
 //*********************************************************
-TMatrixD DrawingTools::GetCovMatrix(Experiment& exp, const std::string& var, int nx, double* xbins,  
+TMatrixD DrawingTools::GetCovMatrix(Experiment& exp, const std::string& var, int nx, double* xbins,
 					   const std::string& cut, const std::string& uopt){
 //*********************************************************
 
   return  GetCovMatrix(exp, "all", "all", var, nx, xbins, cut, uopt);
-} 
+}
 
 //*********************************************************
-TMatrixD DrawingTools::GetCovMatrix(Experiment& exp, const std::string& var, int nx, double xmin, double xmax,  
+TMatrixD DrawingTools::GetCovMatrix(Experiment& exp, const std::string& var, int nx, double xmin, double xmax,
 					   const std::string& cut, const std::string& uopt){
 //*********************************************************
   double xbins[NMAXBINS];
 
   return  GetCovMatrix(exp, "all", "all", var, nx, GetVariableBins(nx, xmin, xmax, xbins), cut, uopt);
-} 
+}
 
 //*********************************************************
 TMatrixD DrawingTools::GetCovMatrix(TTree* tree, const std::string& var, int nx, double xmin, double xmax,
 					   const std::string& cut, const std::string& uopt){
 //*********************************************************
   double xbins[NMAXBINS];
-  
+
   //get the covariance matrix using systematic tools
   return GetCovMatrix(tree, var, nx, GetVariableBins(nx, xmin, xmax, xbins), cut, uopt);
 }
@@ -2753,34 +2768,34 @@ TMatrixD DrawingTools::GetCovMatrix(TTree* tree, const std::string& var, int nx,
 void  DrawingTools::DrawMatrix(const TMatrixD& m, int lc, int lw, int fc, int fs,
 			       const std::string& root_opt, const std::string& uopt){
 //*********************************************************
- 
+
   // Histogram corresponding to the matrix
   TH2D* h = new TH2D(m);
    _saved_histos2D.push_back(h);
-   
+
   //set unique name
   std::string name = h->GetName();
   h->SetName(GetUniqueName(name).c_str());
-  
+
   // Draw the histo
   DrawHisto(h, lc, lw, fc, fs, root_opt, uopt+ " NOSTAT NOMIN","");
-  
+
   std::string ropt = drawUtils::ToUpper(root_opt);
   if (ropt.find("COLZ"))
     gPad->SetRightMargin(0.15);  //to be able to see the palette labels
- 
+
   h->GetXaxis()->SetTitle("Bins");
   h->GetYaxis()->SetTitle("Bins");
   gPad->Modified();
   gPad->Update();
- 
+
 }
 
 //*********************************************************
-HistoStack* DrawingTools::GetCovMatrixHistoStack(Experiment& exp, const std::string& groupName, const std::string& mcSampleName, const std::string& var, int nx, double* xbins, 
+HistoStack* DrawingTools::GetCovMatrixHistoStack(Experiment& exp, const std::string& groupName, const std::string& mcSampleName, const std::string& var, int nx, double* xbins,
                                                  const std::string& cut, const std::string& opt){
 //*********************************************************
-  
+
   std::string uopt = drawUtils::ToUpper(opt);
 
   if (groupName!="all"){
@@ -2798,12 +2813,12 @@ HistoStack* DrawingTools::GetCovMatrixHistoStack(Experiment& exp, const std::str
     hs1 = new HistoStack(_title,_titleX,_titleY);
     _saved_histoStacks.push_back(hs1);
   }
-  
+
   // Project the Experiment into the HistoStacks. Using 0 norm means that POT normalization is used when both samples are available
   double* ybins=NULL;
   std::string root_opt="";
   Project(hs1, hs2, exp, groupName, mcSampleName, var,nx,xbins,0,ybins,"all",cut,root_opt,uopt, 0., false); // false --> do not care about stat errors
-  
+
   return hs2;
 }
 
@@ -2816,8 +2831,8 @@ HistoStack* DrawingTools::GetCovMatrixHistoStack(TTree* tree, const std::string&
 
   // Create empty Histo Stack
   HistoStack* hs = new HistoStack(_title,_titleX,_titleY);
-  _saved_histoStacks.push_back(hs);  
-      
+  _saved_histoStacks.push_back(hs);
+
   // Project the tree into the HistoStack
   double* ybins=NULL;
   std::string root_opt="";
@@ -2835,20 +2850,20 @@ Int_t DrawingTools::GetMinAccumLevelToSave(Experiment& exp, const std::string& u
 //*********************************************************
 
   /*
-    This method finds the maximum minAccumLevel among all first (data in general) samples in all SampleGroups, and 
-    separately the maximum minAccumLevel among all second (MC in general) samples in all SampleGroups. 
+    This method finds the maximum minAccumLevel among all first (data in general) samples in all SampleGroups, and
+    separately the maximum minAccumLevel among all second (MC in general) samples in all SampleGroups.
 
     The higher of this two maximums is returned
 
-    When not all first samples has the same minAccumLevel a warning is shown, and the same for the second samples.     
+    When not all first samples has the same minAccumLevel a warning is shown, and the same for the second samples.
   */
-  
+
   Int_t max1=-10;
   Int_t max2=-10;
   Int_t prevMinAccumLevel1=-1;
   Int_t prevMinAccumLevel2=-1;
   Int_t minAccumLevel;
-  
+
   // Loop over SampleGroup's in the experiment
   std::map< std::string, SampleGroup >::iterator it;
   for (it = exp.GetSampleGroups().begin(); it != exp.GetSampleGroups().end(); it++) {
@@ -2856,27 +2871,27 @@ Int_t DrawingTools::GetMinAccumLevelToSave(Experiment& exp, const std::string& u
     if (uopt.find("NODATA") ==std::string::npos){
       DataSample* sample1 = sampleGroup.GetDataSample();
       if (sample1){
-        minAccumLevel = drawUtils::GetVarFromTree(sample1->GetTree("config"),"MinAccumLevelToSave");    
+        minAccumLevel = drawUtils::GetVarFromTree(sample1->GetTree("config"),"MinAccumLevelToSave");
         if (minAccumLevel > max1) max1=minAccumLevel;
         if (prevMinAccumLevel1!=-1 && minAccumLevel != prevMinAccumLevel1){
-          std::cout << "DrawingTools::GetMinAccumLevelToSave(). WARNING: The first sample"  
-                    << " in SampleGroup '" << it->first << "' has different minAccumLevelToSave " << minAccumLevel << ". Previous was " << prevMinAccumLevel1 << std::endl;         
+          std::cout << "DrawingTools::GetMinAccumLevelToSave(). WARNING: The first sample"
+                    << " in SampleGroup '" << it->first << "' has different minAccumLevelToSave " << minAccumLevel << ". Previous was " << prevMinAccumLevel1 << std::endl;
           std::cout << "---> The higher min accum level will be used. Results below that level would be incorrect !!!! " << std::endl;
         }
         prevMinAccumLevel1 = minAccumLevel;
       }
-    }    
+    }
     if (uopt.find("NOMC") ==std::string::npos){
       std::map< std::string, DataSample*>& mcSamples = sampleGroup.GetMCSamples();
       std::map< std::string, DataSample*>::iterator it2;
       for (it2 = mcSamples.begin(); it2 != mcSamples.end(); it2++) {
         DataSample* sample2 = it2->second;
         if (sample2){
-          minAccumLevel = drawUtils::GetVarFromTree(sample2->GetTree("config"),"MinAccumLevelToSave");    
+          minAccumLevel = drawUtils::GetVarFromTree(sample2->GetTree("config"),"MinAccumLevelToSave");
           if (minAccumLevel > max2) max2=minAccumLevel;
           if (prevMinAccumLevel2!=-1 && minAccumLevel != prevMinAccumLevel2){
             std::cout << "DrawingTools::GetMinAccumLevelToSave(). WARNING: One of the second samples ('" << it2->first
-                      << "') in SampleGroup '" << it->first << "' has different minAccumLevelToSave " << minAccumLevel << ". Previous was " << prevMinAccumLevel2 << std::endl;         
+                      << "') in SampleGroup '" << it->first << "' has different minAccumLevelToSave " << minAccumLevel << ". Previous was " << prevMinAccumLevel2 << std::endl;
             std::cout << "---> The higher min accum level will be used. Results below that level would be incorrect !!!! " << std::endl;
           }
           prevMinAccumLevel2 = minAccumLevel;
@@ -2889,7 +2904,7 @@ Int_t DrawingTools::GetMinAccumLevelToSave(Experiment& exp, const std::string& u
   else if (max1>=0)
     return max1;
   else if (max2>=0)
-    return max2;  
+    return max2;
   else
     return -1;
 }
@@ -2927,3 +2942,107 @@ void DrawingTools::SetAlphanumericLabels(const int n,  const std::string* labels
     _saved_histoStacks[ihh]->GetRootStack()->GetXaxis()->SetLabelSize(size);
   }
 }
+
+//********************************************************************
+void DrawingTools::ListEvtDisplay() {
+//********************************************************************
+    // Auto-create event display if not set
+    if (!_eventDisplay) {
+        _eventDisplay = AutoCreateEventDisplay();
+        if (_eventDisplay) {
+            _autoCreatedEventDisplay = true;
+        } else {
+            std::cout << "ERROR: Could not auto-detect event display!" << std::endl;
+            std::cout << "Please load the appropriate library or call SetEventDisplay() manually." << std::endl;
+            return;
+        }
+    }
+
+    // Get the file path
+    if (_config_file == "") {
+        std::cout << "ERROR: No file opened! Initialize DrawingTools with a file." << std::endl;
+        return;
+    }
+
+    // Delegate to EventDisplayBase
+    _eventDisplay->ListAvailableEvents(_config_file);
+}
+
+//********************************************************************
+void DrawingTools::EvtDisplay(const std::string& mode, Int_t run, Int_t subrun, Int_t evt, const std::string& outputFile) {
+//********************************************************************
+    // Auto-create event display if not set
+    if (!_eventDisplay) {
+        _eventDisplay = AutoCreateEventDisplay();
+        if (_eventDisplay) {
+            _autoCreatedEventDisplay = true;
+        } else {
+            std::cout << "ERROR: Could not auto-detect event display!" << std::endl;
+            std::cout << "Please load the appropriate library or call SetEventDisplay() manually." << std::endl;
+            return;
+        }
+    }
+
+    // Get the file path
+    if (_config_file == "") {
+        std::cout << "ERROR: No file opened! Initialize DrawingTools with a file." << std::endl;
+        return;
+    }
+
+    // Mode parameter kept for backward compatibility, but not used
+    (void)mode; // Suppress unused parameter warning
+
+    // Delegate to EventDisplayBase
+    _eventDisplay->GenerateDisplay(_config_file, run, subrun, evt, outputFile);
+}
+
+//********************************************************************
+EventDisplayBase* DrawingTools::AutoCreateEventDisplay() {
+//********************************************************************
+    // Try to open the file and read the event display class name
+    TFile* f = TFile::Open(_config_file.c_str());
+    if (!f || f->IsZombie()) {
+        std::cerr << "ERROR: Could not open file for auto-detection: " << _config_file << std::endl;
+        return NULL;
+    }
+
+    TTree* tree = (TTree*)f->Get("EventDisplayData");
+    if (!tree || tree->GetEntries() == 0) {
+        f->Close();
+        return NULL;
+    }
+
+    // Read class name from first entry
+    char className[256];
+    tree->SetBranchAddress("ED_ClassName", className);
+    tree->GetEntry(0);
+    f->Close();
+
+    std::string classNameStr(className);
+    std::cout << "Auto-detected event display class: " << classNameStr << std::endl;
+
+    // Use ROOT's reflection system to create instance dynamically
+    // This avoids needing to include derived class headers in highland (common)
+    TClass* cl = TClass::GetClass(classNameStr.c_str());
+    if (!cl) {
+        std::cerr << "ERROR: Class '" << classNameStr << "' not found in ROOT dictionary!" << std::endl;
+        std::cerr << "Make sure the appropriate library (e.g., libhighlandPD.dylib) is loaded:" << std::endl;
+        std::cerr << "  gSystem->Load(\"libhighland.dylib\");" << std::endl;
+        std::cerr << "  gSystem->Load(\"libhighlandPD.dylib\");" << std::endl;
+        return NULL;
+    }
+
+    // Create instance using ROOT reflection
+    void* obj = cl->New();
+    if (!obj) {
+        std::cerr << "ERROR: Failed to create instance of " << classNameStr << std::endl;
+        return NULL;
+    }
+
+    // Cast to EventDisplayBase (all event display classes must inherit from this)
+    EventDisplayBase* eventDisplay = static_cast<EventDisplayBase*>(obj);
+    std::cout << "✓ Auto-created " << classNameStr << " instance" << std::endl;
+
+    return eventDisplay;
+}
+

@@ -16,7 +16,7 @@
 /// analysis, including the all-important Loop function.
 class AnalysisLoop{
  public :
-  
+
   /// Constructor which parses and sanity checks the command line options.
   AnalysisLoop(AnalysisAlgorithm* ana, int argc, char *argv[]);
 
@@ -36,7 +36,7 @@ class AnalysisLoop{
   void Execute();
 
   void SetEvent(AnaEventC* event){_event= event;}
-  
+
  protected:
 
   /// Initialize the entire analysis. Calls the Initialize() function in the
@@ -78,7 +78,7 @@ class AnalysisLoop{
   /// after variations have been applied.
   void InitializeToy();
 
-  /// Called after each toy experiment is complete. 
+  /// Called after each toy experiment is complete.
   bool FinalizeToy();
 
   void InitializeSelection(const SelectionBase& sel);
@@ -117,7 +117,7 @@ class AnalysisLoop{
   /// once per spill!
   //  void FillTruthTree(const AnaTrueVertex& vtx);
 
-  /// Fill the standard configurations trees: 
+  /// Fill the standard configurations trees:
   void FillMicroTrees();
 
   /// Fill the standard configurations only toy-dependent variables
@@ -157,7 +157,7 @@ class AnalysisLoop{
 
   /// Path to the file with the list of events to skim, as defined by the user.
   std::string _inputSkimFileName;
-  
+
   /// Whether the "truth" tree should be filled. See FillTruthTree().
   bool _enableTruthTree;
 
@@ -166,10 +166,10 @@ class AnalysisLoop{
   bool _cosmicMode;
 
   /// Check version compatibility between oaAnalysisReader and oaAnalysis file
-  bool _versionCheck; 
+  bool _versionCheck;
 
   /// Whether to fill the trees and create an output file or not
-  bool _fillTrees; 
+  bool _fillTrees;
 
   /// Tools for tracking memory usage
   MemoryUsage _memory;
@@ -189,7 +189,7 @@ class AnalysisLoop{
 
   /// Total number of entries run so far
   int _entry_count;
-  
+
   /// The Analysis algorithm to run
   AnalysisAlgorithm* _ana;
 
@@ -210,7 +210,7 @@ class AnalysisLoop{
 
   /// Was any of the toys passed the min accum level to be saved into the microtree ?
   bool _toy_filled;
-  
+
 public:
 
 };

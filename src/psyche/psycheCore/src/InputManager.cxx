@@ -1,5 +1,6 @@
 #include "InputManager.hxx"
 #include "CoreUtils.hxx"
+#include "BaseDataClasses.hxx"
 #include <fstream>
 
 //********************************************************************
@@ -26,7 +27,7 @@ void InputManager::Reset(){
 
   for (std::vector<InputConverter*>::const_iterator it = _converters.begin(); it != _converters.end(); it++) {
     (*it)->Reset();
-  }        
+  }
 
 }
 
@@ -36,7 +37,7 @@ void InputManager::DeleteSpill(){
 
   if (_CorrectedSpill)
     delete _CorrectedSpill;
- 
+
   if (_Spill)
     delete _Spill;
 
@@ -55,7 +56,7 @@ bool InputManager::AddDataFileToConverter(const std::string& infile_name, const 
   // Find out the input format (FlatTre, oaAnalysisTree, etc)
   std::string conv2 = conv;
   if (conv2 == "") {
-    std::cout << "InputManager::Initialize(). Input type (oaAnalysisTree, FlatTree, ...) not specified. Find it automatically..." << std::endl;    
+    std::cout << "InputManager::Initialize(). Input type (oaAnalysisTree, FlatTree, ...) not specified. Find it automatically..." << std::endl;
     std::string firstFile = FindFirstFile(infile_name, isROOTFile);
     for (std::vector<InputConverter*>::const_iterator it = _converters.begin(); it != _converters.end(); it++) {
       if ((*it)->IsCorrectType(firstFile)) {
@@ -88,7 +89,7 @@ bool InputManager::AddDataFileToConverter(const std::string& infile_name, const 
   if (!ReadFile(infile_name, isROOTFile)) return false;
 
   // Get the number of entries in the tree
-  Long64_t nentries = GetEntries();  
+  Long64_t nentries = GetEntries();
   std::cout << "InputManager::input tree has " << nentries << " entries" << std::endl;
 
   return true;
@@ -105,7 +106,7 @@ bool InputManager::Initialize(const std::string& infile_name, const std::string&
     std::cout << "InputManager:: MC mode" << std::endl;
   else
     std::cout << "InputManager:: Data mode" << std::endl;
-  
+
   // SoftwareVersion
   std::cout << "InputManager:: SoftwareVersion for original file is " << GetSoftwareVersion() << std::endl;
 
@@ -118,14 +119,14 @@ bool InputManager::IsROOTFile(const std::string& infile_name){
 
   std::cout << "InputManager::IsROOTFile(). If this is not a ROOT file an error will appear in the next two lines. Ignore it !!!! " << std::endl;
 
-  TString infileName(infile_name);  
+  TString infileName(infile_name);
   //std::ifstream inputFile(infileName.Data(), std::ios::in);
-    
+
   //if(!inputFile){
   //std::cerr << "Cannot open input file '" << infileName.Data() << "'. Exit!" << std::endl;
   //return false;
   //}
-  
+
   TFile* isROOTFile = TFile::Open(infile_name.c_str());
   bool isroo=true;
   if (!isROOTFile){
@@ -142,22 +143,22 @@ bool InputManager::IsROOTFile(const std::string& infile_name){
 bool InputManager::ReadFile(const std::string& infile_name, bool isROOTFile){
 //*****************************************************************************
 
-  // Load data files     
-  TString infileName(infile_name);  
+  // Load data files
+  TString infileName(infile_name);
   std::ifstream inputFile(infileName.Data(), std::ios::in);
-    
+
   //if(!inputFile){
   //std::cerr << "Cannot open input file '" << infileName.Data() << "'. Exit!" << std::endl;
   //return false;
   //}
-  
+
   //Loop over the input files
-  std::string inputString=infile_name;   
-  
-  if (!isROOTFile){ 
+  std::string inputString=infile_name;
+
+  if (!isROOTFile){
     while (inputFile >> inputString) {
-      if (!GetConverter().AddFileToTChain(inputString)) return false;      
-    }    
+      if (!GetConverter().AddFileToTChain(inputString)) return false;
+    }
   }
   else{
     if (!GetConverter().AddFileToTChain(inputString)) return false;
@@ -170,17 +171,17 @@ bool InputManager::ReadFile(const std::string& infile_name, bool isROOTFile){
 std::string InputManager::FindFirstFile(const std::string& infile_name, bool isROOTFile){
 //*****************************************************************************
 
-  TString infileName(infile_name);  
+  TString infileName(infile_name);
   std::ifstream inputFile(infileName.Data(), std::ios::in);
-    
+
   //if(!inputFile){
   //std::cerr << "Cannot open input file '" << infileName.Data() << "'. Exit!" << std::endl;
   //std::string fal = "false";
   //return fal;
   //}
-  
-  std::string inputString=infile_name;   
-  
+
+  std::string inputString=infile_name;
+
   if (!isROOTFile)
     inputFile >> inputString;
 
@@ -193,7 +194,7 @@ bool InputManager::LoadSpill(Long64_t& entry){
 
   Long64_t ientry = LoadTree(entry);
   if (ientry < 0) return false;
-  
+
   // The spill to be read
   AnaSpillC* SpillToRead = NULL;
 
@@ -201,6 +202,18 @@ bool InputManager::LoadSpill(Long64_t& entry){
   Int_t nb = GetConverter().GetSpill(entry,SpillToRead);
   if (nb <=0 || !SpillToRead){
     return false;
+  }
+
+  // Check if this event should be skimmed (only process events in the skim file if one is specified)
+  AnaSpillB* spill = static_cast<AnaSpillB*>(SpillToRead);
+  if (spill->EventInfo) {
+    if (!anaUtils::CheckSkimmedEvent(spill->EventInfo->Run,
+                                      spill->EventInfo->SubRun,
+                                      spill->EventInfo->Event)) {
+      // Event not in skim file, skip it
+      delete SpillToRead;
+      return false;
+    }
   }
 
   // Make sure read spill appears as not cloned
@@ -255,7 +268,7 @@ Long64_t InputManager::LoadTree(Long64_t entry){
 //*****************************************************************************
 Long64_t InputManager::GetEntries(){
 //*****************************************************************************
-  
+
   // return the number of entries
   return GetConverter().GetEntries();
 }
@@ -295,7 +308,7 @@ void InputManager::AddConverter(const std::string& name, InputConverter* conv) {
     std::cout << "ERROR: InputConverter " << name << " already exists. If you want to replace it please use ReplaceConverter method" << std::endl;
     return;
   }
-  
+
   // Add a new converter
   conv->SetName(name);
   _converters.push_back(conv);
@@ -308,17 +321,17 @@ void InputManager::ReplaceConverter(const std::string& name, InputConverter* con
   for (std::vector<InputConverter*>::iterator it = _converters.begin(); it != _converters.end(); it++) {
     if ((*it)->Name() == name){
       std::cout << "Overriding " << name << " input converter" << std::endl;
-      
-      // Replace an existing converter with the same name                                                                                                                                                                                   
+
+      // Replace an existing converter with the same name
       delete *it;
       conv->SetName(name);
       *it = conv;
       return;
     }
   }
-  
+
   std::cout << "InputConverter " << name << " does not exist. Cannot replace it !!!!!" << std::endl;
-  
+
 }
 
 //********************************************************************

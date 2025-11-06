@@ -31,32 +31,32 @@
 /// This namespace contains useful functions for analyses
 namespace anaUtils{
 
-  /// Copying of an array 
+  /// Copying of an array
   template <typename T> void CopyArray(const T* srcArr, T* tgtArr, size_t nObj){
-    for (size_t i = 0; i < nObj; i++) 
+    for (size_t i = 0; i < nObj; i++)
       tgtArr[i] = srcArr[i];
   }
 
-  /// Copying of an array 
+  /// Copying of an array
   template <typename T1, typename T2> void CopyArray(const T1* srcArr, T2* tgtArr, size_t nObj){
-    for (size_t i = 0; i < nObj; i++) 
+    for (size_t i = 0; i < nObj; i++)
       tgtArr[i] = srcArr[i];
   }
 
-  /// Resize an array, basic case for int(s), float(s) etc 
+  /// Resize an array, basic case for int(s), float(s) etc
   template <typename T> void ResizeArray(T* &tgtArr, size_t nObjNew, size_t nObjOrig){
     T* tmp = new T[nObjNew];
-    for (size_t i = 0; i < nObjNew; i++) 
+    for (size_t i = 0; i < nObjNew; i++)
       tmp[i] = (i < nObjOrig ? tgtArr[i] : 0);
 
     delete [] tgtArr;
     tgtArr = tmp;
   }
 
-  /// Resize an array with Weight_h 
+  /// Resize an array with Weight_h
   inline void ResizeArray(Weight_h* &tgtArr, size_t nObjNew, size_t nObjOrig){
     Weight_h* tmp = new Weight_h[nObjNew];
-    for (size_t i = 0; i < nObjNew; i++) 
+    for (size_t i = 0; i < nObjNew; i++)
       tmp[i] = (i < nObjOrig ? tgtArr[i] : 1);
 
     delete [] tgtArr;
@@ -66,72 +66,72 @@ namespace anaUtils{
   /// Resize an array, general case of pointers
   template <typename T> void ResizeArray(T** &tgtArr, size_t nObjNew, size_t nObjOrig){
     T** tmp = new T*[nObjNew];
-    for (size_t i = 0; i < nObjNew; i++) 
+    for (size_t i = 0; i < nObjNew; i++)
       tmp[i] = (i < nObjOrig ? tgtArr[i] : NULL);
     delete [] tgtArr;
     tgtArr = tmp;
   }
-  
+
   /// Keep unique elements
   template <typename T> size_t KeepUniqueElementsInArray(T* &tgtArr, size_t nObjOrig){
     std::set<T> set_tmp;
-    for (size_t i = 0; i < nObjOrig; i++){ 
+    for (size_t i = 0; i < nObjOrig; i++){
       if (!tgtArr[i]) continue;
       set_tmp.insert(tgtArr[i]);
     }
-    
+
     size_t set_tmp_size = set_tmp.size();
-    
+
     T* tmp = new T[set_tmp_size];
-    for (size_t i = 0; i < set_tmp_size; i++) 
+    for (size_t i = 0; i < set_tmp_size; i++)
       tmp[i] = set_tmp[i];
     delete [] tgtArr;
     tgtArr = tmp;
     return set_tmp_size;
   }
-  
+
   /// Keep unique elements, general case of pointers
   /// Do not consider it to be serted since is machine dependent
   /// a<b is not guaranteed to do one thing or another, but a program that depends on a<b being consistent
-  /// will be well behaved (consider adding pointers to a set) 
+  /// will be well behaved (consider adding pointers to a set)
   template <typename T> size_t KeepUniqueElementsInArray(T** &tgtArr, size_t nObjOrig){
     std::set<T*> set_tmp;
-    for (size_t i = 0; i < nObjOrig; i++){ 
+    for (size_t i = 0; i < nObjOrig; i++){
       if (!tgtArr[i]) continue;
       set_tmp.insert(tgtArr[i]);
     }
-    
+
     size_t set_tmp_size = set_tmp.size();
-    
+
     T** tmp = new T*[set_tmp_size];
-    for (size_t i = 0; i < set_tmp_size; i++) 
+    for (size_t i = 0; i < set_tmp_size; i++)
       tmp[i] = set_tmp[i];
     delete [] tgtArr;
     tgtArr = tmp;
     return set_tmp_size;
   }
-  
+
 
   /// Clear an array
   template <typename T> void ClearArray(T** tgtArr, size_t nObj){
-    for (size_t i = 0; i < nObj; i++) 
+    for (size_t i = 0; i < nObj; i++)
       tgtArr[i] = NULL;
   }
 
   /// Reserve an array
   template <typename T> void ReserveArray(T** tgtArr, size_t nObj){
-    for (size_t i = 0; i < nObj; i++) 
+    for (size_t i = 0; i < nObj; i++)
       tgtArr[i] = new T();
   }
 
   /// Create an array
   template <typename T> void CreateArray(T** &tgtArr, size_t nObj){
     tgtArr = new T*[nObj];
-    for (size_t i = 0; i < nObj; i++) 
+    for (size_t i = 0; i < nObj; i++)
       tgtArr[i] = NULL;
   }
 
-  /// Create a vector of Int_t of a given size 
+  /// Create a vector of Int_t of a given size
   /// This is to avoid using C++11 initialization for the moment
   inline std::vector<Int_t> CreateVectorI(size_t count, ...) {
     std::vector<Int_t> vect;
@@ -145,8 +145,8 @@ namespace anaUtils{
     va_end(args);
     return vect;
   }
-  
-  /// Create a vector of floats of a given size 
+
+  /// Create a vector of floats of a given size
   /// This is to avoid using C++11 initialization for the moment
   inline std::vector<Float_t> CreateVectorF(size_t count, ...) {
     std::vector<Float_t> vect;
@@ -160,11 +160,11 @@ namespace anaUtils{
     va_end(args);
     return vect;
   }
-   
+
 /* CINT is not happy with it
   template<typename T> std::vector<T> CreateVector(size_t count, ...) {
     std::vector<T> vect;
-    
+
     if (count == 0) return vect;
     va_list args;
     va_start(args, count);
@@ -173,13 +173,13 @@ namespace anaUtils{
       vect.push_back(va_arg(args, T));
     }
     va_end(args);
-    
+
     return vect;
   };
 */
 
 
-  void VectorToArray(const TLorentzVector& v, Float_t* array);  
+  void VectorToArray(const TLorentzVector& v, Float_t* array);
   void VectorToArray(const TVector3& v, Float_t* array);
 
   TVector3 ArrayToTVector3(const Float_t* array);

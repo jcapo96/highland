@@ -4,6 +4,7 @@
 #include "TMath.h"
 #include "BasicUtils.hxx"
 #include <math.h>
+#include <unordered_map>
 
 //********************************************************************
 AnaSubdet1ParticleB::AnaSubdet1ParticleB(){
@@ -58,15 +59,15 @@ AnaSubdet2ParticleB::AnaSubdet2ParticleB(const AnaSubdet2ParticleB& seg):AnaPart
     RefitMomentum  = seg.RefitMomentum;
     EFieldRefitMomentum       = seg.EFieldRefitMomentum;
 
-    dEdxMeas      = seg.dEdxMeas; 
-    dEdxexpMuon   = seg.dEdxexpMuon; 
-    dEdxexpEle    = seg.dEdxexpEle; 
-    dEdxexpPion   = seg.dEdxexpPion;  
-    dEdxexpProton = seg.dEdxexpProton; 
+    dEdxMeas      = seg.dEdxMeas;
+    dEdxexpMuon   = seg.dEdxexpMuon;
+    dEdxexpEle    = seg.dEdxexpEle;
+    dEdxexpPion   = seg.dEdxexpPion;
+    dEdxexpProton = seg.dEdxexpProton;
 
-    dEdxSigmaMuon   = seg.dEdxSigmaMuon; 
-    dEdxSigmaEle    = seg.dEdxSigmaEle; 
-    dEdxSigmaPion   = seg.dEdxSigmaPion; 
+    dEdxSigmaMuon   = seg.dEdxSigmaMuon;
+    dEdxSigmaEle    = seg.dEdxSigmaEle;
+    dEdxSigmaPion   = seg.dEdxSigmaPion;
     dEdxSigmaProton = seg.dEdxSigmaProton;
 }
 
@@ -173,10 +174,10 @@ void AnaParticleMomB::Print() const{
 //********************************************************************
 AnaParticleB::AnaParticleB(): AnaRecObjectC(){
 //********************************************************************
- 
+
     Length            = -999;
     NHits             = -999;
-        
+
     anaUtils::ReserveArray(DirectionStart, 3);
     anaUtils::ReserveArray(PositionStart,  4);
     anaUtils::ReserveArray(PositionEnd,    4);
@@ -197,7 +198,7 @@ AnaParticleB::AnaParticleB(const AnaParticleB& part): AnaRecObjectC(part){
 
     Length            = part.Length;
     NHits             = part.NHits;
-        
+
     anaUtils::CopyArray(part.DirectionStart,  DirectionStart, 3);
     anaUtils::CopyArray(part.DirectionEnd,    DirectionEnd,   3);
     anaUtils::CopyArray(part.PositionStart,   PositionStart,  4);
@@ -226,7 +227,7 @@ void AnaParticleB::Print() const{
 
     dump_array4(PositionStart);
     dump_array4(PositionEnd);
-    
+
     dump_array3(DirectionStart);
     dump_array3(DirectionEnd);
 }
@@ -254,13 +255,13 @@ AnaTrackB::~AnaTrackB(){
 //********************************************************************
 
     for (Int_t i=0;i<nSubdet1Segments;i++){
-        delete Subdet1Segments[i];    
+        delete Subdet1Segments[i];
         Subdet1Segments[i] = NULL;
     }
 
 
     for (Int_t i=0;i<nSubdet2Segments;i++){
-        delete Subdet2Segments[i];    
+        delete Subdet2Segments[i];
         Subdet2Segments[i] = NULL;
     }
 
@@ -279,7 +280,7 @@ AnaTrackB::AnaTrackB(const AnaTrackB& track):AnaParticleMomB(track){
 //********************************************************************
 
     Index             = track.Index;
-    RangeMomentumMuon = track.RangeMomentumMuon;    
+    RangeMomentumMuon = track.RangeMomentumMuon;
     MomentumFlip      = track.MomentumFlip;
     anaUtils::CopyArray(track.DirectionStartFlip,  DirectionStartFlip, 3);
 
@@ -312,7 +313,7 @@ void AnaTrackB::Print() const{
     std::cout << "RangeMomentumMuon:    " << RangeMomentumMuon  << std::endl;
 
     dump_array3(DirectionStartFlip);
-    
+
     std::cout << "NSubdet1s:                " << nSubdet1Segments       << std::endl;
     std::cout << "NSubdet2s:                " << nSubdet2Segments       << std::endl;
 
@@ -327,7 +328,7 @@ AnaDetCrossingB::AnaDetCrossingB(){
 
     anaUtils::ReserveArray(EntrancePosition, 4);
     anaUtils::ReserveArray(ExitPosition,     4);
-  
+
     anaUtils::ReserveArray(EntranceMomentum, 3);
     anaUtils::ReserveArray(ExitMomentum,     3);
 }
@@ -357,7 +358,7 @@ AnaTrueParticleB::AnaTrueParticleB():AnaTrueObjectC(){
 
     ProcessStart = Unknown;
     ProcessEnd = Unknown;
-    
+
     anaUtils::ReserveArray(Position, 4);
     anaUtils::ReserveArray(PositionEnd, 4);
     anaUtils::ReserveArray(Direction, 3);
@@ -384,10 +385,10 @@ AnaTrueParticleB::~AnaTrueParticleB(){
   DetCrossingsVect.clear();
 
   nDetCrossings = 0;
-  
+
   // Must delete array of pointers, since we re-create this every time we apply a selection
   if(DetCrossings != NULL) delete [] DetCrossings;
-  DetCrossings = NULL;      
+  DetCrossings = NULL;
 }
 
 //********************************************************************
@@ -398,10 +399,10 @@ AnaTrueParticleB::AnaTrueParticleB(const AnaTrueParticleB& truePart):AnaTrueObje
     ParentID   = truePart.ParentID;
     ParentPDG  = truePart.ParentPDG;
     GParentPDG = truePart.GParentPDG;
-   
+
     ProcessStart = truePart.ProcessStart;
     ProcessEnd   = truePart.ProcessEnd;
-    
+
     anaUtils::CopyArray(truePart.Position, Position, 4);
     anaUtils::CopyArray(truePart.PositionEnd, PositionEnd, 4);
     anaUtils::CopyArray(truePart.Direction, Direction, 3);
@@ -416,14 +417,14 @@ AnaTrueParticleB::AnaTrueParticleB(const AnaTrueParticleB& truePart):AnaTrueObje
     /// store for each subdetector
     /// if the true truePart enter the active volume of the subdetector i
     /// what is the entrance position of the subdetector i
-    ///  "    "  "   exit       "               "        
+    ///  "    "  "   exit       "               "
 
     anaUtils::CreateArray(DetCrossings, truePart.nDetCrossings);
     for (Int_t i=0;i<truePart.nDetCrossings;i++){
         DetCrossings[i] = truePart.DetCrossings[i]->Clone();
     }
     nDetCrossings = truePart.nDetCrossings;
-    
+
     DetCrossingsVect.clear();
 }
 
@@ -473,7 +474,7 @@ AnaTrueVertexB::~AnaTrueVertexB(){
 
   // Must delete array of pointers, since we re-create this every time we apply a selection
   if(TrueParticles != NULL) delete [] TrueParticles;
-  TrueParticles = NULL;      
+  TrueParticles = NULL;
 
   TrueParticlesVect.clear();
 }
@@ -566,7 +567,7 @@ AnaBunchB::~AnaBunchB(){
     }
     nDelayedClusters = 0;
     if (DelayedClusters) delete [] DelayedClusters;
-    DelayedClusters = NULL;    
+    DelayedClusters = NULL;
 }
 
 //********************************************************************
@@ -584,17 +585,17 @@ AnaBunchB::AnaBunchB(const AnaBunchB& bunch):AnaBunchC(bunch){
     nDelayedClusters = 0;
 
     //  anaUtils::CreateArray(DelayedClusters, bunch.nDelayedClusters);
-    
+
     DelayedClusters = new AnaDelayedClustersB*[bunch.nDelayedClusters];
     for(int i = 0; i < bunch.nDelayedClusters; ++i){
       DelayedClusters[i] = NULL;
     }
-        
+
     for (Int_t i=0;i<bunch.nDelayedClusters;i++){
       DelayedClusters[nDelayedClusters] = bunch.DelayedClusters[i]->Clone();
       nDelayedClusters++;
     }
-    
+
 }
 
 //********************************************************************
@@ -654,8 +655,8 @@ AnaSpillB::AnaSpillB():AnaSpillC(){
     GeomID=999;
     NTotalTrueVertices = 999;
     NTotalTrueParticles   = 999;
-    TrueVertices.clear();    
-    TrueParticles.clear();    
+    TrueVertices.clear();
+    TrueParticles.clear();
     OutOfBunch = NULL;
     EventInfo = NULL;
     Beam = NULL;
@@ -670,18 +671,18 @@ AnaSpillB::~AnaSpillB(){
     // TrueVertex's are not cloned. Only delete them in the raw spill
     if (!isClone){
         for (UInt_t i=0;i<TrueVertices.size();i++)
-            delete TrueVertices[i];    
+            delete TrueVertices[i];
     }
 
-    TrueVertices.clear();    
+    TrueVertices.clear();
 
     // TrueParticles are not cloned.  Only delete them in the raw spill
     if (!isClone){
       for (UInt_t i=0;i<TrueParticles.size();i++)
-            delete TrueParticles[i];    
+            delete TrueParticles[i];
     }
 
-    TrueParticles.clear();    
+    TrueParticles.clear();
 
 
     if (OutOfBunch)
@@ -706,7 +707,7 @@ AnaSpillB::AnaSpillB(const AnaSpillB& spill):AnaSpillC(spill){
 
     NTotalTrueVertices = spill.NTotalTrueVertices;
     NTotalTrueParticles   = spill.NTotalTrueParticles;
-    
+
     // Don't clone truth
     TrueVertices.clear();
     for (UInt_t i=0;i<spill.TrueVertices.size();i++)
@@ -744,6 +745,17 @@ void AnaSpillB::RedoLinks(){
     std::vector<AnaBunchC*> allBunches = Bunches;
     if (OutOfBunch) allBunches.push_back(OutOfBunch);
 
+    // OPTIMIZATION: Build hash map of all particles by UniqueID for O(1) lookups
+    std::unordered_map<Int_t, AnaParticleB*> particleByUniqueID;
+    for (UInt_t i=0;i<allBunches.size();i++){
+      AnaBunchB* bunch = static_cast<AnaBunchB*>(allBunches[i]);
+      for (UInt_t j=0;j<bunch->Particles.size();j++){
+        if(bunch->Particles[j]){
+          particleByUniqueID[bunch->Particles[j]->UniqueID] = bunch->Particles[j];
+        }
+      }
+    }
+
     for (UInt_t i=0;i<allBunches.size();i++){
       AnaBunchB* bunch = static_cast<AnaBunchB*>(allBunches[i]);
 
@@ -759,34 +771,15 @@ void AnaSpillB::RedoLinks(){
         // AnaTrueVertex::ReconVertices
         associateVertexToTrueVertex(vertex);
         for (Int_t k=0;k<vertex->nParticles;k++){
-          bool found=false;
           if (!vertex->Particles[k]) continue; // Particles in a vertex can be NULL in some cases (see oaAnalysisTreeConverter::FindParticle)
-          for (UInt_t l=0;l<bunch->Particles.size();l++){
-            if (vertex->Particles[k]->UniqueID == bunch->Particles[l]->UniqueID){
-              // AnaVertexB::Particles
-              vertex->Particles[k] = bunch->Particles[l];
-              // AnaParticle::ReconVertices
-              associateVertexToParticle(vertex->Particles[k], vertex);
-              found=true;
-              break;
-            }
-          }
-          if (!found){
-            for (UInt_t i2=0;i2<allBunches.size();i2++){
-              if ((Int_t)i2==bunch->Bunch) continue;
-              AnaBunchB* bunch2 = static_cast<AnaBunchB*>(allBunches[i2]);
-              for (UInt_t l=0;l<bunch2->Particles.size();l++){
-                if (vertex->Particles[k]->UniqueID == bunch2->Particles[l]->UniqueID){
-                  // AnaVertexB::Particles
-                  vertex->Particles[k] = bunch2->Particles[l];
-                  // AnaParticle::ReconVertices
-                  associateVertexToParticle(vertex->Particles[k], vertex);
-                  found=true;
-                  break;
-                }                
-              }
-              if (found) break;
-            }
+
+          // OPTIMIZATION: O(1) hash map lookup instead of O(n) linear search
+          auto it = particleByUniqueID.find(vertex->Particles[k]->UniqueID);
+          if(it != particleByUniqueID.end()){
+            // AnaVertexB::Particles
+            vertex->Particles[k] = it->second;
+            // AnaParticle::ReconVertices
+            associateVertexToParticle(vertex->Particles[k], vertex);
           }
         }
       }
@@ -809,7 +802,7 @@ void AnaSpillB::Print() const{
     std::cout << "NSavedTrueVertices:  " << (int)TrueVertices.size() << std::endl;
     std::cout << "NTotalTrueParticles:    " << NTotalTrueParticles << std::endl;
     std::cout << "NSavedTrueParticles:    " << (int)TrueParticles.size() << std::endl;
-    if (DataQuality) 
+    if (DataQuality)
       std::cout << "Good DQ:             " << DataQuality->GoodDaq << std::endl;
     else
       std::cout << "NO DataQuality Info available !!!" << std::endl;
@@ -830,18 +823,18 @@ void AnaSpillB::CopyArraysIntoVectors(){
     if (OutOfBunch) bunches.push_back(OutOfBunch);
 
     for (std::vector<AnaBunchC*>::iterator it=bunches.begin();it!=bunches.end();it++){
-      AnaBunchB* bunch = static_cast<AnaBunchB*>(*it);      
+      AnaBunchB* bunch = static_cast<AnaBunchB*>(*it);
       for (UInt_t i=0;i<bunch->Particles.size();i++){
         AnaTrackB* track = dynamic_cast<AnaTrackB*>(bunch->Particles[i]);
         if (!track)  continue;
         track->Subdet1SegmentsVect.clear();
         for (Int_t j=0;j<track->nSubdet1Segments;j++)
-          track->Subdet1SegmentsVect.push_back(track->Subdet1Segments[j]);       
+          track->Subdet1SegmentsVect.push_back(track->Subdet1Segments[j]);
 
         track->Subdet2SegmentsVect.clear();
         for (Int_t j=0;j<track->nSubdet2Segments;j++)
-          track->Subdet2SegmentsVect.push_back(track->Subdet2Segments[j]);       
-      }      
+          track->Subdet2SegmentsVect.push_back(track->Subdet2Segments[j]);
+      }
       for (UInt_t i=0;i<bunch->Vertices.size();i++){
         AnaVertexB* vertex = bunch->Vertices[i];
 
@@ -1041,7 +1034,7 @@ AnaVertexB::AnaVertexB(const AnaVertexB& vertex):AnaRecObjectC(vertex){
 
     anaUtils::CopyArray(vertex.Position, Position, 4);
 
-    anaUtils::CreateArray(Particles, vertex.nParticles);   
+    anaUtils::CreateArray(Particles, vertex.nParticles);
     anaUtils::CopyArray(vertex.Particles, Particles, vertex.nParticles);
 
     nParticles = vertex.nParticles;
@@ -1073,7 +1066,7 @@ bool AnaVertexB::ComparePrimaryIndex(const AnaVertexB* t1, const AnaVertexB* t2)
     // set nan to be 999 so they are sorted last
     if (isnan(m1)) m1 = 999;
     if (isnan(m2)) m2 = 999;
-    
+
     // sort by PrimaryIndex
     if (m1 != m2 || ! t1 || ! t2) return m1 < m2;
 
@@ -1267,7 +1260,7 @@ AnaEventB::~AnaEventB(){
         delete Particles[i];
         Particles[i] = NULL;
     }
-    nParticles = 0;    
+    nParticles = 0;
     if (Particles) delete [] Particles;
     Particles = NULL;
 
@@ -1277,7 +1270,7 @@ AnaEventB::~AnaEventB(){
     }
     nVertices = 0;
     if (Vertices) delete [] Vertices;
-    Vertices = NULL;    
+    Vertices = NULL;
 
     // TrueParticles are not cloned.  Only delete them in the raw spill
     if (!isClone){
@@ -1306,7 +1299,7 @@ AnaEventB::~AnaEventB(){
         delete Beam;
         Beam = NULL;
     }
-    
+
     if (EventInfo){
         delete EventInfo;
         EventInfo = NULL;
@@ -1382,11 +1375,11 @@ void AnaEventB::Copy(const AnaEventC& eventC, bool copyBunchInfo, bool cloneTrut
                     if(TrueVertices[j]->nTrueParticles == 0){
                         anaUtils::CreateArray(TrueVertices[j]->TrueParticles, event.nTrueParticles);
                     }
-                    TrueVertices[j]->TrueParticles[TrueVertices[j]->nTrueParticles] = TrueParticles[nTrueParticles];	
+                    TrueVertices[j]->TrueParticles[TrueVertices[j]->nTrueParticles] = TrueParticles[nTrueParticles];
                     TrueVertices[j]->nTrueParticles++;
                     break;
                 }
-            } 
+            }
             nTrueParticles++;
         }
         else{
@@ -1398,7 +1391,7 @@ void AnaEventB::Copy(const AnaEventC& eventC, bool copyBunchInfo, bool cloneTrut
     // Fill the FGD time bins vector
     nDelayedClusters = 0;
     //  anaUtils::CreateArray(DelayedClusters, event.nDelayedClusters);
-    
+
     DelayedClusters = new AnaDelayedClustersB*[event.nDelayedClusters];
     for(int i = 0; i < event.nDelayedClusters; ++i){
     DelayedClusters[i] = NULL;
@@ -1456,17 +1449,17 @@ AnaEventB::AnaEventB(const AnaSpillB& spill, const AnaBunchB& bunch){
   nEventBoxes=0;
   for (UInt_t i=0;i<NMAXEVENTBOXES;i++)
     EventBoxes[i]=NULL;
-  
+
   // The initial weight of the Event is 1;
   Weight=1;
-  
+
   // Must create a summary object when we create an event
   // This is initialised to NULL and SampleId::kUnassigned, so you know it has not passed a selection
   Summary = new AnaEventSummaryB();
 
 
   UniqueID = 0;
-  isClone = false;  
+  isClone = false;
   Particles = NULL;
   Vertices = NULL;
   TrueParticles = NULL;
@@ -1478,7 +1471,7 @@ AnaEventB::AnaEventB(const AnaSpillB& spill, const AnaBunchB& bunch){
   EventInfo = NULL;
   Beam = NULL;
   DataQuality = NULL;
-  
+
   //------ Copy from Spill and Bunch ----------------
 
   Weight      = bunch.Weight;
@@ -1543,27 +1536,27 @@ std::string AnaTrueParticleB::ConvertProcess(AnaTrueParticleB::ProcessEnum proce
 
   std::string sprocess="";
 
-  if      (process == Unknown)               sprocess = "Unknown";               
-  else if (process == primary)               sprocess = "primary";                                  
-  else if (process == Decay)                 sprocess = "Decay";                 
+  if      (process == Unknown)               sprocess = "Unknown";
+  else if (process == primary)               sprocess = "primary";
+  else if (process == Decay)                 sprocess = "Decay";
   else if (process == kaonplusInelastic)     sprocess = "kaon+Inelastic";
-  else if (process == kaonminusInelastic)    sprocess = "kaon-Inelastic";     
-  else if (process == neutronInelastic)      sprocess = "neutronInelastic";      
-  else if (process == hadElastic)            sprocess = "hadElastic";            
-  else if (process == nCapture)              sprocess = "nCapture";              
-  else if (process == protonInelastic)       sprocess = "protonInelastic";       
-  else if (process == piplusInelastic)       sprocess = "pi+Inelastic";       
-  else if (process == piminusInelastic)      sprocess = "pi-Inelastic";      
-  else if (process == hBertiniCaptureAtRest) sprocess = "hBertiniCaptureAtRest"; 
-  else if (process == CoulombScat)           sprocess = "CoulombScat";           
-  else if (process == kaon0LInelastic)       sprocess = "kaon0LInelastic";       
-  else if (process == electronNuclear)       sprocess = "electronNuclear";       
-  else if (process == muMinusCaptureAtRest)  sprocess = "muMinusCaptureAtRest";  
-  else if (process == dInelastic)            sprocess = "dInelastic";            
-  else if (process == kaon0SInelastic)       sprocess = "kaon0SInelastic";       
-  else if (process == positronNuclear)       sprocess = "positronNuclear";       
-  else if (process == lambdaInelastic)       sprocess = "lambdaInelastic";       
-  else if (process == tInelastic)            sprocess = "tInelastic";                       
+  else if (process == kaonminusInelastic)    sprocess = "kaon-Inelastic";
+  else if (process == neutronInelastic)      sprocess = "neutronInelastic";
+  else if (process == hadElastic)            sprocess = "hadElastic";
+  else if (process == nCapture)              sprocess = "nCapture";
+  else if (process == protonInelastic)       sprocess = "protonInelastic";
+  else if (process == piplusInelastic)       sprocess = "pi+Inelastic";
+  else if (process == piminusInelastic)      sprocess = "pi-Inelastic";
+  else if (process == hBertiniCaptureAtRest) sprocess = "hBertiniCaptureAtRest";
+  else if (process == CoulombScat)           sprocess = "CoulombScat";
+  else if (process == kaon0LInelastic)       sprocess = "kaon0LInelastic";
+  else if (process == electronNuclear)       sprocess = "electronNuclear";
+  else if (process == muMinusCaptureAtRest)  sprocess = "muMinusCaptureAtRest";
+  else if (process == dInelastic)            sprocess = "dInelastic";
+  else if (process == kaon0SInelastic)       sprocess = "kaon0SInelastic";
+  else if (process == positronNuclear)       sprocess = "positronNuclear";
+  else if (process == lambdaInelastic)       sprocess = "lambdaInelastic";
+  else if (process == tInelastic)            sprocess = "tInelastic";
   else                                       sprocess = "Unknown";
 
     return sprocess;
@@ -1575,28 +1568,28 @@ AnaTrueParticleB::ProcessEnum AnaTrueParticleB::ConvertProcess(const std::string
 //*********************************************************
 
   ProcessEnum process=Unknown;
-  
-  if      (sprocess == "Unknown")               process = Unknown;               
-  else if (sprocess == "primary")               process = primary;                                  
-  else if (sprocess == "Decay")                 process = Decay;                 
+
+  if      (sprocess == "Unknown")               process = Unknown;
+  else if (sprocess == "primary")               process = primary;
+  else if (sprocess == "Decay")                 process = Decay;
   else if (sprocess == "kaon+Inelastic")        process = kaonplusInelastic;
-  else if (sprocess == "kaon.Inelastic")        process = kaonminusInelastic;     
-  else if (sprocess == "neutronInelastic")      process = neutronInelastic;      
-  else if (sprocess == "hadElastic")            process = hadElastic;            
-  else if (sprocess == "nCapture")              process = nCapture;              
-  else if (sprocess == "protonInelastic")       process = protonInelastic;       
-  else if (sprocess == "pi+Inelastic")          process = piplusInelastic;       
-  else if (sprocess == "pi-Inelastic")          process = piminusInelastic;      
-  else if (sprocess == "hBertiniCaptureAtRest") process = hBertiniCaptureAtRest; 
-  else if (sprocess == "CoulombScat")           process = CoulombScat;           
-  else if (sprocess == "kaon0LInelastic")       process = kaon0LInelastic;       
-  else if (sprocess == "electronNuclear")       process = electronNuclear;       
-  else if (sprocess == "muMinusCaptureAtRest")  process = muMinusCaptureAtRest;  
-  else if (sprocess == "dInelastic")            process = dInelastic;            
-  else if (sprocess == "kaon0SInelastic")       process = kaon0SInelastic;       
-  else if (sprocess == "positronNuclear")       process = positronNuclear;       
-  else if (sprocess == "lambdaInelastic")       process = lambdaInelastic;       
-  else if (sprocess == "tInelastic")            process = tInelastic;                       
+  else if (sprocess == "kaon.Inelastic")        process = kaonminusInelastic;
+  else if (sprocess == "neutronInelastic")      process = neutronInelastic;
+  else if (sprocess == "hadElastic")            process = hadElastic;
+  else if (sprocess == "nCapture")              process = nCapture;
+  else if (sprocess == "protonInelastic")       process = protonInelastic;
+  else if (sprocess == "pi+Inelastic")          process = piplusInelastic;
+  else if (sprocess == "pi-Inelastic")          process = piminusInelastic;
+  else if (sprocess == "hBertiniCaptureAtRest") process = hBertiniCaptureAtRest;
+  else if (sprocess == "CoulombScat")           process = CoulombScat;
+  else if (sprocess == "kaon0LInelastic")       process = kaon0LInelastic;
+  else if (sprocess == "electronNuclear")       process = electronNuclear;
+  else if (sprocess == "muMinusCaptureAtRest")  process = muMinusCaptureAtRest;
+  else if (sprocess == "dInelastic")            process = dInelastic;
+  else if (sprocess == "kaon0SInelastic")       process = kaon0SInelastic;
+  else if (sprocess == "positronNuclear")       process = positronNuclear;
+  else if (sprocess == "lambdaInelastic")       process = lambdaInelastic;
+  else if (sprocess == "tInelastic")            process = tInelastic;
   else                                          process = Unknown;
 
   return process;
