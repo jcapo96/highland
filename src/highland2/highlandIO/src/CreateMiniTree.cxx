@@ -7,17 +7,26 @@
 //#include "Versioning.hxx"
 //#include "GeometryManager.hxx"
 #include "HighlandAnalysisUtils.hxx"
+#include <cmath>
 
 #include "CorrId.hxx"
 
+namespace{
+
+inline bool IsNeutralKaonPDG(int pdg){
+  const int absPDG = std::abs(pdg);
+  return absPDG == 310;
+}
+
+}
 // Corrections
 //#include "MomRangeCorrection.hxx"
 
 Int_t NVtx;
 TClonesArray* Vtx;
-Int_t RunID;    
-Int_t SubrunID;    
-Int_t EventID;    
+Int_t RunID;
+Int_t SubrunID;
+Int_t EventID;
 bool  Preselected;
 
 //********************************************************************
@@ -33,7 +42,7 @@ CreateMiniTree::CreateMiniTree(int argc, char *argv[]):SimpleLoopBase(argc, argv
   ND::versioning().AddPackage("highlandCorrections", anaUtils::GetSoftwareVersionFromPath((std::string)getenv("HIGHLANDCORRECTIONSROOT")));
   ND::versioning().AddPackage("highlandIO",          anaUtils::GetSoftwareVersionFromPath((std::string)getenv("HIGHLANDIOROOT")));
   */
-  
+
   // add the different converters
   //  input().AddConverter("FlatTree",       new FlatTreeConverter(true));
   input().AddConverter("MiniTree",       new HighlandMiniTreeConverter("MiniTree",true));
@@ -42,7 +51,7 @@ CreateMiniTree::CreateMiniTree(int argc, char *argv[]):SimpleLoopBase(argc, argv
 //********************************************************************
 bool CreateMiniTree::Initialize(){
 //********************************************************************
-  
+
   _saveGeometry = (bool)ND::params().GetParameterI("highlandIO.FlatTree.SaveGeometry");
   _trueWithRecoPreselection          = (bool)ND::params().GetParameterD("highlandIO.MiniTree.Truth.WithRecoPreselection");
   _trueWithRecoDaughtersPreselection = (bool)ND::params().GetParameterD("highlandIO.MiniTree.Truth.IncludeTrueDaughters");
@@ -56,8 +65,14 @@ bool CreateMiniTree::Initialize(){
   _savedParticles = 0;
   _totalTrueParticles = 0;
   _savedTrueParticles = 0;
-  
-  
+
+  _currentSpillHasNeutralK0 = false;
+  _currentSpillNeutralKaonCount = 0;
+  _totalSpillsProcessed = 0;
+  _spillsWithNeutralK0 = 0;
+  _totalNeutralKaonsFound = 0;
+
+
   return true;
 }
 
@@ -80,7 +95,7 @@ void CreateMiniTree::DefineOutputTree(){
   if(_saveRoo && rooTreeName!=""){
     if (input().InputIsOriginalTree() && _filterRoo){
       AddTreeWithName(RooTrackerVtx, rooTreeName);
-              
+
       Vtx = new TClonesArray(("ND::"+rooTreeName).c_str(),100);
 
       GetTree(RooTrackerVtx)->Branch("RunID",       &RunID,       "RunID/I",       32000);
@@ -98,8 +113,8 @@ void CreateMiniTree::DefineOutputTree(){
   SetCurrentTree(minitree);
   SetFillSingleTree(GetCurrentTree());
 
-  // The full AnaSpill. _spill cannot be undefined here, otherwise it give problems in some platforms 
-  _spill=NULL; 
+  // The full AnaSpill. _spill cannot be undefined here, otherwise it give problems in some platforms
+  _spill=NULL;
   GetTree(minitree)->Branch("Spill", "AnaSpill", &_spill,64000,1);
 
   _POTSincePreviousSavedSpill   =0;
@@ -114,16 +129,31 @@ bool CreateMiniTree::Process(){
   // Set the tree to fill
   SetFillSingleTree(minitree);
   SetCurrentTree(minitree);
-  
+
   // Get the corrected spill and set the branch address
   _spill = static_cast<AnaSpill*>(&input().GetCorrectedSpill());
-  GetTree(minitree)->SetBranchAddress("Spill",&_spill );  
+  GetTree(minitree)->SetBranchAddress("Spill",&_spill );
+
+  const UInt_t neutralKaonCount = CountTrueNeutralKaons(*_spill);
 
   // The number of POT and Spills since the last saved Spill
-  _POTSincePreviousSavedSpill    += _spill->Beam->POTSincePreviousSavedSpill; 
-  _SpillsSincePreviousSavedSpill += _spill->Beam->SpillsSincePreviousSavedSpill; 
+  _POTSincePreviousSavedSpill    += _spill->Beam->POTSincePreviousSavedSpill;
+  _SpillsSincePreviousSavedSpill += _spill->Beam->SpillsSincePreviousSavedSpill;
 
   // Delete the uninteresting bunches
+  _lastSpillSaved = false;
+  _currentSpillHasNeutralK0 = (neutralKaonCount>0);
+  _currentSpillNeutralKaonCount = neutralKaonCount;
+  _totalSpillsProcessed++;
+  if (_currentSpillHasNeutralK0){
+    _spillsWithNeutralK0++;
+    _totalNeutralKaonsFound += neutralKaonCount;
+  }
+
+  // if (!_currentSpillHasNeutralK0){
+  //   return true;
+  // }
+
   DeleteUninterestingBunches();
 
   // Delete all particles we are not interested in
@@ -131,9 +161,6 @@ bool CreateMiniTree::Process(){
 
   // Delete all true particles we are not interested in
   DeleteUninterestingTrueParticles();
-  
-  
-  _lastSpillSaved = false;
 
 
   // Spill level preselection
@@ -145,12 +172,20 @@ bool CreateMiniTree::Process(){
     // Write the geometry when it changes
     if (_saveGeometry) WriteGeometry();
 
-    // Fill the RooTrackerVtx tree 
+    // Fill the RooTrackerVtx tree
     // Must be called before FillMiniTree since when the RooTrackerVtx filtering is applied the RooVtxIndex in true vertices changes
     FillRooTrackerVtxTree();
-    
+
     // Fill the minitree
     FillMiniTree();
+
+    // if (_spill->EventInfo){
+    //   std::cout << "[CreateMiniTree] Saved event Run " << _spill->EventInfo->Run
+    //             << " Subrun " << _spill->EventInfo->SubRun
+    //             << " Event " << _spill->EventInfo->Event << std::endl;
+    // } else{
+    //   std::cout << "[CreateMiniTree] Saved event (EventInfo missing)" << std::endl;
+    // }
 
     // Mark this spill as saved
     _lastSpillSaved=true;
@@ -165,22 +200,54 @@ void CreateMiniTree::Finalize(){
 
   // Dump info about true and reco filtering
   std::cout << std::setprecision(2);
-  std::cout << "Reco particle filtering factor " << 100*double(_savedParticles)/_totalParticles << "%" << std::endl; 
-  std::cout << "True particle filtering factor " << 100*double(_savedTrueParticles)/_totalTrueParticles << "%" << std::endl; 
+  std::cout << "Reco particle filtering factor " << 100*double(_savedParticles)/_totalParticles << "%" << std::endl;
+  std::cout << "True particle filtering factor " << 100*double(_savedTrueParticles)/_totalTrueParticles << "%" << std::endl;
 
   //---- Save the last spill (if not save yet) such that we keep track of the total POT since the last saved entry.
 
-  if (_lastSpillSaved) return;
+  if (_lastSpillSaved){
+    std::cout << "[CreateMiniTree] Processed " << _totalSpillsProcessed
+              << " spills, " << _spillsWithNeutralK0
+              << " contained a neutral kaon ("
+              << (_totalSpillsProcessed ? 100.0*double(_spillsWithNeutralK0)/double(_totalSpillsProcessed) : 0.0)
+              << "%), total neutral kaons encountered: " << _totalNeutralKaonsFound
+              << std::endl;
+    return;
+  }
+
+  if (!_currentSpillHasNeutralK0){
+    input().DeleteSpill();
+    return;
+  }
 
   // Fill the RooTrackerVtx tree
     // Must be called before FillMiniTree since when the RooTrackerVtx filtering is applied the RooVtxIndex in true vertices changes
   FillRooTrackerVtxTree();
 
   // Fill the minitree
-  FillMiniTree(); 
+  FillMiniTree();
+
+  if (_spill->EventInfo){
+    std::cout << "[CreateMiniTree] Saved event Run " << _spill->EventInfo->Run
+              << " Subrun " << _spill->EventInfo->SubRun
+              << " Event " << _spill->EventInfo->Event
+              << " (neutral kaons: " << _currentSpillNeutralKaonCount << ")"
+              << std::endl;
+  } else{
+    std::cout << "[CreateMiniTree] Saved event (EventInfo missing)"
+              << " (neutral kaons: " << _currentSpillNeutralKaonCount << ")"
+              << std::endl;
+  }
 
   // Delete Spills for the last entry
-  input().DeleteSpill();  
+  input().DeleteSpill();
+
+  std::cout << "[CreateMiniTree] Processed " << _totalSpillsProcessed
+            << " spills, " << _spillsWithNeutralK0
+            << " contained a neutral kaon ("
+            << (_totalSpillsProcessed ? 100.0*double(_spillsWithNeutralK0)/double(_totalSpillsProcessed) : 0.0)
+            << "%), total neutral kaons encountered: " << _totalNeutralKaonsFound
+            << std::endl;
 }
 
 //********************************************************************
@@ -217,7 +284,7 @@ void CreateMiniTree::WriteGeometry(){
 
   // Write the geometry when it changes
   if (_spill->GeomID != _currentGeomID){
-    
+
     // Write the geometry in the geom directory
     if(_file) _file->cd("geom");
     //    ND::hgman().GeoManager()->Write();
@@ -239,7 +306,7 @@ void CreateMiniTree::FillMiniTree(){
   // Update the POT and spills
   _spill->Beam->POTSincePreviousSavedSpill    = _POTSincePreviousSavedSpill;
   _spill->Beam->SpillsSincePreviousSavedSpill = _SpillsSincePreviousSavedSpill;
-  
+
   // Fill the tree
   FillTree(minitree);
   _entry_saved_count++;
@@ -253,20 +320,20 @@ void CreateMiniTree::FillMiniTree(){
 //********************************************************************
 void CreateMiniTree::FillRooTrackerVtxTree(){
 //********************************************************************
-    
+
   if (HasTree(RooTrackerVtx)){
     // Select the interesting vertices
     if (_filterRoo) FilterRooTrackerVtxTree();
-    
+
     // Fill the RooTrackerVtx tree
-    OutputManager::FillTree(RooTrackerVtx);    
+    OutputManager::FillTree(RooTrackerVtx);
   }
 }
 
 //********************************************************************
 void CreateMiniTree::FilterRooTrackerVtxTree(){
 //********************************************************************
-  
+
 }
 
 //********************************************************************
@@ -278,13 +345,13 @@ void CreateMiniTree::DeleteUninterestingBunches(){
   // Loop over bunches and schedule for deletion the ones not satisfying the conditions about reconstructed objects
   std::vector<Int_t> bunchesToDelete;
   for (std::vector<AnaBunchC*>::iterator it=_spill->Bunches.begin();it!=_spill->Bunches.end();it++){
-    AnaBunchB* bunch = static_cast<AnaBunchB*>(*it);    
+    AnaBunchB* bunch = static_cast<AnaBunchB*>(*it);
     // Schedule bunches not fulfilling the requirements for deletion
     if (!CheckReconFillMiniTree(*bunch))
       bunchesToDelete.push_back(bunch->Bunch);
     else{
       // Save in a vector all belonging to vertices in that bunch
-      for (std::vector<AnaVertexB*>::iterator it2=bunch->Vertices.begin();it2!=bunch->Vertices.end();it2++){      
+      for (std::vector<AnaVertexB*>::iterator it2=bunch->Vertices.begin();it2!=bunch->Vertices.end();it2++){
         AnaVertexB* vertex = *it2;
         for (Int_t i = 0;i<vertex->nParticles;i++){
           AnaParticleB* particle = vertex->Particles[i];
@@ -296,14 +363,14 @@ void CreateMiniTree::DeleteUninterestingBunches(){
 
   // Delete the uninteresting bunches
   for (UInt_t i=0;i<bunchesToDelete.size();i++){
-    for (std::vector<AnaBunchC*>::iterator it=_spill->Bunches.begin();it!=_spill->Bunches.end();it++){      
-      AnaBunchB* bunch = static_cast<AnaBunchB*>(*it);    
+    for (std::vector<AnaBunchC*>::iterator it=_spill->Bunches.begin();it!=_spill->Bunches.end();it++){
+      AnaBunchB* bunch = static_cast<AnaBunchB*>(*it);
       if (bunch->Bunch == bunchesToDelete[i]){
         bool found=false;
         // Don't delete if there is a particle in this bunch which belongs to a vertex in another bunch that is not deleted
-        for (std::vector<AnaParticleB*>::iterator it2=bunch->Particles.begin();it2!=bunch->Particles.end();it2++){      
+        for (std::vector<AnaParticleB*>::iterator it2=bunch->Particles.begin();it2!=bunch->Particles.end();it2++){
           AnaParticleB* particle2 = *it2;
-          for (std::vector<AnaParticleB*>::iterator it3=particlesToConsider.begin();it3!=particlesToConsider.end();it3++){      
+          for (std::vector<AnaParticleB*>::iterator it3=particlesToConsider.begin();it3!=particlesToConsider.end();it3++){
             AnaParticleB* particle3 = *it3;
             if (particle2==particle3){
               found=true;
@@ -312,7 +379,7 @@ void CreateMiniTree::DeleteUninterestingBunches(){
           }
           if (found) break;
         }
-        if (!found){        
+        if (!found){
           delete bunch;
           _spill->Bunches.erase(it);
           break;
@@ -325,9 +392,9 @@ void CreateMiniTree::DeleteUninterestingBunches(){
   if (_spill->OutOfBunch && !CheckReconFillMiniTreeOutOfBunch(*_spill->OutOfBunch)){
 
     bool found=false;
-    for (std::vector<AnaParticleB*>::iterator it2=_spill->OutOfBunch->Particles.begin();it2!=_spill->OutOfBunch->Particles.end();it2++){      
+    for (std::vector<AnaParticleB*>::iterator it2=_spill->OutOfBunch->Particles.begin();it2!=_spill->OutOfBunch->Particles.end();it2++){
       AnaParticleB* particle2 = *it2;
-      for (std::vector<AnaParticleB*>::iterator it3=particlesToConsider.begin();it3!=particlesToConsider.end();it3++){      
+      for (std::vector<AnaParticleB*>::iterator it3=particlesToConsider.begin();it3!=particlesToConsider.end();it3++){
         AnaParticleB* particle3 = *it3;
         if (particle2==particle3){
           found=true;
@@ -351,33 +418,33 @@ void CreateMiniTree::DeleteUninterestingParticles(){
 
 
 //  if (!_trackStartPreselection) return;
-  
+
   for (std::vector<AnaBunchC*>::iterator it=_spill->Bunches.begin();it!=_spill->Bunches.end();it++){
-    AnaBunchB* bunch = static_cast<AnaBunchB*>(*it);    
+    AnaBunchB* bunch = static_cast<AnaBunchB*>(*it);
 
     std::vector<AnaParticleB*> goodParticles;
-    std::vector<AnaParticleB*> badParticles;     
-    for (std::vector<AnaParticleB*>::iterator it2=bunch->Particles.begin();it2!=bunch->Particles.end();it2++){      
-      AnaParticleB* part = *it2;           
+    std::vector<AnaParticleB*> badParticles;
+    for (std::vector<AnaParticleB*>::iterator it2=bunch->Particles.begin();it2!=bunch->Particles.end();it2++){
+      AnaParticleB* part = *it2;
 
-      // increment counter      
+      // increment counter
       _totalParticles++;
-      
-      if (CheckSaveParticle(*part)) {        
+
+      if (CheckSaveParticle(*part)) {
 
         // Filter information inside good particles
         FilterParticleInfo(*part);
 
         // increment counter
         _savedParticles++;
-        
+
         goodParticles.push_back(part);
       }
       else{
         badParticles.push_back(part);
       }
     }
-    for (std::vector<AnaParticleB*>::iterator it2=badParticles.begin();it2!=badParticles.end();it2++){      
+    for (std::vector<AnaParticleB*>::iterator it2=badParticles.begin();it2!=badParticles.end();it2++){
       delete *it2;
     }
     bunch->Particles = goodParticles;
@@ -395,13 +462,13 @@ void CreateMiniTree::DeleteUninterestingTrueParticles(){
   std::set<AnaTrueParticleB*> goodTrueParticles;
 
   // Loop over all true particles in the spill
-  for(std::vector<AnaTrueParticleB*>::iterator it = _spill->TrueParticles.begin(); it != _spill->TrueParticles.end(); it++){      
+  for(std::vector<AnaTrueParticleB*>::iterator it = _spill->TrueParticles.begin(); it != _spill->TrueParticles.end(); it++){
     AnaTrueParticleB* truePart = static_cast<AnaTrueParticle*>(*it);
 
-    // increment counter      
+    // increment counter
     _totalTrueParticles++;
-    
-    if (CheckSaveTrueParticle(*truePart)) {        
+
+    if (CheckSaveTrueParticle(*truePart)) {
 
         // Filter information inside good true particles
         FilterTrueParticleInfo(*truePart);
@@ -409,7 +476,7 @@ void CreateMiniTree::DeleteUninterestingTrueParticles(){
         // increment counter
         _savedTrueParticles++;
 
-     	goodTrueParticles.insert(truePart);   
+     	goodTrueParticles.insert(truePart);
     }
   }
 
@@ -417,13 +484,13 @@ void CreateMiniTree::DeleteUninterestingTrueParticles(){
   // Keep the true particles associated to reconstructed particles and all its descendants
 
   if (_trueWithRecoPreselection){
-    // Loop over all reconstructed particles in the spill      
+    // Loop over all reconstructed particles in the spill
     for (std::vector<AnaBunchC*>::iterator it=_spill->Bunches.begin();it!=_spill->Bunches.end();it++){
-      AnaBunchB* bunch = static_cast<AnaBunchB*>(*it);    
-      
-      for (std::vector<AnaParticleB*>::iterator it2=bunch->Particles.begin();it2!=bunch->Particles.end();it2++){      
+      AnaBunchB* bunch = static_cast<AnaBunchB*>(*it);
+
+      for (std::vector<AnaParticleB*>::iterator it2=bunch->Particles.begin();it2!=bunch->Particles.end();it2++){
         AnaParticleB* part = *it2;
-        
+
         // If the particle has an associated true object add it
         if (part->TrueObject){
           AnaTrueParticle* truePart0 = static_cast<AnaTrueParticle*>(part->TrueObject);
@@ -432,11 +499,11 @@ void CreateMiniTree::DeleteUninterestingTrueParticles(){
             FilterTrueParticleInfo(*truePart0);
             goodTrueParticles.insert(truePart0);
           }
-          
+
           if (_trueWithRecoDaughtersPreselection){
-            // Get all dauthers of this true particle recursively (all descendants) and add them 
+            // Get all dauthers of this true particle recursively (all descendants) and add them
             std::vector<AnaTrueParticle*> goodTrueDaughters = anaUtils::GetTrueDaughters(_spill->TrueParticles, truePart0, true);
-            for (std::vector<AnaTrueParticle*>::iterator it3=goodTrueDaughters.begin();it3!=goodTrueDaughters.end();it3++){      
+            for (std::vector<AnaTrueParticle*>::iterator it3=goodTrueDaughters.begin();it3!=goodTrueDaughters.end();it3++){
               if(std::find(goodTrueParticles.begin(), goodTrueParticles.end(), *it3) == goodTrueParticles.end()){
                 FilterTrueParticleInfo(**it3);
                 goodTrueParticles.insert(*it3);
@@ -447,8 +514,58 @@ void CreateMiniTree::DeleteUninterestingTrueParticles(){
       }
     }
   }
-  
+
   // Transfer from the set to the vector
   _spill->TrueParticles.assign( goodTrueParticles.begin(), goodTrueParticles.end());
+}
+
+//********************************************************************
+bool CreateMiniTree::ContainsTrueNeutralKaon(const AnaSpill& spill) const{
+//********************************************************************
+
+  return CountTrueNeutralKaons(spill) > 0;
+}
+
+//********************************************************************
+bool CreateMiniTree::ContainsTrueNeutralKaon(const AnaTrueVertexB& vtx) const{
+//********************************************************************
+
+  for (std::vector<AnaTrueParticleB*>::const_iterator it = vtx.TrueParticlesVect.begin(); it != vtx.TrueParticlesVect.end(); ++it){
+    const AnaTrueParticleB* truePart = static_cast<const AnaTrueParticleB*>(*it);
+    if (!truePart) continue;
+
+    if (IsNeutralKaonPDG(truePart->PDG)) return true;
+  }
+
+  return false;
+}
+
+//********************************************************************
+UInt_t CreateMiniTree::CountTrueNeutralKaons(const AnaSpill& spill) const{
+//********************************************************************
+
+  UInt_t count = 0;
+
+  if (!spill.TrueParticles.empty()){
+    for (std::vector<AnaTrueParticleB*>::const_iterator it = spill.TrueParticles.begin(); it != spill.TrueParticles.end(); ++it){
+      const AnaTrueParticleB* truePart = static_cast<const AnaTrueParticleB*>(*it);
+      if (!truePart) continue;
+      if (IsNeutralKaonPDG(truePart->PDG)) ++count;
+    }
+    return count;
+  }
+
+  std::set<const AnaTrueParticleB*> counted;
+  for (std::vector<AnaTrueVertexB*>::const_iterator vit = spill.TrueVertices.begin(); vit != spill.TrueVertices.end(); ++vit){
+    if (!*vit) continue;
+    for (std::vector<AnaTrueParticleB*>::const_iterator pit = (*vit)->TrueParticlesVect.begin(); pit != (*vit)->TrueParticlesVect.end(); ++pit){
+      const AnaTrueParticleB* truePart = static_cast<const AnaTrueParticleB*>(*pit);
+      if (!truePart) continue;
+      if (!IsNeutralKaonPDG(truePart->PDG)) continue;
+      if (counted.insert(truePart).second) ++count;
+    }
+  }
+
+  return count;
 }
 

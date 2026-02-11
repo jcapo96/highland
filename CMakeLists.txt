@@ -39,7 +39,8 @@ message("CMAKE_MODULE_PATH source dir: ${CMAKE_MODULE_PATH}")
 # set(VDT_INCLUDE_DIR ${ROOTSYS}/include/vdt)
 # set(VDT_LIBRARY ${ROOTSYS}/lib/libvdt.a)  # O .so si es dinámico
 # Add RGL and Eve for OpenGL 3D event display with zoom support
-find_package(ROOT REQUIRED COMPONENTS Geom EG RGL Eve)
+# Add Gui and Ged for tab management in event display
+find_package(ROOT REQUIRED COMPONENTS Geom EG RGL Eve Gui Ged)
 
 include(${ROOT_USE_FILE})
 

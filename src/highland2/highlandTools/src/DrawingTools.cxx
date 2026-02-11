@@ -2946,6 +2946,12 @@ void DrawingTools::SetAlphanumericLabels(const int n,  const std::string* labels
 //********************************************************************
 void DrawingTools::ListEvtDisplay() {
 //********************************************************************
+    ListEvtDisplay("");
+}
+
+//********************************************************************
+void DrawingTools::ListEvtDisplay(const std::string& category) {
+//********************************************************************
     // Auto-create event display if not set
     if (!_eventDisplay) {
         _eventDisplay = AutoCreateEventDisplay();
@@ -2965,7 +2971,7 @@ void DrawingTools::ListEvtDisplay() {
     }
 
     // Delegate to EventDisplayBase
-    _eventDisplay->ListAvailableEvents(_config_file);
+    _eventDisplay->ListAvailableEvents(_config_file, category);
 }
 
 //********************************************************************
@@ -2994,6 +3000,30 @@ void DrawingTools::EvtDisplay(const std::string& mode, Int_t run, Int_t subrun, 
 
     // Delegate to EventDisplayBase
     _eventDisplay->GenerateDisplay(_config_file, run, subrun, evt, outputFile);
+}
+
+//********************************************************************
+void DrawingTools::EvtDisplayByIndex(Long64_t index, const std::string& outputFile) {
+//********************************************************************
+    // Auto-create event display if not set
+    if (!_eventDisplay) {
+        _eventDisplay = AutoCreateEventDisplay();
+        if (_eventDisplay) {
+            _autoCreatedEventDisplay = true;
+        } else {
+            std::cout << "ERROR: Could not auto-detect event display!" << std::endl;
+            std::cout << "Please load the appropriate library or call SetEventDisplay() manually." << std::endl;
+            return;
+        }
+    }
+
+    // Get the file path
+    if (_config_file == "") {
+        std::cout << "ERROR: No file opened! Initialize DrawingTools with a file." << std::endl;
+        return;
+    }
+
+    _eventDisplay->GenerateDisplayByIndex(_config_file, index, outputFile);
 }
 
 //********************************************************************

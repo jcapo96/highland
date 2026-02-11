@@ -568,6 +568,7 @@ public:
 
   // List available events with event display data
   void ListEvtDisplay();
+  void ListEvtDisplay(const std::string& category);
 
   // Generate event display (delegates to EventDisplayBase)
   // Note: mode parameter kept for backward compatibility but not used
@@ -577,6 +578,8 @@ public:
   void EvtDisplay(Int_t run, Int_t subrun, Int_t evt, const std::string& outputFile = "") {
     EvtDisplay("", run, subrun, evt, outputFile);
   }
+
+  void EvtDisplayByIndex(Long64_t index, const std::string& outputFile = "");
 
 protected:
   TTree* _treeForSystErrors;

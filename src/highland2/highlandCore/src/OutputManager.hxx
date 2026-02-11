@@ -6,6 +6,7 @@
 #include <iostream>
 #include <map>
 #include <vector>
+#include <tuple>
 #include <TROOT.h>
 #include <TChain.h>
 #include <TFile.h>
@@ -16,6 +17,9 @@
 #include "BasicTypes.hxx"
 #include "TreeManager.hxx"
 #include "DocStringManager.hxx"
+
+// Forward declaration
+class AnaEventB;
 
 /// Maximum number of special trees
 const UInt_t NMAXSPECIALTREES = 20;
@@ -760,6 +764,24 @@ public :
 
   void AddToyWeight(Double_t w){_toyWeights.push_back(w);}
 
+  //--------- Event Skim File functionality ----------
+
+  /// Initialize event skim file functionality
+  /// @param storeEvents Enable/disable storing surviving events
+  /// @param truthPDG PDG code to check in truth (-1 to disable)
+  void InitializeEventSkim(bool storeEvents, Int_t truthPDG);
+
+  /// Check if event should be added to skim file and add it if conditions are met
+  /// @param event The event to check
+  /// @param eventPassed Whether the event passed the selection
+  void CheckAndAddEvent(AnaEventB& event, bool eventPassed);
+
+  /// Add a surviving event to the list (internal use)
+  /// @param run Run number
+  /// @param subrun Subrun number
+  /// @param event Event number
+  void AddSurvivingEvent(Int_t run, Int_t subrun, Int_t event);
+
   void FillMicroTrees();
 
 
@@ -791,6 +813,12 @@ public :
 
 
   Int_t _single_tree_fill;
+
+  // Event Skim File functionality
+  std::string _outputFileName;  // Store the output ROOT file name
+  std::vector<std::tuple<Int_t, Int_t, Int_t> > _survivingEvents;  // Store (run, subrun, event) tuples
+  bool _storeSurvivingEvents;  // Flag to enable/disable feature
+  Int_t _truthPDGToCheck;  // PDG code to check in truth (-1 if disabled)
 
 
   // ----- Branches in the tree  ---------

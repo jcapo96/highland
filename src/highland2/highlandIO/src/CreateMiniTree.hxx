@@ -37,7 +37,7 @@ protected:
 
   virtual void FilterParticleInfo(AnaParticleB& part){}
   virtual void FilterTrueParticleInfo(AnaTrueParticleB& part){}
-  
+
   virtual void FillMiniTree();
   virtual void FillRooTrackerVtxTree();
   virtual void FilterRooTrackerVtxTree();
@@ -48,10 +48,20 @@ protected:
   virtual void DeleteUninterestingParticles();
   virtual void DeleteUninterestingTrueParticles();
 
-  virtual bool SpillLevelPreselection() {return true;} 
+  virtual bool SpillLevelPreselection() {return true;}
 
   virtual AnaSpillB* MakeSpill(){return new AnaSpill();}
   virtual AnaBeamB*  MakeBeam() {return new AnaBeam();}
+
+  bool ContainsTrueNeutralKaon(const AnaSpill& spill) const;
+  bool ContainsTrueNeutralKaon(const AnaTrueVertexB& vtx) const;
+  UInt_t CountTrueNeutralKaons(const AnaSpill& spill) const;
+
+  bool _currentSpillHasNeutralK0;
+  UInt_t _currentSpillNeutralKaonCount;
+  UInt_t _totalSpillsProcessed;
+  UInt_t _spillsWithNeutralK0;
+  UInt_t _totalNeutralKaonsFound;
 
   enum miniTreeIndex{
     minitree = OutputManager::enumSpecialTreesLast+1
@@ -62,9 +72,9 @@ protected:
   bool _saveGeometry;
   bool _saveRoo;
   bool _filterRoo;
-  bool _trueWithRecoPreselection;          
-  bool _trueWithRecoDaughtersPreselection; 
-  
+  bool _trueWithRecoPreselection;
+  bool _trueWithRecoDaughtersPreselection;
+
   Double_t _POTSincePreviousSavedSpill;
   Int_t _SpillsSincePreviousSavedSpill;
 

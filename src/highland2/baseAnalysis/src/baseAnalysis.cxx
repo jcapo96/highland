@@ -1,6 +1,8 @@
 #include "baseAnalysis.hxx"
 
 #include "HighlandMiniTreeConverter.hxx"
+#include "Parameters.hxx"
+#include "BaseDataClasses.hxx"
 
 #include "baseToyMaker.hxx"
 
@@ -56,6 +58,17 @@ bool baseAnalysis::InitializeBase(){
 
   // Initialize trees or not at the beginnng of each configuration
   SetInitializeTrees(ND::params().GetParameterI("baseAnalysis.InitializeTrees"));
+
+  // Initialize event skim file functionality
+  bool storeSurvivingEvents = false;
+  Int_t truthPDGForSkim = -1;
+  if (ND::params().HasParameter("baseAnalysis.StoreSurvivingEvents")) {
+    storeSurvivingEvents = (ND::params().GetParameterI("baseAnalysis.StoreSurvivingEvents") != 0);
+  }
+  if (ND::params().HasParameter("baseAnalysis.TruthPDGForSkim")) {
+    truthPDGForSkim = ND::params().GetParameterI("baseAnalysis.TruthPDGForSkim");
+  }
+  output().InitializeEventSkim(storeSurvivingEvents, truthPDGForSkim);
 
   /*
   if (_versionCheck){
@@ -287,6 +300,13 @@ void baseAnalysis::FillMicroTreesBase(bool addBase){
   output().FillVar(run,    GetSpill().EventInfo->Run);
   output().FillVar(subrun, GetSpill().EventInfo->SubRun);
   output().FillVar(evt,    GetSpill().EventInfo->Event);
+
+  // Check if event should be added to skim file
+  // Event passed if it reached minimum accum level to save
+  bool eventPassed = CheckAccumLevelToSave();
+  // Cast to AnaEventB& for CheckAndAddEvent
+  AnaEventB& eventB = static_cast<AnaEventB&>(GetEvent());
+  output().CheckAndAddEvent(eventB, eventPassed);
 
 }
 

@@ -514,6 +514,9 @@ void AnalysisLoop::Finalize(){
     // Write out memory usage, if needed.
     _memory.Write();
 
+    // Finalize OutputManager (writes event skim file if enabled)
+    ana().output().Finalize();
+
     // Close the output file
     ana().output().CloseOutputFile();
   }
