@@ -1,5 +1,5 @@
 # -*- cmake -*-
-CMAKE_MINIMUM_REQUIRED(VERSION 3.0)
+CMAKE_MINIMUM_REQUIRED(VERSION 3.5) # I have changed this to 3.5 so it does not throw an error on my system
 PROJECT(HighLAND)
 
 
@@ -30,13 +30,17 @@ message("CMAKE_BUILD_TYPE: ${CMAKE_BUILD_TYPE}")
 #------- External packages -----------------------------
 #-------------------------------------------------------
 
-# Set where to look for external packages 
-set (CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/modules/") 
+# Set where to look for external packages
+set (CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/modules/")
 
 message("CMAKE_MODULE_PATH source dir: ${CMAKE_MODULE_PATH}")
 
 # Look for the required libraries
-find_package(ROOT REQUIRED COMPONENTS Geom EG)
+# set(VDT_INCLUDE_DIR ${ROOTSYS}/include/vdt)
+# set(VDT_LIBRARY ${ROOTSYS}/lib/libvdt.a)  # O .so si es dinámico
+# Add RGL and Eve for OpenGL 3D event display with zoom support
+# Add Gui and Ged for tab management in event display
+find_package(ROOT REQUIRED COMPONENTS Geom EG RGL Eve Gui Ged)
 
 include(${ROOT_USE_FILE})
 
@@ -64,7 +68,7 @@ foreach(file0 ${dict_src0})
   string(FIND ${file0} "/"          pos_ini REVERSE)
   string(SUBSTRING ${file0} 0      ${pos_ini}  dir)
   string(REPLACE "${dir}/"     "" file2 ${file0})
-  string(REPLACE _LinkDef.h    "" file3 ${file2})  
+  string(REPLACE _LinkDef.h    "" file3 ${file2})
 
 # removed the path to dict/${file3}_Dict, cmake does not like / in names. To be studied how to solve this.
 # root_generate_dictionary(${file3}_Dict NODEPHEADERS ${file3}.hxx LINKDEF ${file0}  MODULE ${file3} DEPENDENCIES ${ROOT_LIBRARIES})
@@ -82,11 +86,11 @@ endforeach(file0)
 #-------- the highland library -------------------------
 #-------------------------------------------------------
 
-file(GLOB highland_src  ${CMAKE_SOURCE_DIR}/src/psyche/*/src/*.cxx 
-                        ${CMAKE_SOURCE_DIR}/src/highland2/highland*/src/*.cxx                                           
+file(GLOB highland_src  ${CMAKE_SOURCE_DIR}/src/psyche/*/src/*.cxx
+                        ${CMAKE_SOURCE_DIR}/src/highland2/highland*/src/*.cxx
                         ${CMAKE_SOURCE_DIR}/src/highland2/baseAnalysis/src/*.cxx)
 
-add_library(highland SHARED ${dict_src} ${highland_src} ) 
+add_library(highland SHARED ${dict_src} ${highland_src} )
 target_link_libraries(highland ${ROOT_LIBRARIES})
 INSTALL(TARGETS highland DESTINATION ${CMAKE_SOURCE_DIR}/lib)
 

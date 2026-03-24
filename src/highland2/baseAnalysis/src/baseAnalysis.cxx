@@ -1,6 +1,8 @@
 #include "baseAnalysis.hxx"
 
 #include "HighlandMiniTreeConverter.hxx"
+#include "Parameters.hxx"
+#include "BaseDataClasses.hxx"
 
 #include "baseToyMaker.hxx"
 
@@ -57,6 +59,17 @@ bool baseAnalysis::InitializeBase(){
   // Initialize trees or not at the beginnng of each configuration
   SetInitializeTrees(ND::params().GetParameterI("baseAnalysis.InitializeTrees"));
 
+  // Initialize event skim file functionality
+  bool storeSurvivingEvents = false;
+  Int_t truthPDGForSkim = -1;
+  if (ND::params().HasParameter("baseAnalysis.StoreSurvivingEvents")) {
+    storeSurvivingEvents = (ND::params().GetParameterI("baseAnalysis.StoreSurvivingEvents") != 0);
+  }
+  if (ND::params().HasParameter("baseAnalysis.TruthPDGForSkim")) {
+    truthPDGForSkim = ND::params().GetParameterI("baseAnalysis.TruthPDGForSkim");
+  }
+  output().InitializeEventSkim(storeSurvivingEvents, truthPDGForSkim);
+
   /*
   if (_versionCheck){
     if(!ND::versioning().CheckVersionCompatibility(ND::versioning().GetProduction(input().GetSoftwareVersion()),
@@ -67,11 +80,11 @@ bool baseAnalysis::InitializeBase(){
   //  versionUtils::DumpProductions();
 
 
-  // This will take care of data/MC differences in detector volumes definitions 	 
+  // This will take care of data/MC differences in detector volumes definitions
   // Should be applied after the version has been defined
   // TODO. Moved temporarily from AnalysisLoop to avoid dependency of highlandCore on psycheND280Utils
   //  ND::hgman().InitializeGeometry(input().GetIsMC()); TODO DUNE
-  
+
   return true;
 }
 
@@ -104,9 +117,9 @@ void baseAnalysis::DefineCorrections(){
     // Add corrections only when they are enabled. In that way the CorrectionManager does not have to loop over unused corrections
 
     // Ignore right ECal for runs 3 and 4 as part of it is broken.
-    if (ND::params().GetParameterI("baseAnalysis.Corrections.EnableIgnoreRightECal"))  corr().AddCorrection("ignorerightecal_corr", new IgnoreRightECalRuns3and4Correction());     
+    if (ND::params().GetParameterI("baseAnalysis.Corrections.EnableIgnoreRightECal"))  corr().AddCorrection("ignorerightecal_corr", new IgnoreRightECalRuns3and4Correction());
     // Correct the data quality in periods when a FGD FEB wasn't working.
-    if (ND::params().GetParameterI("baseAnalysis.Corrections.EnableDQ"))               corr().AddCorrection("dq_corr",              new DataQualityCorrection());   
+    if (ND::params().GetParameterI("baseAnalysis.Corrections.EnableDQ"))               corr().AddCorrection("dq_corr",              new DataQualityCorrection());
   }
   // If set to true corrections applied in the input file are applied again
   corr().SetForceApplyCorrections((bool)ND::params().GetParameterI("baseAnalysis.Corrections.ForceApplyCorrections"));
@@ -123,7 +136,7 @@ void baseAnalysis::DefineConfigurations(){
   _enableSingleWeightSystConf    = (bool)ND::params().GetParameterI("baseAnalysis.Configurations.EnableSingleWeightSystConfigurations");
   _enableAllSystConfig           = (bool)ND::params().GetParameterI("baseAnalysis.Configurations.EnableAllSystematics");
 
-  _ntoys = (Int_t)ND::params().GetParameterI("baseAnalysis.Systematics.NumberOfToys");   // The number of Toy Experiments 
+  _ntoys = (Int_t)ND::params().GetParameterI("baseAnalysis.Systematics.NumberOfToys");   // The number of Toy Experiments
   _randomSeed = (Int_t)ND::params().GetParameterI("baseAnalysis.Systematics.RandomSeed");   // The random seed to generate the ToyExperiments
 
   /*
@@ -139,17 +152,17 @@ void baseAnalysis::DefineConfigurations(){
     if (ND::params().GetParameterI("baseAnalysis.Weights.EnableFluxNeutrino")) {
       AddConfiguration(conf(), nuflux_syst, _ntoys, _randomSeed, new baseToyMaker(_randomSeed));
       conf().EnableEventWeight(SystId::kFluxWeightNu    , nuflux_syst);
-    }    
+    }
     if (ND::params().GetParameterI("baseAnalysis.Weights.EnableFluxAntiNeutrino")) {
       AddConfiguration(conf(), antinuflux_syst, _ntoys, _randomSeed, new baseToyMaker(_randomSeed));
       conf().EnableEventWeight(SystId::kFluxWeightAntiNu , antinuflux_syst);
-    }  
+    }
   }
-  */  
+  */
 
   // A configuration with all systematics
-  if (_enableAllSystConfig){ 
-    AddConfiguration(conf(), all_syst, _ntoys, _randomSeed, new baseToyMaker(_randomSeed));  
+  if (_enableAllSystConfig){
+    AddConfiguration(conf(), all_syst, _ntoys, _randomSeed, new baseToyMaker(_randomSeed));
   }
 
   /*
@@ -160,7 +173,7 @@ void baseAnalysis::DefineConfigurations(){
     if (ND::params().GetParameterI("baseAnalysis.Weights.EnableSIPion"))            conf().EnableEventWeight(SystId::kSIPion            , index);
     if (ND::params().GetParameterI("baseAnalysis.Weights.EnableSIProton"))          conf().EnableEventWeight(SystId::kSIProton          , index);
     if (ND::params().GetParameterI("baseAnalysis.Weights.EnableFluxNeutrino"))      conf().EnableEventWeight(SystId::kFluxWeightNu      , index);
-    if (ND::params().GetParameterI("baseAnalysis.Weights.EnableFluxAntiNeutrino"))  conf().EnableEventWeight(SystId::kFluxWeightAntiNu  , index);	
+    if (ND::params().GetParameterI("baseAnalysis.Weights.EnableFluxAntiNeutrino"))  conf().EnableEventWeight(SystId::kFluxWeightAntiNu  , index);
   }
   */
 }
@@ -214,8 +227,8 @@ bool baseAnalysis::FinalizeConfiguration(){
   if (trueVertex) trueVertices.push_back(trueVertex);
 
 
-  // If true vertex does not exist (e.g. can happen that reco vertex is not yet available at this step of the selection) then 
-  // store the accum_level to all true vertices of the bunch -> i.e. this basically corresponds to the fact that event as a whole 
+  // If true vertex does not exist (e.g. can happen that reco vertex is not yet available at this step of the selection) then
+  // store the accum_level to all true vertices of the bunch -> i.e. this basically corresponds to the fact that event as a whole
   // passed some cuts
   if (trueVertices.size() == 0){
     // Loop over all true vertices in the event and found those that belong to the bunch being processed
@@ -227,20 +240,20 @@ bool baseAnalysis::FinalizeConfiguration(){
       // Check the bunch
       if (GetBunch().Bunch != vtx->Bunch) continue;
 
-      trueVertices.push_back(vtx); 
+      trueVertices.push_back(vtx);
     }
   }
 
   // Loop over all true vertices of interest
-  for (iter = trueVertices.begin(); iter != trueVertices.end(); iter++){ 
+  for (iter = trueVertices.begin(); iter != trueVertices.end(); iter++){
     AnaTrueVertex* vtx = *iter;
     if (!vtx) continue;
 
-    // When the AccumLevel has not been already saved for this vertex 
+    // When the AccumLevel has not been already saved for this vertex
     if (vtx->AccumLevel.size() == 0)
       vtx->AccumLevel.resize(sel().GetNEnabledSelections());
     //else{
-    // Sometimes the same true vertex is asigned to the candidate in another bunch, most likely because of a delayed track. In this case 
+    // Sometimes the same true vertex is asigned to the candidate in another bunch, most likely because of a delayed track. In this case
     // save the higher accum level
     // std::cout << "baseAnalysis::FinalizeConfiguration(). This true vertex was used in another bunch (likely a delayed track). Save higher accum_level" << std::endl;
     //}
@@ -261,6 +274,19 @@ bool baseAnalysis::FinalizeConfiguration(){
 }
 
 //********************************************************************
+/**
+ * @brief Fills the micro trees with base event information.
+ *
+ * This function is called after FinalizeConfiguration and is responsible for
+ * filling all tree variables that are common to all toys in a given configuration.
+ *
+ * @param addBase A boolean flag indicating whether to add base information.
+ *
+ * @details This function fills the following event-level variables:
+ * - `run`: The run number of the event.
+ * - `subrun`: The sub-run number of the event.
+ * - `evt`: The event number.
+ */
 void baseAnalysis::FillMicroTreesBase(bool addBase){
   //********************************************************************
 
@@ -275,6 +301,13 @@ void baseAnalysis::FillMicroTreesBase(bool addBase){
   output().FillVar(subrun, GetSpill().EventInfo->SubRun);
   output().FillVar(evt,    GetSpill().EventInfo->Event);
 
+  // Check if event should be added to skim file
+  // Event passed if it reached minimum accum level to save
+  bool eventPassed = CheckAccumLevelToSave();
+  // Cast to AnaEventB& for CheckAndAddEvent
+  AnaEventB& eventB = static_cast<AnaEventB&>(GetEvent());
+  output().CheckAndAddEvent(eventB, eventPassed);
+
 }
 
 //********************************************************************
@@ -284,7 +317,7 @@ void baseAnalysis::FillToyVarsInMicroTreesBase(bool addBase){
   (void)addBase;
 
   // Nothing here for the moment
-  
+
 }
 
 //********************************************************************

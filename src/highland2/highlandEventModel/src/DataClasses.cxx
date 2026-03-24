@@ -3,6 +3,7 @@
 #include "DataClasses.hxx"
 #include "AnalysisUtils.hxx"
 #include "TMath.h"
+#include <unordered_map>
 
 // define a constant value for uninitialised parameters
 const Float_t  kFloatUnassigned = -999.;
@@ -46,7 +47,7 @@ AnaParticleE::AnaParticleE(){
 
   TrueEff       = kFloatUnassigned;
   TruePur       = kFloatUnassigned;
-  
+
   AveragedEdx   = kFloatUnassigned;
   AveragedQdx   = kFloatUnassigned;
   MomentumError = kFloatUnassigned;
@@ -70,7 +71,7 @@ AnaParticleE::AnaParticleE(){
 
   Daughters.clear();
   DaughtersIDs.clear();
-  
+
 }
 
 //********************************************************************
@@ -93,7 +94,7 @@ AnaParticleE::AnaParticleE(const AnaParticleE& part){
   TrueEff       = part.TrueEff;
   TruePur       = part.TruePur;
 
-  
+
   AveragedQdx   = part.AveragedQdx;
   AveragedEdx   = part.AveragedEdx;
   MomentumError = part.MomentumError;
@@ -124,7 +125,7 @@ AnaParticleE::AnaParticleE(const AnaParticleE& part){
   // Daughters should not be clone since the pointer leaves in the Particle vector
   // This vector is filled in AnaBunch, using te IDS
   Daughters.clear();
-  
+
   // Instead a copy of the daughters IDs is made
   DaughtersIDs.clear();
   for (UInt_t j=0;j<part.DaughtersIDs.size();j++){
@@ -143,13 +144,13 @@ void AnaParticleE::Print() const{
   std::cout << "Bunch:                   " << Bunch << std::endl;
   std::cout << "NReconVertices:          " << (int)ReconVertices.size() << std::endl;
   std::cout << "MomentumAtVertex:        " << MomentumAtVertex << std::endl;
-  std::cout << "DirectionAtVertex:       " << DirectionAtVertex[0] << " " << DirectionAtVertex[1] << " " << DirectionAtVertex[2] << std::endl;    
+  std::cout << "DirectionAtVertex:       " << DirectionAtVertex[0] << " " << DirectionAtVertex[1] << " " << DirectionAtVertex[2] << std::endl;
   std::cout << "AveragedEdx:             " << AveragedEdx << std::endl;
   std::cout << "AveragedQdx:             " << AveragedQdx << std::endl;
   std::cout << "#Daughters               " << Daughters.size() << std::endl;
 
 
-  
+
 }
 
 //********************************************************************
@@ -301,13 +302,13 @@ AnaTrueParticle::AnaTrueParticle(const AnaTrueParticle& truePart):AnaTrueParticl
   Bunch       = truePart.Bunch;
   VertexIndex = truePart.VertexIndex;
   Length      = truePart.Length;
-  
+
   ReconParticles.clear();
 
   for (UInt_t i=0;i<truePart.Daughters.size();i++)
     Daughters.push_back(truePart.Daughters[i]);
 
-  
+
   /*
   for (UInt_t i=0;i<truePart.ReconParticles.size();i++)
     ReconParticles.push_back(truePart.ReconParticles[i]);
@@ -399,7 +400,7 @@ AnaTrack::AnaTrack(const AnaTrack& track):AnaTrackB(track),AnaParticleE(track){
 
 //  Length        = track.Length;
   Detectors     = track.Detectors;
-  
+
 }
 
 //********************************************************************
@@ -439,11 +440,11 @@ AnaBunch::AnaBunch(const AnaBunch& bunch):AnaBunchB(bunch){
     part->Daughters.clear();
     for (UInt_t j=0;j<part->DaughtersIDs.size();j++){
       AnaParticleB* dau = anaUtils::GetParticleByID(*this,part->DaughtersIDs[j]);
-      if (dau) part->Daughters.push_back(dau);      
+      if (dau) part->Daughters.push_back(dau);
     }
   }
 
-  
+
 /*
     Bunch  = bunch.Bunch;
     Weight = bunch.Weight;
@@ -505,7 +506,7 @@ void AnaSpill::RedoLinks(){
   // Reset the true->Reco links since truth is not cloned and the vectors of ReconParticles and ReconVertices are already filled
   for (UInt_t i=0;i<TrueVertices.size();i++){
     (static_cast<AnaTrueVertex*>(TrueVertices[i]))->ReconParticles.clear();
-    (static_cast<AnaTrueVertex*>(TrueVertices[i]))->ReconVertices.clear();    
+    (static_cast<AnaTrueVertex*>(TrueVertices[i]))->ReconVertices.clear();
   }
   for (UInt_t i=0;i<TrueParticles.size();i++)
     (static_cast<AnaTrueParticle*>(TrueParticles[i]))->ReconParticles.clear();
@@ -515,35 +516,49 @@ void AnaSpill::RedoLinks(){
 
   std::vector<AnaBunchC*> allBunches = Bunches;
   if (OutOfBunch) allBunches.push_back(OutOfBunch);
-  
+
+  // OPTIMIZATION: Build hash map of all particles by UniqueID for O(1) lookups
+  std::unordered_map<Int_t, AnaParticleB*> particleByUniqueID;
   for (UInt_t i=0;i<allBunches.size();i++){
     AnaBunchB* bunch = static_cast<AnaBunchB*>(allBunches[i]);
-    
+    for (UInt_t j=0;j<bunch->Particles.size();j++){
+      if(bunch->Particles[j]){
+        particleByUniqueID[bunch->Particles[j]->UniqueID] = bunch->Particles[j];
+      }
+    }
+  }
+
+  for (UInt_t i=0;i<allBunches.size();i++){
+    AnaBunchB* bunch = static_cast<AnaBunchB*>(allBunches[i]);
+
     for (UInt_t j=0;j<bunch->Particles.size();j++){
       AnaParticle* part = static_cast<AnaParticle*>(bunch->Particles[j]);
 
       part->Daughters.clear();
       for (UInt_t k=0;k<part->DaughtersIDs.size();k++){
-        AnaParticleB* dau = anaUtils::GetParticleByID(*bunch, part->DaughtersIDs[k]);
-        if (dau)  part->Daughters.push_back(dau);
-      }      
+        // OPTIMIZATION: O(1) hash map lookup instead of O(n) linear search
+        auto it = particleByUniqueID.find(part->DaughtersIDs[k]);
+        if(it != particleByUniqueID.end()){
+          part->Daughters.push_back(it->second);
+        }
+      }
     }
   }
-  
-  // Redo the links
+
+  // Redo the links in parent class
   AnaSpillB::RedoLinks();
 }
 
 //********************************************************************
 void AnaSpill::associateVertexToParticle(AnaParticleB* particle, AnaVertexB* vertex) const{
-//********************************************************************  
+//********************************************************************
   (static_cast<AnaTrack*>(particle))->ReconVertices.push_back(vertex);
 }
 
 //********************************************************************
 void AnaSpill::associateVertexToTrueVertex(AnaVertexB* vertex) const{
 //********************************************************************
-  
+
   if (vertex->TrueVertex)
     (static_cast<AnaTrueVertex*>(vertex->TrueVertex))->ReconVertices.push_back(vertex);
 }
@@ -602,9 +617,9 @@ AnaEvent::AnaEvent(const AnaSpill& spill, const AnaBunch& bunch):AnaEventB(spill
     part->Daughters.clear();
     for (UInt_t j=0;j<part->DaughtersIDs.size();j++){
       AnaParticleB* dau = anaUtils::GetParticleByID(*this,part->DaughtersIDs[j]);
-      if (dau) part->Daughters.push_back(dau);      
+      if (dau) part->Daughters.push_back(dau);
     }
-  }  
+  }
 }
 
 //********************************************************************
@@ -709,7 +724,7 @@ AnaBeam::~AnaBeam(){
 //********************************************************************
 
   if (BeamParticle)
-    delete BeamParticle;  
+    delete BeamParticle;
 }
 
 //********************************************************************
@@ -717,7 +732,7 @@ AnaBeam::AnaBeam(const AnaBeam& beam):AnaBeamB(beam){
 //********************************************************************
 
   POT           = beam.POT;
-  Spill         = beam.Spill;  
+  Spill         = beam.Spill;
 
   BeamParticle  = NULL;
   if (beam.BeamParticle)
@@ -747,7 +762,7 @@ AnaTrigger::AnaTrigger(const AnaTrigger& tr) {
 //********************************************************************
 
   nTriggers= tr.nTriggers;
-  
+
   anaUtils::CreateArray(Time, nTriggers);
   anaUtils::CreateArray(ID,   nTriggers);
 
@@ -762,7 +777,7 @@ void AnaTrigger::Print() const{
   std::cout << "-------- AnaTrigger --------- " << std::endl;
 
   for (Int_t i=0;i<nTriggers;i++){
-    std::cout << i << ":  id = " << ID[i] << "\t t = " << Time[i] << std::endl;  
+    std::cout << i << ":  id = " << ID[i] << "\t t = " << Time[i] << std::endl;
   }
 
 }

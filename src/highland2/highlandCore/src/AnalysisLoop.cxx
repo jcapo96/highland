@@ -28,7 +28,7 @@ AnalysisLoop::AnalysisLoop(AnalysisAlgorithm* ana, int argc, char *argv[]){
 
   // Remove root warnings
   gErrorIgnoreLevel = kError;
-  
+
   std::string programName = argv[0];
   std::string paramFile = "";
 
@@ -148,26 +148,26 @@ bool AnalysisLoop::Initialize(){
 
   // Set the skim file name
   anaUtils::skimFileName = _inputSkimFileName;
-  
+
   // Initialize the InputManager by specifying the input type and the input file
   if (!ana().input().Initialize(_inputFileName,_inputFileType, _cosmicMode)) return false;
 
   // Tell the AnalysisAlgorithm to perform version checking to make sure the sofware version and the input file match each other
   ana().SetVersionCheck(_versionCheck);
-  
-  // Initialize the User Analysis Algorithm. It can overwride the production via parameters file in baseAnalysis 
+
+  // Initialize the User Analysis Algorithm. It can overwride the production via parameters file in baseAnalysis
   ana().SetAnalysisPoint(AnalysisAlgorithm::kInitialize);
   if (!ana().Initialize()) return false;
 
   // This must be called after the Initialize of all algorithms since it is there where the last used algorithms can be decleared
   if (!ana().InitializeBase()) return false;
-  
-  // This will take care of data/MC differences in detector volumes definitions 	 
+
+  // This will take care of data/MC differences in detector volumes definitions
   // Should be applied after the version has been defined
   // TODO. Moved temporarily to baseAnalysis.cxx to avoid dependency on psycheND280Utils
-  //  ND::hgman().InitializeGeometry(ana().input().GetIsMC()); 
+  //  ND::hgman().InitializeGeometry(ana().input().GetIsMC());
 
-  // Initialise the Output Manager. 
+  // Initialise the Output Manager.
   ana().output().Initialize();
 
   // Open the output file
@@ -192,7 +192,7 @@ bool AnalysisLoop::Initialize(){
 
   // Define the configurations
   DefineConfigurations();
-  
+
   // Define the micro tree variables
   if (_fillTrees)
     DefineMicroTrees();
@@ -225,10 +225,10 @@ bool AnalysisLoop::InitializeSpill(){
 
   // To compute the entry increment
   Int_t entry0 = _entry;
-  
+
   // Fill the spill structure for the current spill from the input tree
   bool spillOK = ana().input().LoadSpill(_entry);
- 
+
   // To compute the entry increment
   Int_t entry1 = _entry;
 
@@ -241,7 +241,7 @@ bool AnalysisLoop::InitializeSpill(){
 
   // return if the read spill is not OK
   if (!spillOK) return false;
-  
+
   // Apply Corrections. This will affect all configurations
   ana().corr().ApplyCorrections(ana().input().GetCorrectedSpill());
 
@@ -261,7 +261,7 @@ bool AnalysisLoop::InitializeSpill(){
 //********************************************************************
 void AnalysisLoop::InitializeBunch(){
 //********************************************************************
-  
+
   // Create the event from the spill and the current bunch (needed by psyche packages)
   _event = ana().MakeEvent();
   ana().SetEvent(_event);
@@ -271,7 +271,7 @@ void AnalysisLoop::InitializeBunch(){
 
   // Initialize the Bunch in the User Analysis Algorithm
   ana().SetAnalysisPoint(AnalysisAlgorithm::kInitializeBunch);
-  ana().InitializeBunch();  
+  ana().InitializeBunch();
 }
 
 //********************************************************************
@@ -286,29 +286,29 @@ void AnalysisLoop::InitializeConfiguration(){
     // Enable the appropriate EventVariations for this configuration
     ana().evar().DisableAllEventVariations();
     ana().evar().EnableEventVariations(ana().conf().GetEnabledEventVariations());
-        
+
     // Create the SystBox array (only the first time it is called for each EventVariation)
     ana().evar().Initialize(_entry_nmax);
-    
+
     // Initialize The SystBox for EventVariations
     ana().evar().InitializeEvent(ana().sel(),*_event);
-  }    
+  }
 
   if (ana().eweight().HasEventWeights()){
     // Enable the appropriate EventWeights for this configuration
     ana().eweight().DisableAllEventWeights();
     ana().eweight().EnableEventWeights(ana().conf().GetEnabledEventWeights());
-    
+
     // Create an array to store the systematics weights. (TODO. Is it faster to just resize the existing array ?)
     _nWeightSyst= ana().eweight().GetNEnabledEventWeights();
     anaUtils::CreateArray(_weightSyst, _nWeightSyst);
-    
+
     // Create the SystBox array (only the first time it is called for each EventWeight)
     ana().eweight().Initialize(ana().sel(),_entry_nmax);
-    
+
     // Initialize The SystBox for variation systematics
     ana().eweight().InitializeEvent(ana().sel(),*_event);
-  }    
+  }
 
   // Initialize the Configuration in the User Analysis Algorithm
   ana().InitializeConfiguration();
@@ -327,6 +327,7 @@ void AnalysisLoop::InitializeToy(){
 
     // Get the current Toy Experiment
     ToyExperiment* toy = ana().conf().GetCurrentConfiguration()->GetToyMaker().GetToyExperiment(ana().conf().GetToyIndex());
+    toy->SetToyIndex(ana().conf().GetToyIndex());
 
     // Apply  systematic variations for systematic error propagation
     ana().evar().ApplyEventVariations(*toy, *_event);
@@ -334,7 +335,7 @@ void AnalysisLoop::InitializeToy(){
 
   // Initialize this toy experiment for the user Analysis Algorithm
   ana().SetAnalysisPoint(AnalysisAlgorithm::kInitializeToy);
-  ana().InitializeToy();	
+  ana().InitializeToy();
 }
 
 //********************************************************************
@@ -343,8 +344,8 @@ void AnalysisLoop::InitializeSelection(const SelectionBase& selec){
 
   // initialize selection for the user analysis. TODO: currently not used by any analysis
   ana().SetAnalysisPoint(AnalysisAlgorithm::kInitializeSelection);
-  ana().InitializeSelection(selec);	
-  
+  ana().InitializeSelection(selec);
+
 }
 
 //********************************************************************
@@ -353,17 +354,18 @@ void AnalysisLoop::FinalizeSelection(const SelectionBase& selec){
 
   /// Compute the weight for this selection by applying the systematic weights. Only for MC when any of the weight systematics is enabled,
   // and when the selection was passed. TODO: now that this is not only a systematic it could be also used for data
-  if (_toy_passed && _event->GetIsMC() && ana().eweight().GetNEnabledEventWeights()>0){      
+  if (_toy_passed && _event->GetIsMC() && ana().eweight().GetNEnabledEventWeights()>0){
     // Get the current Toy Experiment
     ToyExperiment* toy = ana().conf().GetCurrentConfiguration()->GetToyMaker().GetToyExperiment(ana().conf().GetToyIndex());
-    // Apply the relevant weight systematics for the current selection. Internally loops over branches in the selection and compute the weights only 
+    toy->SetToyIndex(ana().conf().GetToyIndex());
+    // Apply the relevant weight systematics for the current selection. Internally loops over branches in the selection and compute the weights only
     // for the succesfull branches
     ana().eweight().ComputeEventWeights(selec,*toy, *_event, selec.GetPreviousToyBox(*_event), _weightSyst);
   }
 
   // finalize selection for the user analysis. TODO: currently not used by any analysis.
   ana().SetAnalysisPoint(AnalysisAlgorithm::kFinalizeSelection);
-  ana().FinalizeSelection(selec);	
+  ana().FinalizeSelection(selec);
 }
 
 //********************************************************************
@@ -380,15 +382,15 @@ bool AnalysisLoop::FinalizeToy(){
   //  ana().output().AddToyWeight(1.);
 
   // The toy experiment dependent micro-tree variables are filled here
-  // Conditions inside method 
+  // Conditions inside method
   if (_fillTrees) FillToyVarsInMicroTrees();
 
   // break the toy loop when the the first toy does not reach a minimum accum level for any of the selections
-  // TODO: when running several selections we should stop running a given selection when the minimum accum level for that selection 
+  // TODO: when running several selections we should stop running a given selection when the minimum accum level for that selection
   // is not reached
   if (!ana().sel().PreSelectionPassed(*_event)) return false;
 
-  // Undo all variationSystematics variations at the end of this toy experiment. TODO: we should reset undo all systematics in the same method to 
+  // Undo all variationSystematics variations at the end of this toy experiment. TODO: we should reset undo all systematics in the same method to
   // avoid looping several times over the same objects
   if (_event->GetIsMC() && ana().evar().GetNEnabledEventVariations()>0){
     if  (ana().evar().UndoEventVariations(*_event))
@@ -512,6 +514,9 @@ void AnalysisLoop::Finalize(){
     // Write out memory usage, if needed.
     _memory.Write();
 
+    // Finalize OutputManager (writes event skim file if enabled)
+    ana().output().Finalize();
+
     // Close the output file
     ana().output().CloseOutputFile();
   }
@@ -524,7 +529,7 @@ void AnalysisLoop::DefineMicroTrees(){
   /* Here we add all default variables  */
 
 
-  //------------ Add a tree for each configuration -----------------  
+  //------------ Add a tree for each configuration -----------------
   Int_t tree_index = NMAXSPECIALTREES;
   for (std::vector<ConfigurationBase* >::iterator it3= ana().conf().GetConfigurations().begin();it3!=ana().conf().GetConfigurations().end();it3++, tree_index++){
     if (!(*it3)->IsEnabled()) continue;
@@ -572,7 +577,7 @@ void AnalysisLoop::DefineMicroTrees(){
 				      "This is a category variable that can be used to split up a MC histogram into a stack. Use the DumpCategory(\"...\") function for more.",
 				      categ._counterIndex, categ._counterName, categ._counterSize1, categ._counterSize2, categ._counterSize3);
       }
-      
+
       else std::cout << "object order (" << categ._objectOrder << ") exceeds maximum order suported (3)" << std::endl;
     }
     else
@@ -618,7 +623,7 @@ void AnalysisLoop::DefineMicroTrees(){
   }
   char cut[50];
   Int_t indx=AnalysisAlgorithm::first_cut;
-  for (unsigned int i=0;i<ana().sel().GetNMaxCuts() ;i++, indx++){  
+  for (unsigned int i=0;i<ana().sel().GetNMaxCuts() ;i++, indx++){
     sprintf(cut, "cut%d", i);
     if (ana().sel().GetNEnabledSelections()>1) {
       if (ana().sel().GetNMaxBranches()>1) {
@@ -628,14 +633,14 @@ void AnalysisLoop::DefineMicroTrees(){
                                        "If you only have one toy (normal), then you can use cutN[][0][0], etc., where the 0 can be replaced with your selection/branch number \n"
                                        "and N is the cut number.",
                                        ana().sel().GetNEnabledSelections(), ana().sel().GetNMaxBranches());
-      }      
+      }
       else{
         ana().output().AddToyVectorVar(indx, cut, "I","Whether this cut was passed or not.\n"
                                        "highland supports running multiple toys (for evaluating systematics), so the index in this vector is the toy index.\n"
                                        "The second index is the selection. \n"
                                        "If you only have one toy (normal), then you can use cutN or cutN[][0] to access the correct number, \n"
                                        "where the 0 can be replaced with your selection number and N is the cut number.",
-                                       ana().sel().GetNEnabledSelections());	
+                                       ana().sel().GetNEnabledSelections());
       }
     }
     else{
@@ -651,24 +656,24 @@ void AnalysisLoop::DefineMicroTrees(){
       }
     }
   }
-  
+
   //------------ Add systematics related variables -----------------
 
   /*
   //! [AnalysisLoop_syst]
-  There are several variables in the microtree related with systematic error propagation. The correspondence with variables used to compute the covariance matrix 
+  There are several variables in the microtree related with systematic error propagation. The correspondence with variables used to compute the covariance matrix
   is indicated inside the paretheses:
-  
+
   - \b NTOYS (\(N_{toys}\)):  this the the number of toy experiments. The same for all events.
   - \b toy_index (t): the toy experiment index (from 0 to NTOYS-1). It has 1 index: toy_index[NTOYS];
-  - \b toy_weight (\(w^t\)): This is the toy experiment weight. It has 1 index: toy_weight[NTOYS]. 
-  - \b NWEIGHSYST (\(N_s\)): the number of weight systematics. 
-  - \b weight_syst (\((W^t)_e^s\)):    this is the event weights for each toy and each weight systematic enabled. 
+  - \b toy_weight (\(w^t\)): This is the toy experiment weight. It has 1 index: toy_weight[NTOYS].
+  - \b NWEIGHSYST (\(N_s\)): the number of weight systematics.
+  - \b weight_syst (\((W^t)_e^s\)):    this is the event weights for each toy and each weight systematic enabled.
                                          It has 2 indexes: weight_syst[NTOYS][NWEIGHTSYST].
   - \b weight_syst_total (\((W^t)_e\)):   the product of all weight systematics. It has one index weight_syst_total[NTOYS]
 
   //! [AnalysisLoop_syst]
-  */  
+  */
 
   for (std::vector<ConfigurationBase* >::iterator it3= ana().conf().GetConfigurations().begin();it3!=ana().conf().GetConfigurations().end();it3++){
     if (!(*it3)->IsEnabled()) continue;
@@ -702,7 +707,7 @@ void AnalysisLoop::DefineMicroTrees(){
       ana().output().AddToyVectorVar(tree_index,AnalysisAlgorithm::weight_corr, "weight_corr",       "F", "Weight parameters (corr only)", ana().eweight().GetNEnabledEventWeights());
       ana().output().AddToyVar(tree_index,AnalysisAlgorithm::weight_corr_total, "weight_corr_total", "F", "Total weight (corr only)");
     }
-    
+
     // add the number of systematic weights
     ana().output().AddVar(tree_index,AnalysisAlgorithm::NWEIGHTSYST, "NWEIGHTSYST", "I", "Number of systematic weight parameters");
   }
@@ -766,7 +771,7 @@ void AnalysisLoop::DefineTruthTree(){
       ana().output().AddVectorVar(categ_index, categ_name, "I","This is a category variable that can be used to split up a MC histogram into a stack. Use the DumpCategory(\"...\") function for more.", counter_index, "N"+categ_name, categ.GetNTypes());
       counter_index++;
     }
-    else if (!categ.IsObject()) 
+    else if (!categ.IsObject())
       ana().output().AddVar(categ_index, categ_name,"I","This is a category variable that can be used to split up a MC histogram into a stack. Use the DumpCategory(\"...\") function for more.");
   }
 
@@ -788,27 +793,27 @@ void AnalysisLoop::FillConfigTree(){
   ana().output().SetFillSingleTree(OutputManager::config);
 
   // The $HIGHLANDPATH
-  ana().output().AddVar(OutputManager::config, AnalysisAlgorithm::HIGHLANDPATH,   "HIGHLANDPATH",   "C", "the HIGHLAND used to produce the output file");  
-  ana().output().FillVar(AnalysisAlgorithm::HIGHLANDPATH, (std::string)getenv("HIGHLANDPATH") );  
+  ana().output().AddVar(OutputManager::config, AnalysisAlgorithm::HIGHLANDPATH,   "HIGHLANDPATH",   "C", "the HIGHLAND used to produce the output file");
+  ana().output().FillVar(AnalysisAlgorithm::HIGHLANDPATH, (std::string)getenv("HIGHLANDPATH") );
 
   // The Machine name
-  ana().output().AddVar(OutputManager::config, AnalysisAlgorithm::HOSTNAME,   "HOSTNAME",   "C", "the machine used to produce the output file");  
+  ana().output().AddVar(OutputManager::config, AnalysisAlgorithm::HOSTNAME,   "HOSTNAME",   "C", "the machine used to produce the output file");
   if (getenv("HOSTNAME"))
-    ana().output().FillVar(AnalysisAlgorithm::HOSTNAME, (std::string)getenv("HOSTNAME") );  
-  else 
+    ana().output().FillVar(AnalysisAlgorithm::HOSTNAME, (std::string)getenv("HOSTNAME") );
+  else
     ana().output().FillVar(AnalysisAlgorithm::HOSTNAME, "unknown" );
 
   // The input file name
-  ana().output().AddVar(OutputManager::config, AnalysisAlgorithm::INPUTFILE,   "InputFile",   "C", "the input file used to produce the output file");  
-  ana().output().FillVar(AnalysisAlgorithm::INPUTFILE, _inputFileName );  
+  ana().output().AddVar(OutputManager::config, AnalysisAlgorithm::INPUTFILE,   "InputFile",   "C", "the input file used to produce the output file");
+  ana().output().FillVar(AnalysisAlgorithm::INPUTFILE, _inputFileName );
 
   // The original file (i.e. the recon output file)
-  ana().output().AddVar(OutputManager::config, AnalysisAlgorithm::OriginalFile,   "OriginalFile",   "C", "the original file used to produce the input file");  
+  ana().output().AddVar(OutputManager::config, AnalysisAlgorithm::OriginalFile,   "OriginalFile",   "C", "the original file used to produce the input file");
 
 
   if (!ana().input().InputIsOriginalTree()){
     TChain* chain = new TChain("config");
-    chain->AddFile(_inputFileName.c_str());    
+    chain->AddFile(_inputFileName.c_str());
     char OriginalFile[200]="unknown";
     if (chain->FindLeaf("OriginalFile")){
       chain->SetBranchAddress("OriginalFile", OriginalFile);
@@ -817,14 +822,14 @@ void AnalysisLoop::FillConfigTree(){
       (void) centry;
       (void) nb;
     }
-    ana().output().FillVar(AnalysisAlgorithm::OriginalFile, OriginalFile );  
+    ana().output().FillVar(AnalysisAlgorithm::OriginalFile, OriginalFile );
   }
   else
-    ana().output().FillVar(AnalysisAlgorithm::OriginalFile, _inputFileName );  
+    ana().output().FillVar(AnalysisAlgorithm::OriginalFile, _inputFileName );
 
 
-  ana().output().AddVar(OutputManager::config, AnalysisAlgorithm::MinAccumLevelToSave,   "MinAccumLevelToSave",   "I", "the minimum accut level to save the event");  
-  ana().output().FillVar(AnalysisAlgorithm::MinAccumLevelToSave,   ana().GetMinAccumCutLevelToSave());  
+  ana().output().AddVar(OutputManager::config, AnalysisAlgorithm::MinAccumLevelToSave,   "MinAccumLevelToSave",   "I", "the minimum accut level to save the event");
+  ana().output().FillVar(AnalysisAlgorithm::MinAccumLevelToSave,   ana().GetMinAccumCutLevelToSave());
 
 
   // The software versions
@@ -851,7 +856,7 @@ void AnalysisLoop::FillConfigTree(){
   // Fill user defined variables
   ana().SetAnalysisPoint(AnalysisAlgorithm::kFillConfigTree);
   ana().FillConfigTree();
-  
+
   // Put back set fill all trees
   ana().output().SetFillAllTrees();
 
@@ -879,9 +884,9 @@ void AnalysisLoop::DefineCorrections(){
   // Read corrections from the input file
 
   // When running over a FlatTree corrections may already exist in it.
-  // It that case corrections are read from the input file (config tree) and added to the CorrectionManager. 
-  // In this case each correction is stored as 
-  // "appliedInInput" and "disabled", such that it is not applied twice. 
+  // It that case corrections are read from the input file (config tree) and added to the CorrectionManager.
+  // In this case each correction is stored as
+  // "appliedInInput" and "disabled", such that it is not applied twice.
 
   if (!ana().input().InputIsOriginalTree()){
     bool isROOTFile = ana().input().IsROOTFile(_inputFileName);
@@ -939,18 +944,18 @@ void AnalysisLoop::DefineConfigurations(){
   // Dump all configurations
   ana().conf().DumpConfigurations(&ana().syst());
 }
-  
+
 //********************************************************************
 void AnalysisLoop::Loop(int nmax,int imin){
 //********************************************************************
-  
+
   if (!Initialize()) return;
-  
+
   // Get the number of entries in the tree
-  Long64_t nentries = ana().input().GetEntries();  
+  Long64_t nentries = ana().input().GetEntries();
 
   if (imin>nentries){
-    std::cout << "AnalysisLoop::Loop(). input tree has " << nentries << " entries. You cannot start from entry " << imin << std::endl;    
+    std::cout << "AnalysisLoop::Loop(). input tree has " << nentries << " entries. You cannot start from entry " << imin << std::endl;
     return;
   }
 
@@ -958,7 +963,7 @@ void AnalysisLoop::Loop(int nmax,int imin){
   if (nmax==0 || imin+nmax>nentries) _entry_nmax = nentries-imin;
   else                               _entry_nmax = nmax;
 
-  // Compute the number of the last entry to be run  
+  // Compute the number of the last entry to be run
   _entry_imax = _entry_imin+_entry_nmax;
 
   if (ana().input().InputIsFlatTree())
@@ -972,7 +977,7 @@ void AnalysisLoop::Loop(int nmax,int imin){
   //--------- Loop over entries in the tree ----------------------------------
   _entry=_entry_imin;
   while (_entry<_entry_imax) {
-  
+
     // Initialize clock
     timeval tim;
     gettimeofday(&tim, NULL);
@@ -986,12 +991,12 @@ void AnalysisLoop::Loop(int nmax,int imin){
 
     // go to the next spill if this one is not OK
     if (!spillOK) continue;
-    
+
     gettimeofday(&tim, NULL);
     double t1=tim.tv_sec+(tim.tv_usec/1000000.0);
 
     delta_t[0] += t1-t0;
-    
+
     //---- For each Spill loop over Bunches ----
     for (unsigned int ibunch=0;ibunch<ana().input().GetSpill().Bunches.size();ibunch++){
       gettimeofday(&tim, NULL);
@@ -1006,29 +1011,29 @@ void AnalysisLoop::Loop(int nmax,int imin){
 
       delta_t[1] += t3-t2;
 
-      
-      //---- For each bunch loop over configurations ----     
+
+      //---- For each bunch loop over configurations ----
       for (std::vector<ConfigurationBase*>::iterator it= ana().conf().GetConfigurations().begin();it!=ana().conf().GetConfigurations().end();it++){
       	ConfigurationBase* conf = *it;
 
         gettimeofday(&tim, NULL);
         double t4=tim.tv_sec+(tim.tv_usec/1000000.0);
-        
+
         if (!conf->IsEnabled()) continue;
         ana().conf().SetCurrentConfigurationIndex(conf->GetIndex());
         ana().output().SetCurrentTree(conf->GetTreeIndex());
-        InitializeConfiguration();      
+        InitializeConfiguration();
 
         gettimeofday(&tim, NULL);
         double t5=tim.tv_sec+(tim.tv_usec/1000000.0);
-        
+
         delta_t[2] += t5-t4;
-        
+
         _conf_passed=false;
-	  
+
         //---- For each configuration loop over toys --------
         for (int n=0;n<conf->GetNToys();n++){
-          
+
           gettimeofday(&tim, NULL);
           double t6=tim.tv_sec+(tim.tv_usec/1000000.0);
 
@@ -1038,13 +1043,13 @@ void AnalysisLoop::Loop(int nmax,int imin){
 
           gettimeofday(&tim, NULL);
           double t7=tim.tv_sec+(tim.tv_usec/1000000.0);
-          
+
           delta_t[3] += t7-t6;
 
           //---- For each toy loop over selections --------
 	  for (std::vector<SelectionBase*>::iterator sit= ana().sel().GetSelections().begin();sit!=ana().sel().GetSelections().end();sit++){
             SelectionBase& selec = **sit;
-            if (!selec.IsEnabled()) continue;                            
+            if (!selec.IsEnabled()) continue;
             gettimeofday(&tim, NULL);
             double t8=tim.tv_sec+(tim.tv_usec/1000000.0);
 
@@ -1055,7 +1060,7 @@ void AnalysisLoop::Loop(int nmax,int imin){
 
             delta_t[4] += t9-t8;
 
-            _toy_passed = Process(selec);      
+            _toy_passed = Process(selec);
 
             gettimeofday(&tim, NULL);
             double t10=tim.tv_sec+(tim.tv_usec/1000000.0);
@@ -1069,29 +1074,29 @@ void AnalysisLoop::Loop(int nmax,int imin){
 
 
             delta_t[6] += t11-t10;
-            if (_toy_passed) _conf_passed=true;            
+            if (_toy_passed) _conf_passed=true;
 	  }
-	  
+
           gettimeofday(&tim, NULL);
           double t12=tim.tv_sec+(tim.tv_usec/1000000.0);
 
-          if (!FinalizeToy()) break; 
-          
+          if (!FinalizeToy()) break;
+
           gettimeofday(&tim, NULL);
           double t13=tim.tv_sec+(tim.tv_usec/1000000.0);
-          
+
           delta_t[7] += t13-t12;
-          
+
 	}
-        
+
         gettimeofday(&tim, NULL);
         double t14=tim.tv_sec+(tim.tv_usec/1000000.0);
-        
+
         FinalizeConfiguration();
-        
+
         gettimeofday(&tim, NULL);
         double t15=tim.tv_sec+(tim.tv_usec/1000000.0);
-        
+
         delta_t[8] += t15-t14;
       }
       gettimeofday(&tim, NULL);
@@ -1120,19 +1125,19 @@ void AnalysisLoop::Loop(int nmax,int imin){
 
 
   std::cout << "time profile --------------" << std::endl;
-  std::cout << "Ini Spill:        " << delta_t[0] << std::endl;    
-  std::cout << "Ini Bunch:        " << delta_t[1] << std::endl;    
-  std::cout << "Ini Conf:         " << delta_t[2] << std::endl;    
-  std::cout << "Ini Toy (v syst): " << delta_t[3] << std::endl;    
-  std::cout << "Ini Sel:          " << delta_t[4] << std::endl;    
-  std::cout << "Selection:        " << delta_t[5] << std::endl;    
-  std::cout << "End Sel (w syst): " << delta_t[6] << std::endl;    
-  std::cout << "End Toy:          " << delta_t[7] << std::endl;    
-  std::cout << "End Conf:         " << delta_t[8] << std::endl;    
-  std::cout << "End Bunch:        " << delta_t[9] << std::endl;    
-  std::cout << "End Spill:        " << delta_t[10] << std::endl;   
-  std::cout << "Total:            " << delta_t[11] << std::endl;   
-  std::cout << "Total wo t:       " << delta_t[12] << std::endl;       
+  std::cout << "Ini Spill:        " << delta_t[0] << std::endl;
+  std::cout << "Ini Bunch:        " << delta_t[1] << std::endl;
+  std::cout << "Ini Conf:         " << delta_t[2] << std::endl;
+  std::cout << "Ini Toy (v syst): " << delta_t[3] << std::endl;
+  std::cout << "Ini Sel:          " << delta_t[4] << std::endl;
+  std::cout << "Selection:        " << delta_t[5] << std::endl;
+  std::cout << "End Sel (w syst): " << delta_t[6] << std::endl;
+  std::cout << "End Toy:          " << delta_t[7] << std::endl;
+  std::cout << "End Conf:         " << delta_t[8] << std::endl;
+  std::cout << "End Bunch:        " << delta_t[9] << std::endl;
+  std::cout << "End Spill:        " << delta_t[10] << std::endl;
+  std::cout << "Total:            " << delta_t[11] << std::endl;
+  std::cout << "Total wo t:       " << delta_t[12] << std::endl;
 
 
 
@@ -1144,7 +1149,7 @@ bool AnalysisLoop::Process(SelectionBase& selec){
 //********************************************************************
 
   // Returns true when any of the branches is passed
-  // Internaly the CheckRedoSelection is called. The returned boolean is returned as argument 
+  // Internaly the CheckRedoSelection is called. The returned boolean is returned as argument
   // by the Apply method of the selection such that we can save the redo value in the micro-tree
   bool redo = false;
   bool ToyPassed = selec.Apply(*_event, redo);
@@ -1223,7 +1228,7 @@ void AnalysisLoop::FillToyVarsInMicroTrees(){
   // This variables is reseted in InitializeConfiguration.
   // If true means that at least one toy fullfils the condition to be saved into the microtree
   _toy_filled = true;
-  
+
   // ---------------- Fill cut level variables ------------------------
 
   Int_t isel=0;
@@ -1234,27 +1239,27 @@ void AnalysisLoop::FillToyVarsInMicroTrees(){
       if (ana().sel().GetNEnabledSelections()>1){
         if (ana().sel().GetNMaxBranches()>1){
           ana().output().FillToyMatrixVar(AnalysisAlgorithm::accum_level, (*it)->GetAccumCutLevel(ibranch), isel, ibranch);
-          for (unsigned int i=0;i<(*it)->GetNCuts(ibranch);i++, indx++){  
+          for (unsigned int i=0;i<(*it)->GetNCuts(ibranch);i++, indx++){
             ana().output().FillToyMatrixVar(indx, (*it)->GetCutPassed(i, ibranch), isel, ibranch);
-          }	
+          }
         }
         else{
           ana().output().FillToyVectorVar(AnalysisAlgorithm::accum_level, (*it)->GetAccumCutLevel(ibranch), isel);
-          for (unsigned int i=0;i<(*it)->GetNCuts(ibranch);i++, indx++){  
+          for (unsigned int i=0;i<(*it)->GetNCuts(ibranch);i++, indx++){
             ana().output().FillToyVectorVar(indx, (*it)->GetCutPassed(i, ibranch), isel);
-          }	
+          }
         }
       }
       else{
         if (ana().sel().GetNMaxBranches()>1){
           ana().output().FillToyVectorVar(AnalysisAlgorithm::accum_level, (*it)->GetAccumCutLevel(ibranch), ibranch);
-          for (unsigned int i=0;i<(*it)->GetNCuts(ibranch);i++, indx++){  
+          for (unsigned int i=0;i<(*it)->GetNCuts(ibranch);i++, indx++){
             ana().output().FillToyVectorVar(indx, (*it)->GetCutPassed(i, ibranch), ibranch);
           }
         }
         else{
-          ana().output().FillToyVar(AnalysisAlgorithm::accum_level, (*it)->GetAccumCutLevel(ibranch));	
-          for (unsigned int i=0;i<(*it)->GetNCuts(ibranch);i++, indx++){  
+          ana().output().FillToyVar(AnalysisAlgorithm::accum_level, (*it)->GetAccumCutLevel(ibranch));
+          for (unsigned int i=0;i<(*it)->GetNCuts(ibranch);i++, indx++){
             ana().output().FillToyVar(indx, (*it)->GetCutPassed(i, ibranch));
           }
         }
@@ -1271,7 +1276,7 @@ void AnalysisLoop::FillToyVarsInMicroTrees(){
     Int_t w = 0;
     Float_t weight_syst_total = 1.;
     Float_t weight_corr_total = 1.;
-    
+
     for (int j = 0; j < nWeightSyst; ++j){
       Float_t weight_syst = 1.;
       Float_t weight_corr = 1.;
@@ -1301,11 +1306,11 @@ void AnalysisLoop::FillToyVarsInMicroTrees(){
         std::cerr << "Warning: correction weight_corr is NaN, setting to 0!" << std::endl;
         weight_corr = 0.;
       }
-      
+
       weight_syst_total *= weight_syst;
       weight_corr_total *= weight_corr;
     }
-    
+
     // -------- Fill the total weight systematic -------------------
     if (ana().conf().GetCurrentConfigurationIndex() == ConfigurationManager::default_conf){
       ana().output().FillVar(AnalysisAlgorithm::weight_syst_total, weight_syst_total);
@@ -1316,6 +1321,7 @@ void AnalysisLoop::FillToyVarsInMicroTrees(){
       ana().output().FillToyVar(AnalysisAlgorithm::weight_corr_total, weight_corr_total);
     }
     ana().output().FillVar(AnalysisAlgorithm::NWEIGHTSYST, nWeightSyst);
+    ana().SetCurrentEventWeight(weight_syst_total);
   }
 
   // Fill the user toy experiment variables
@@ -1347,4 +1353,4 @@ void AnalysisLoop::Execute(){
   Loop(_entry_nmax, _entry_imin);
 }
 
- 
+

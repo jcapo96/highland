@@ -47,10 +47,16 @@ Int_t InputConverter::GetNEvents(Int_t entries){
 //****************************************************************************
 bool InputConverter::IsCorrectType(const std::string& inputString){
 //****************************************************************************
-  
+
   bool correct = true;
 
   TFile *f = TFile::Open(inputString.c_str());
+  if (!f || f->IsZombie()) {
+    // File doesn't exist or is invalid
+    if (f) f->Close();
+    return false;
+  }
+
   f->cd();
   if (!f->Get(_treeName.c_str())) correct = false;
   f->Close();
@@ -59,7 +65,7 @@ bool InputConverter::IsCorrectType(const std::string& inputString){
   else
     std::cout << "  - Converter '" << _name << "' looking for tree '" << _treeName << "' --> No" << std::endl;
 
-  
+
   return correct;
 }
 

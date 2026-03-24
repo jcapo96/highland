@@ -139,6 +139,8 @@ DrawingToolsBase::DrawingToolsBase(const std::string& file, Int_t T2KstyleIndex)
   _titleY="";
   _title="";
   _centerTitles=false;
+  _titleXoffset=1.0;
+  _titleYoffset=1.0;
 
   _data_color = kBlack;
   _allmc_color = kBlack;
@@ -445,6 +447,11 @@ void DrawingToolsBase::ProjectTwoCuts(HistoStack* hs1, HistoStack* hs2, TTree* t
     hs1->NormalizeByArea(uopt);
     hs2->NormalizeByArea(uopt,hs1->GetTotal1D()->GetSumOfWeights());
   }
+
+  if(drawUtils::CheckOption(uopt,"NORMBYWIDTH1")){
+    hs1->NormalizeByBinWidthTo1(uopt);
+    hs2->NormalizeByBinWidthTo1(uopt);
+  }
 }
 
 //*********************************************************
@@ -548,6 +555,10 @@ void DrawingToolsBase::Project(HistoStack* hs, const std::string& sample_name, T
 
   if(drawUtils::CheckOption(uopt,"AREA"))
     hs->NormalizeByArea(uopt);  
+
+  if(drawUtils::CheckOption(uopt,"NORMBYWIDTH1"))
+    hs->NormalizeByBinWidthTo1(uopt);
+  
 }
 
 //*********************************************************
@@ -2024,8 +2035,10 @@ void DrawingToolsBase::DrawHisto(TH1* h, int lc, int lw, int fc, int fs, const s
     CreateLegend(uopt);
 
   
-  if (drawUtils::CheckOption(uopt,"NOSTAT"))
+  if (drawUtils::CheckOption(uopt,"NOSTAT")){
     gStyle->SetOptStat(0);
+    uroot_opt = GetNoSameRootOption(uroot_opt)+" same";
+  }
   else
     gStyle->SetOptStat(_stat_option);
 
@@ -2075,6 +2088,12 @@ void DrawingToolsBase::DrawHisto(TH1* h, int lc, int lw, int fc, int fs, const s
   h->GetXaxis()->SetTitle(_titleX.c_str());
   h->GetYaxis()->SetTitle(_titleY.c_str());
   h->SetTitle(_title.c_str());
+
+  h->GetXaxis()->SetTitleOffset(_titleXoffset);
+  h->GetYaxis()->SetTitleOffset(_titleYoffset);
+
+  if (drawUtils::CheckInternalOption(uopt,"ISDATA"))
+    h->SetLineWidth(3);
   
   //---------- Put the right statistics box, with no variable binning normalization --------------
   TH1_h* hp = new TH1_h(*((TH1_h*)h));
@@ -2220,7 +2239,6 @@ void DrawingToolsBase::DrawHistoStack(HistoStack* hs, const std::string& categ, 
     }
     else if (hs->Is2D())
       DrawHisto(hs->GetTotal2D(), lc, lw, fc, fs, root_opt, uopt);
-
   }
   else {
   // if categ != all
@@ -2388,13 +2406,12 @@ void DrawingToolsBase::DrawHistoStacks(HistoStack* hs1p, HistoStack* hs2p,
   if (hs1 && ! drawUtils::CheckOption(uopt,"NODATA")) {
     SetStatPos(_statPos[0], _statPos[1]);
     std::string same="";
-    if (hs2 && ! drawUtils::CheckOption(uopt,"NOMC")) same = " sames";
+    if (hs2 && !drawUtils::CheckOption(uopt,"NOMC")) same = " sames";
     DrawHistoStack(hs1, "all", root_opt+same+error1, uopt+" ISDATA DONTADDLEGENTRY NOSAME",_line_color, _line_width, _fill_color, 0, "","LE1P", 2);
   }
   
   // Don't draw
   if (drawUtils::CheckOption(uopt,"NODRAW")) return;
-
   // Set the appropriate maximum for 1D plots
   if (!is2D){
     bool draw1 = (hs1 && ! drawUtils::CheckOption(uopt,"NODATA"));
@@ -2426,7 +2443,10 @@ void DrawingToolsBase::DrawHistoStacks(HistoStack* hs1p, HistoStack* hs2p,
       if (draw2) hs2->SetMinimum(_minY);
     }
 
-    gStyle->SetOptStat(_stat_option);
+    if (drawUtils::CheckOption(uopt,"NOSTAT"))
+      gStyle->SetOptStat(0);
+    else
+      gStyle->SetOptStat(_stat_option);
     gPad->Update();
     gPad->Draw();
 
@@ -3043,7 +3063,7 @@ TH1_h* DrawingToolsBase::GetEventsVSCut(TTree* tree, const std::string& name, co
 
     // Build the cut
     std::string cut= cut0 + " && " + BuildAccumLevelCut(std::string(tree->GetName()), sel().GetNEnabledSelections(), isel, ibranch,icut);
-    
+
     // Apply event weights
     std::string cutp = weightTools::ApplyWeights(tree,cut,uopt);
 

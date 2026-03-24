@@ -6,6 +6,7 @@
 #include <iostream>
 #include <map>
 #include <vector>
+#include <tuple>
 #include <TROOT.h>
 #include <TChain.h>
 #include <TFile.h>
@@ -17,7 +18,10 @@
 #include "TreeManager.hxx"
 #include "DocStringManager.hxx"
 
-/// Maximum number of special trees 
+// Forward declaration
+class AnaEventB;
+
+/// Maximum number of special trees
 const UInt_t NMAXSPECIALTREES = 20;
 
 /// Maximum size for vector or matrices
@@ -33,9 +37,9 @@ class OutOfBounds: public std::runtime_error {
 };
 
 class float_vector{
-  
+
 public:
-  
+
   float_vector(const int n1){
     _m = new float[n1];
     _n1 =n1;
@@ -43,20 +47,20 @@ public:
   ~float_vector() {
     if (_m) delete[] _m;
   }
-  
+
   void Ini(Float_t val){
     for (UInt_t i = 0; i<num_rows(); i++) _m[i]=val;
   }
-  
+
   void Fill(int i, Float_t val){
     if (i < 0 || i >= _n1) throw OutOfBounds();
     _m[i]=val;
-    
+
   }
 
   Float_t GetValue(int i) const{
     if (i < 0 || i >= _n1) throw OutOfBounds();
-    return _m[i];    
+    return _m[i];
   }
 
   float* GetAddress(){return _m;}
@@ -70,7 +74,7 @@ protected:
 class float_matrix{
 
 public:
-  
+
   float_matrix(const int n1, const int n2){
     _m = new float[n1*n2];
     _n1 =n1;
@@ -81,8 +85,8 @@ public:
   }
 
   void Ini(Float_t val){
-    for (UInt_t i = 0; i<num_rows(); i++) 
-      for (UInt_t j = 0; j<num_cols(); j++) 
+    for (UInt_t i = 0; i<num_rows(); i++)
+      for (UInt_t j = 0; j<num_cols(); j++)
 	_m[i*_n2+j]=val;
   }
 
@@ -113,7 +117,7 @@ protected:
 class float_3Dmatrix{
 
 public:
-  
+
   float_3Dmatrix(const int n1, const int n2, const int n3){
     _m = new float[n1*n2*n3];
     _n1 =n1;
@@ -123,11 +127,11 @@ public:
   ~float_3Dmatrix() {
     if (_m) delete[] _m;
   }
-  
+
   void Ini(Float_t val){
-    for (UInt_t i = 0; i<num_rows1(); i++) 
-      for (UInt_t j = 0; j<num_rows2(); j++) 
-	for (UInt_t k = 0; k<num_rows3(); k++) 
+    for (UInt_t i = 0; i<num_rows1(); i++)
+      for (UInt_t j = 0; j<num_rows2(); j++)
+	for (UInt_t k = 0; k<num_rows3(); k++)
 	  _m[i*_n3*_n2 + j*_n3 + k]=val;
   }
 
@@ -159,7 +163,7 @@ protected:
 class double_vector{
 
 public:
-  
+
   double_vector(const int n1){
     _m = new double[n1];
     _n1 =n1;
@@ -191,7 +195,7 @@ protected:
 class double_matrix{
 
 public:
-  
+
   double_matrix(const int n1, const int n2){
     _m = new double[n1*n2];
     _n1 =n1;
@@ -202,8 +206,8 @@ public:
   }
 
   void Ini(Double_t val){
-    for (UInt_t i = 0; i<num_rows(); i++) 
-      for (UInt_t j = 0; j<num_cols(); j++) 
+    for (UInt_t i = 0; i<num_rows(); i++)
+      for (UInt_t j = 0; j<num_cols(); j++)
 	_m[i*_n2+j]=val;
   }
 
@@ -230,9 +234,9 @@ protected:
 
 
 class double_3Dmatrix{
-  
+
 public:
-  
+
   double_3Dmatrix(const int n1, const int n2, const int n3){
     _m = new double[n1*n2*n3];
     _n1 =n1;
@@ -244,9 +248,9 @@ public:
   }
 
   void Ini(Double_t val){
-    for (UInt_t i = 0; i<num_rows1(); i++) 
-      for (UInt_t j = 0; j<num_rows2(); j++) 
-	for (UInt_t k = 0; k<num_rows3(); k++) 
+    for (UInt_t i = 0; i<num_rows1(); i++)
+      for (UInt_t j = 0; j<num_rows2(); j++)
+	for (UInt_t k = 0; k<num_rows3(); k++)
 	  _m[i*_n3*_n2 + j*_n3 + k]=val;
   }
 
@@ -278,7 +282,7 @@ protected:
 class int_vector{
 
 public:
-  
+
   int_vector(const int n1){
     _m = new int[n1];
     _n1 =n1;
@@ -311,7 +315,7 @@ protected:
 class int_matrix{
 
 public:
-  
+
   int_matrix(const int n1, const int n2){
     _m = new int[n1*n2];
     _n1 =n1;
@@ -322,8 +326,8 @@ public:
   }
 
   void Ini(Int_t val){
-    for (UInt_t i = 0; i<num_rows(); i++) 
-      for (UInt_t j = 0; j<num_cols(); j++) 
+    for (UInt_t i = 0; i<num_rows(); i++)
+      for (UInt_t j = 0; j<num_cols(); j++)
 	_m[i*_n2+j]=val;
   }
 
@@ -350,7 +354,7 @@ protected:
 class int_3Dmatrix{
 
 public:
-  
+
   int_3Dmatrix(const int n1, const int n2, const int n3){
     _m = new int[n1*n2*n3];
     _n1 =n1;
@@ -362,9 +366,9 @@ public:
   }
 
   void Ini(Int_t val){
-    for (UInt_t i = 0; i<num_rows1(); i++) 
-      for (UInt_t j = 0; j<num_rows2(); j++) 
-	for (UInt_t k = 0; k<num_rows3(); k++) 
+    for (UInt_t i = 0; i<num_rows1(); i++)
+      for (UInt_t j = 0; j<num_rows2(); j++)
+	for (UInt_t k = 0; k<num_rows3(); k++)
 	  _m[i*_n3*_n2 + j*_n3 + k]=val;
   }
 
@@ -396,7 +400,7 @@ protected:
 class achar{
 
 public:
-  
+
   achar(){
   }
   ~achar() {
@@ -419,7 +423,7 @@ public:
   char_vector(){
     _n1 = 0;
     _m.clear();
-  } 
+  }
   char_vector(const int n1){
     _m.resize(n1);
     for (int i=0; i<n1; i++) _m[i] = "";
@@ -454,7 +458,7 @@ public:
 
   char_matrix(const int n1, const int n2){
     _m.resize(n2);
-    for (int i=0; i<n2; i++) 
+    for (int i=0; i<n2; i++)
       _m[i] = char_vector(n1);
     _n1= n1;
     _n2= n2;
@@ -488,7 +492,7 @@ public :
 
   OutputManager();
   virtual ~OutputManager();
-  
+
   virtual bool Initialize();
   virtual bool InitializeEntry();
   virtual void Finalize();
@@ -516,7 +520,7 @@ public :
       if (_tree_vars_all_vars[tree_index][i]==var) return i;
     return -1;
   }
-  
+
   //--------- Operations with counters ------------
 
 
@@ -583,10 +587,10 @@ public :
   void AddMatrixVar(Int_t tree_index, Int_t index, const std::string& name, const std::string& type, const std::string& doc, int size1=-MAXVECTORSIZE, int size2=-1);
 
   /// Add a 3D matrix variable to all trees
-  void Add3DMatrixVar(                  Int_t index, const std::string& name, const std::string& type, const std::string& doc, Int_t counter_index, const std::string& counter_name, 
+  void Add3DMatrixVar(                  Int_t index, const std::string& name, const std::string& type, const std::string& doc, Int_t counter_index, const std::string& counter_name,
 					int size1=-MAXVECTORSIZE, int size2=-1, int size3=-1);
   /// Add a 3D matrix variable to a specific tree
-  void Add3DMatrixVar(Int_t tree_index, Int_t index, const std::string& name, const std::string& type, const std::string& doc, Int_t counter_index, const std::string& counter_name, 
+  void Add3DMatrixVar(Int_t tree_index, Int_t index, const std::string& name, const std::string& type, const std::string& doc, Int_t counter_index, const std::string& counter_name,
 		      int size1=-MAXVECTORSIZE, int size2=-1, int size3=-1);
 
   /// Add a single analysis variable to all trees
@@ -632,7 +636,7 @@ public :
   void FillVectorVar(Int_t index, Int_t var,              Int_t indx=-1);
   void FillVectorVar(Int_t index, Double_t var,           Int_t indx=-1);
   void FillVectorVar(Int_t index, const std::string& var, Int_t indx=-1);
-  void FillVectorVarForceIndex(Int_t index, Int_t var,   Int_t indx);  // The index is specified regardless of whether this is a variable using a counter variable 
+  void FillVectorVarForceIndex(Int_t index, Int_t var,   Int_t indx);  // The index is specified regardless of whether this is a variable using a counter variable
 
   /// Fill a vector variable from array
   void FillVectorVarFromArray(Int_t index, const Double_t    var[], UInt_t size) {for (UInt_t i=0;i<size;i++) FillVectorVar(index,(Double_t)var[i]         ,i);}
@@ -741,7 +745,7 @@ public :
   /// the normal micro-trees, and contain meta information, like the header or
   /// config info, or RooTracker information.
   bool IsSpecialTree(Int_t tree_index);
-  
+
   //--------- functions to control different toy experiments ----------
 
   /// Set and gets the index of the current toy experiment
@@ -760,6 +764,24 @@ public :
 
   void AddToyWeight(Double_t w){_toyWeights.push_back(w);}
 
+  //--------- Event Skim File functionality ----------
+
+  /// Initialize event skim file functionality
+  /// @param storeEvents Enable/disable storing surviving events
+  /// @param truthPDG PDG code to check in truth (-1 to disable)
+  void InitializeEventSkim(bool storeEvents, Int_t truthPDG);
+
+  /// Check if event should be added to skim file and add it if conditions are met
+  /// @param event The event to check
+  /// @param eventPassed Whether the event passed the selection
+  void CheckAndAddEvent(AnaEventB& event, bool eventPassed);
+
+  /// Add a surviving event to the list (internal use)
+  /// @param run Run number
+  /// @param subrun Subrun number
+  /// @param event Event number
+  void AddSurvivingEvent(Int_t run, Int_t subrun, Int_t event);
+
   void FillMicroTrees();
 
 
@@ -769,14 +791,14 @@ public :
 
   // Dump an error message and exit
   void WrongVariableType(Int_t index, const std::string& dim, const std::string& type);
-  
+
   void SetDocStringManager(DocStringManager* doc){_doc=doc;}
 
   DocStringManager& docstrings(){return *_doc;}
 
 
   void DumpAllVars();
-  
+
  protected:
 
   // Map of trees
@@ -787,10 +809,16 @@ public :
   std::vector<Double_t> _toyWeights;
 
   /// current toy experiment index
-  int _toy_index; 
+  int _toy_index;
 
 
   Int_t _single_tree_fill;
+
+  // Event Skim File functionality
+  std::string _outputFileName;  // Store the output ROOT file name
+  std::vector<std::tuple<Int_t, Int_t, Int_t> > _survivingEvents;  // Store (run, subrun, event) tuples
+  bool _storeSurvivingEvents;  // Flag to enable/disable feature
+  Int_t _truthPDGToCheck;  // PDG code to check in truth (-1 if disabled)
 
 
   // ----- Branches in the tree  ---------
@@ -800,8 +828,8 @@ public :
 
    /// The names of all counters added
   std::vector< std::vector< std::string > >      _tree_vars_all_counters;
-  
-  /// Correspondece between a variable index and the counter index  
+
+  /// Correspondece between a variable index and the counter index
   std::vector< std::vector< Int_t > >            _link_var_to_counter;
 
   /// The size of the counter: 0 for variable size vectors, >0 for fix size vectors
@@ -885,13 +913,13 @@ public :
   std::vector< std::vector< Bool_t > >            _tree_vars_exist_float_3Dmatrix;
   std::vector< std::vector< Bool_t > >            _tree_vars_exist_double_3Dmatrix;
 
-  
+
 public:
 
   enum enumStandardMicroTrees_OutputManager{
     NTOYS=0,
     toy_weight,
-    toy_index,    
+    toy_index,
     enumStandardMicroTreesLast_OutputManager
   };
 
@@ -899,12 +927,13 @@ public:
     config=0,
     header,
     truth,
-    NRooTrackerVtx, 
+    NRooTrackerVtx,
     GRooTrackerVtx,
     RooTrackerVtx,
+    eventdisplay,
     enumSpecialTreesLast
   };
-  
+
 };
 
 

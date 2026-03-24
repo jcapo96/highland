@@ -1,16 +1,19 @@
 #include "OutputManager.hxx"
+#include "BaseDataClasses.hxx"
 #include <TDirectory.h>
 #include <TList.h>
 #include <sstream>
 #include <stdlib.h>
 #include <algorithm>
+#include <fstream>
+#include <tuple>
 
 //********************************************************************
 OutputManager::OutputManager():TreeManager(){
 //********************************************************************
 
   _default_docstring="No documentation was specified for this variable";
-  _toy_index=0; 
+  _toy_index=0;
 
   _tree_vars_counter_size.resize(NMAXTREES);
   _link_var_to_counter.resize(NMAXTREES);
@@ -82,9 +85,14 @@ OutputManager::OutputManager():TreeManager(){
   _tree_vars_exist_double_3Dmatrix.resize(NMAXTREES);
   _tree_vars_exist_int_3Dmatrix.resize(NMAXTREES);
 
-  
+
 
   _single_tree_fill = -1;
+
+  // Initialize event skim file functionality
+  _storeSurvivingEvents = false;
+  _truthPDGToCheck = -1;
+  _outputFileName = "";
 
 }
 
@@ -150,7 +158,7 @@ void OutputManager::AddTreeWithName(Int_t tree_index, const std::string& name, T
   // add the TTree with this name
   if (_file)
     _file->cd();
-  
+
   if (tree){
     _trees[tree_index] = tree->CloneTree(0);
     _trees[tree_index]->SetTitle(GetString(tree_index).c_str());
@@ -211,8 +219,8 @@ void OutputManager::AddTreeWithName(Int_t tree_index, const std::string& name, T
   _tree_vars_exist_double_3Dmatrix[tree_index].resize(NMAXTREEVARS);
   _tree_vars_exist_int_3Dmatrix[tree_index].resize(NMAXTREEVARS);
 
-  
-  for (UInt_t i=0;i<NMAXTREEVARS;i++){ 
+
+  for (UInt_t i=0;i<NMAXTREEVARS;i++){
     _link_var_to_counter[tree_index][i]=-1;
     _tree_vars_counter_size[tree_index][i]=-1;
   }
@@ -230,23 +238,23 @@ void OutputManager::AddTreeWithName(Int_t tree_index, const std::string& name, T
     _tree_vars_exist_double[tree_index][i]=false;
     _tree_vars_exist_int[tree_index][i]=false;
     _tree_vars_exist_char[tree_index][i]=false;
-    
+
     _tree_vars_exist_float_vector[tree_index][i]=false;
     _tree_vars_exist_double_vector[tree_index][i]=false;
     _tree_vars_exist_int_vector[tree_index][i]=false;
     _tree_vars_exist_char_vector[tree_index][i]=false;
-    
+
     _tree_vars_exist_float_matrix[tree_index][i]=false;
     _tree_vars_exist_double_matrix[tree_index][i]=false;
     _tree_vars_exist_int_matrix[tree_index][i]=false;
     _tree_vars_exist_char_matrix[tree_index][i]=false;
-    
+
     _tree_vars_exist_float_3Dmatrix[tree_index][i]=false;
     _tree_vars_exist_double_3Dmatrix[tree_index][i]=false;
     _tree_vars_exist_int_3Dmatrix[tree_index][i]=false;
   }
-  
-  
+
+
   SetCurrentTree(tree_index);
 }
 
@@ -276,25 +284,25 @@ bool OutputManager::InitializeEntry(){
   /*
   std::map< std::string, std::map<std::string, int> >::iterator cit;
   std::map<std::string, int>::iterator cit2;
-  for (cit= _tree_vars_int_var.begin();cit!=_tree_vars_int_var.end();cit++){    
-    std::string name = cit->first;        
-    for (cit2= _tree_vars_int_var[name].begin();cit2!=_tree_vars_int_var[name].end();cit2++){    
+  for (cit= _tree_vars_int_var.begin();cit!=_tree_vars_int_var.end();cit++){
+    std::string name = cit->first;
+    for (cit2= _tree_vars_int_var[name].begin();cit2!=_tree_vars_int_var[name].end();cit2++){
       cit2->second = 0;
     }
   }
   */
-#if 0 
+#if 0
   /*
 
   std::map< std::string, std::map<std::string, std::vector<Int_t>* > >::iterator  vit;
   std::map<std::string, std::vector<Int_t>* >::iterator vit2;
   std::vector<Int_t>::iterator vit3;
-  for (vit= _tree_vars_int_vector_var.begin();vit!=_tree_vars_int_vector_var.end();vit++){    
-    std::string name = vit->first;        
-    for (vit2= _tree_vars_int_vector_var[name].begin();vit2!=_tree_vars_int_vector_var[name].end();vit2++){    
-      std::string var = vit2->first;        
+  for (vit= _tree_vars_int_vector_var.begin();vit!=_tree_vars_int_vector_var.end();vit++){
+    std::string name = vit->first;
+    for (vit2= _tree_vars_int_vector_var[name].begin();vit2!=_tree_vars_int_vector_var[name].end();vit2++){
+      std::string var = vit2->first;
       _tree_vars_int_vector_var[name][var]->clear();
-     
+
     }
   }
   */
@@ -303,15 +311,15 @@ bool OutputManager::InitializeEntry(){
   std::map< std::string, std::map<std::string, std::vector<Double_t>* > >::iterator  dvit;
   std::map<std::string, std::vector<Double_t>* >::iterator dvit2;
   std::vector<Double_t>::iterator dvit3;
-  for (dvit= _tree_vars_double_vector_var.begin();dvit!=_tree_vars_double_vector_var.end();dvit++){    
-    std::string name = dvit->first;      
-    for (dvit2= _tree_vars_double_vector_var[name].begin();dvit2!=_tree_vars_double_vector_var[name].end();dvit2++){    
+  for (dvit= _tree_vars_double_vector_var.begin();dvit!=_tree_vars_double_vector_var.end();dvit++){
+    std::string name = dvit->first;
+    for (dvit2= _tree_vars_double_vector_var[name].begin();dvit2!=_tree_vars_double_vector_var[name].end();dvit2++){
       std::string var = dvit2->first;
       _tree_vars_double_vector_var[name][var]->clear();
     }
   }
   */
-#endif 
+#endif
 
 
   return true;
@@ -321,8 +329,8 @@ bool OutputManager::InitializeEntry(){
 void OutputManager::InitializeTrees(bool iniVars){
 //********************************************************************
 
-  for (UInt_t i= 0; i<_trees_indices.size();i++){    
-    InitializeTree(_trees_indices[i], iniVars);    
+  for (UInt_t i= 0; i<_trees_indices.size();i++){
+    InitializeTree(_trees_indices[i], iniVars);
   }
 }
 
@@ -335,7 +343,7 @@ void OutputManager::InitializeTree(Int_t tree_index, bool iniVars){
   _toyWeights.clear();
 
   std::vector<Int_t>::iterator it;
-  for (it= _tree_vars_used_counter[tree_index].begin();it!=_tree_vars_used_counter[tree_index].end();it++){    
+  for (it= _tree_vars_used_counter[tree_index].begin();it!=_tree_vars_used_counter[tree_index].end();it++){
     // initalize to 0 the counters with no defined size
     InitializeCounter(tree_index,*it);
   }
@@ -347,40 +355,40 @@ void OutputManager::InitializeTree(Int_t tree_index, bool iniVars){
   for (it= _tree_vars_used_int[tree_index].begin();it!=_tree_vars_used_int[tree_index].end();it++)
     _tree_vars_int[tree_index][*it]=-999;
 
-  for (it= _tree_vars_used_double[tree_index].begin();it!=_tree_vars_used_double[tree_index].end();it++)    
+  for (it= _tree_vars_used_double[tree_index].begin();it!=_tree_vars_used_double[tree_index].end();it++)
     _tree_vars_double[tree_index][*it] = -999;
 
-  for (it= _tree_vars_used_float[tree_index].begin();it!=_tree_vars_used_float[tree_index].end();it++)    
+  for (it= _tree_vars_used_float[tree_index].begin();it!=_tree_vars_used_float[tree_index].end();it++)
     _tree_vars_float[tree_index][*it] = -999;
 
 
-  for (it= _tree_vars_used_int_vector[tree_index].begin();it!=_tree_vars_used_int_vector[tree_index].end();it++)    
+  for (it= _tree_vars_used_int_vector[tree_index].begin();it!=_tree_vars_used_int_vector[tree_index].end();it++)
     _tree_vars_int_vector[tree_index][*it]->Ini(-999);
 
-  for (it= _tree_vars_used_float_vector[tree_index].begin();it!=_tree_vars_used_float_vector[tree_index].end();it++)    
+  for (it= _tree_vars_used_float_vector[tree_index].begin();it!=_tree_vars_used_float_vector[tree_index].end();it++)
     _tree_vars_float_vector[tree_index][*it]->Ini(-999);
 
-  for (it= _tree_vars_used_double_vector[tree_index].begin();it!=_tree_vars_used_double_vector[tree_index].end();it++)    
+  for (it= _tree_vars_used_double_vector[tree_index].begin();it!=_tree_vars_used_double_vector[tree_index].end();it++)
     _tree_vars_double_vector[tree_index][*it]->Ini(-999);
 
 
-  for (it= _tree_vars_used_int_matrix[tree_index].begin();it!=_tree_vars_used_int_matrix[tree_index].end();it++)    
+  for (it= _tree_vars_used_int_matrix[tree_index].begin();it!=_tree_vars_used_int_matrix[tree_index].end();it++)
     _tree_vars_int_matrix[tree_index][*it]->Ini(-999);
 
-  for (it= _tree_vars_used_float_matrix[tree_index].begin();it!=_tree_vars_used_float_matrix[tree_index].end();it++)    
+  for (it= _tree_vars_used_float_matrix[tree_index].begin();it!=_tree_vars_used_float_matrix[tree_index].end();it++)
     _tree_vars_float_matrix[tree_index][*it]->Ini(-999);
 
-  for (it= _tree_vars_used_double_matrix[tree_index].begin();it!=_tree_vars_used_double_matrix[tree_index].end();it++)    
+  for (it= _tree_vars_used_double_matrix[tree_index].begin();it!=_tree_vars_used_double_matrix[tree_index].end();it++)
     _tree_vars_double_matrix[tree_index][*it]->Ini(-999);
 
 
-  for (it= _tree_vars_used_int_3Dmatrix[tree_index].begin();it!=_tree_vars_used_int_3Dmatrix[tree_index].end();it++)    
+  for (it= _tree_vars_used_int_3Dmatrix[tree_index].begin();it!=_tree_vars_used_int_3Dmatrix[tree_index].end();it++)
     _tree_vars_int_3Dmatrix[tree_index][*it]->Ini(-999);
 
-  for (it= _tree_vars_used_float_3Dmatrix[tree_index].begin();it!=_tree_vars_used_float_3Dmatrix[tree_index].end();it++)    
+  for (it= _tree_vars_used_float_3Dmatrix[tree_index].begin();it!=_tree_vars_used_float_3Dmatrix[tree_index].end();it++)
     _tree_vars_float_3Dmatrix[tree_index][*it]->Ini(-999);
 
-  for (it= _tree_vars_used_double_3Dmatrix[tree_index].begin();it!=_tree_vars_used_double_3Dmatrix[tree_index].end();it++)    
+  for (it= _tree_vars_used_double_3Dmatrix[tree_index].begin();it!=_tree_vars_used_double_3Dmatrix[tree_index].end();it++)
     _tree_vars_double_3Dmatrix[tree_index][*it]->Ini(-999);
 
 }
@@ -389,7 +397,121 @@ void OutputManager::InitializeTree(Int_t tree_index, bool iniVars){
 void OutputManager::Finalize(){
 //********************************************************************
 
-  // this function is called at the end of each event
+  // this function is called at the end of the analysis (after all events processed)
+
+  // Write event skim file if we have events to write
+  // Events can be collected either via StoreSurvivingEvents or via TruthPDGForSkim
+  bool shouldWriteSkim = (_storeSurvivingEvents || _truthPDGToCheck >= 0) && !_survivingEvents.empty();
+
+  if (shouldWriteSkim) {
+    // Generate output filename: replace .root with _skim.txt or append _skim.txt
+    std::string skimFileName = _outputFileName;
+    size_t pos = skimFileName.find_last_of(".");
+    if (pos != std::string::npos && skimFileName.substr(pos) == ".root") {
+      skimFileName = skimFileName.substr(0, pos) + "_skim.txt";
+    } else {
+      skimFileName += "_skim.txt";
+    }
+
+    // Sort events by run, then subrun, then event
+    std::sort(_survivingEvents.begin(), _survivingEvents.end(),
+              [](const std::tuple<Int_t, Int_t, Int_t>& a, const std::tuple<Int_t, Int_t, Int_t>& b) {
+                if (std::get<0>(a) != std::get<0>(b)) return std::get<0>(a) < std::get<0>(b);
+                if (std::get<1>(a) != std::get<1>(b)) return std::get<1>(a) < std::get<1>(b);
+                return std::get<2>(a) < std::get<2>(b);
+              });
+
+    // Write to file
+    std::ofstream outFile(skimFileName.c_str());
+    if (outFile.is_open()) {
+      for (const auto& event : _survivingEvents) {
+        outFile << std::get<0>(event) << " "
+                << std::get<1>(event) << " "
+                << std::get<2>(event) << std::endl;
+      }
+      outFile.close();
+      std::cout << "[OutputManager] Wrote " << _survivingEvents.size()
+                << " events to skim file: " << skimFileName << std::endl;
+    } else {
+      std::cerr << "[OutputManager] ERROR: Could not open skim file for writing: "
+                << skimFileName << std::endl;
+    }
+  } else if (_storeSurvivingEvents || _truthPDGToCheck >= 0) {
+    // Feature is enabled but no events were collected
+    std::cout << "[OutputManager] Event skim file enabled but no events were collected." << std::endl;
+  }
+
+}
+
+//********************************************************************
+void OutputManager::InitializeEventSkim(bool storeEvents, Int_t truthPDG){
+//********************************************************************
+
+  _storeSurvivingEvents = storeEvents;
+  _truthPDGToCheck = truthPDG;
+  _survivingEvents.clear();
+
+  if (_storeSurvivingEvents) {
+    std::cout << "[OutputManager] Event skim file enabled";
+    if (_truthPDGToCheck >= 0) {
+      std::cout << " (also storing events with true PDG=" << _truthPDGToCheck << ")";
+    }
+    std::cout << std::endl;
+  } else if (_truthPDGToCheck >= 0) {
+    std::cout << "[OutputManager] Event skim file enabled (storing events with true PDG="
+              << _truthPDGToCheck << " only)" << std::endl;
+  } else {
+    std::cout << "[OutputManager] Event skim file disabled" << std::endl;
+  }
+
+}
+
+//********************************************************************
+void OutputManager::AddSurvivingEvent(Int_t run, Int_t subrun, Int_t event){
+//********************************************************************
+
+  _survivingEvents.push_back(std::make_tuple(run, subrun, event));
+
+}
+
+//********************************************************************
+void OutputManager::CheckAndAddEvent(AnaEventB& event, bool eventPassed){
+//********************************************************************
+
+  // If neither storeSurvivingEvents nor truthPDG matching is enabled, return early
+  if (!_storeSurvivingEvents && _truthPDGToCheck < 0) return;
+
+  if (!event.EventInfo) return;  // Need event info to get run/subrun/event
+
+  bool shouldAdd = false;
+  bool addedByPass = false;
+  bool addedByTruth = false;
+
+  // Add if event passed selection (only if StoreSurvivingEvents is enabled)
+  if (_storeSurvivingEvents && eventPassed) {
+    shouldAdd = true;
+    addedByPass = true;
+  }
+  // Check for truth PDG if enabled (works independently of StoreSurvivingEvents)
+  if (_truthPDGToCheck >= 0) {
+    // Check if event contains a true particle with matching PDG
+    if (event.TrueParticles && event.nTrueParticles > 0) {
+      for (int i = 0; i < event.nTrueParticles; i++) {
+        if (event.TrueParticles[i]) {
+          Int_t pdg = event.TrueParticles[i]->PDG;
+          if (abs(pdg) == abs(_truthPDGToCheck)) {
+            shouldAdd = true;
+            addedByTruth = true;
+            break;
+          }
+        }
+      }
+    }
+  }
+
+  if (shouldAdd) {
+    AddSurvivingEvent(event.EventInfo->Run, event.EventInfo->SubRun, event.EventInfo->Event);
+  }
 
 }
 
@@ -407,9 +529,9 @@ bool OutputManager::CheckCounterType(Int_t counter_index, Int_t indx, Int_t var_
 
   // check whether the counter has a fix size or not
   bool correct=true;
-  if (indx==-1){ 
+  if (indx==-1){
     if(_tree_vars_counter_size[_current_tree][counter_index] > 0){
-      std::cout << "Counter '" << GetCounterName(counter_index) << "' has a fix size = " 
+      std::cout << "Counter '" << GetCounterName(counter_index) << "' has a fix size = "
 		<<  _tree_vars_counter_size[_current_tree][counter_index]
 		<< ". Index must be specified !!!" << std::endl;
       correct=false;
@@ -421,10 +543,10 @@ bool OutputManager::CheckCounterType(Int_t counter_index, Int_t indx, Int_t var_
       correct=false;
     }
     if (indx > _tree_vars_counter_size[_current_tree][counter_index]){
-      std::cout << "Requested index " << indx <<  " for variable '" << GetVarName(var_index) 
+      std::cout << "Requested index " << indx <<  " for variable '" << GetVarName(var_index)
 		<< "' bigger than fix counter size " << _tree_vars_counter_size[_current_tree][counter_index] << " !!!" << std::endl;
       correct =false;
-    }    
+    }
   }
 
   return correct;
@@ -440,23 +562,23 @@ bool OutputManager::CheckCounterType(Int_t counter_index, Int_t indx, Int_t var_
   if (counter_name!=""){
     // Add an integer variable for the counter and initialize it to 0
     AddCounter(tree_name,counter_name,0);
-    
+
     // Associate the counter to the variable
-    _tree_vars_vector_counter[tree_name][var_name]=counter_name;  
-    
+    _tree_vars_vector_counter[tree_name][var_name]=counter_name;
+
     // Give a fix value to the counter if requested
-    _tree_vars_counter_size[tree_name][counter_name]=0;        
+    _tree_vars_counter_size[tree_name][counter_name]=0;
     if (size>0)
-      _tree_vars_counter_size[tree_name][counter_name]=size;         
+      _tree_vars_counter_size[tree_name][counter_name]=size;
   }
   else{
     // Associate the counter to the variable
-    _tree_vars_vector_counter[tree_name][var_name]=var_name;  
-    
+    _tree_vars_vector_counter[tree_name][var_name]=var_name;
+
     // Give a fix value to the counter if requested
-    _tree_vars_counter_size[tree_name][var_name]=0;        
+    _tree_vars_counter_size[tree_name][var_name]=0;
     if (size>0)
-      _tree_vars_counter_size[tree_name][var_name]=size;         
+      _tree_vars_counter_size[tree_name][var_name]=size;
   }
 }
 */
@@ -464,7 +586,7 @@ bool OutputManager::CheckCounterType(Int_t counter_index, Int_t indx, Int_t var_
 void OutputManager::ResizeCounter(Int_t counter_index, Int_t size){
 //********************************************************************
 
-  for (UInt_t i= 0; i<_trees_indices.size();i++){    
+  for (UInt_t i= 0; i<_trees_indices.size();i++){
     ResizeCounter(_trees_indices[i],counter_index,size);
   }
 }
@@ -482,7 +604,7 @@ void OutputManager::ResizeCounter(Int_t tree_index, Int_t counter_index, Int_t s
   // Change the size of the counter
   _tree_vars_counter_size[tree_index][counter_index]=size;
 
-  _tree_vars_counter[tree_index][counter_index]=size;	
+  _tree_vars_counter[tree_index][counter_index]=size;
 
   // Initialize all variables using this counter
   InitializeCounter(tree_index, counter_index);
@@ -573,8 +695,8 @@ bool OutputManager::ValidateVarNameAndIndex(Int_t tree_index, Int_t var_index, c
   }
 
   if (_tree_vars_all_vars[tree_index][var_index]!="") {
-    std::cerr << "ERROR: The tree '" << _trees[tree_index]->GetName() << "' already contains a variable with index " << var_index 
-              << " and a different name '" << GetVarName(tree_index, var_index)   
+    std::cerr << "ERROR: The tree '" << _trees[tree_index]->GetName() << "' already contains a variable with index " << var_index
+              << " and a different name '" << GetVarName(tree_index, var_index)
               << "' - please use a different index for variable '" << var_name << "'" << std::endl;
     std::cerr << "Program will now exit, to save you from having to solve a nasty bug later..." << std::endl;
     exit(1);
@@ -589,22 +711,22 @@ bool OutputManager::ValidateVarNameAndIndex(Int_t tree_index, Int_t var_index, c
 void OutputManager::InitializeCounter(Int_t counter_index){
 //********************************************************************
 
-  for (UInt_t i= 0; i<_trees_indices.size();i++){    
+  for (UInt_t i= 0; i<_trees_indices.size();i++){
     InitializeCounter(_trees_indices[i], counter_index);
-  }    
+  }
 }
 
 //********************************************************************
 void OutputManager::InitializeCounter(Int_t tree_index, Int_t counter_index){
 //********************************************************************
-  
+
   if (_tree_vars_counter_size[tree_index][counter_index] == -1) return;
 
   // check if the counter has a fixed value
   if (_tree_vars_counter_size[tree_index][counter_index] > 0) return;
-  
+
   // Reset the counter to 0
-  _tree_vars_counter[tree_index][counter_index]=0;	
+  _tree_vars_counter[tree_index][counter_index]=0;
 
 }
 
@@ -614,10 +736,10 @@ void OutputManager::InitializeVar(Int_t index, Double_t ini){
 
   // Initialise int and double variables to the value ini
 
-  for (UInt_t i= 0; i<_trees_indices.size();i++){    
+  for (UInt_t i= 0; i<_trees_indices.size();i++){
     Int_t tree_index = _trees_indices[i];
     if (_tree_vars_int[tree_index][index]!=-1){
-      _tree_vars_int[tree_index][index]=(Int_t)ini;	
+      _tree_vars_int[tree_index][index]=(Int_t)ini;
     }
     else if (_tree_vars_float[tree_index][index]!=-1){
       _tree_vars_float[tree_index][index]=(Float_t)ini;
@@ -638,7 +760,7 @@ void OutputManager::InitializeVectorVar(Int_t index, Double_t ini){
   // Initialise int and Double_t analysis variables to the value ini
   /*
   std::map< std::string, TTree* >::iterator cit;
-  for (cit= GetTrees().begin();cit!=GetTrees().end();cit++){    
+  for (cit= GetTrees().begin();cit!=GetTrees().end();cit++){
     std::string tree_name = cit->first;
 
     // Get the counter corresponding to this vector variable
@@ -647,17 +769,17 @@ void OutputManager::InitializeVectorVar(Int_t index, Double_t ini){
     if (_tree_vars_counter_size[_current_tree][name]>0){
       if (_tree_vars_int_vector_var[tree_name].find(name)!=_tree_vars_int_vector_var[tree_name].end()){
 	for (int i=0;i<_tree_vars_counter_size[_current_tree][name];i++){
-	  _tree_vars_int_vector_var[tree_name][name]->Fill(i,(Int_t)ini);  
+	  _tree_vars_int_vector_var[tree_name][name]->Fill(i,(Int_t)ini);
 	}
-      }      
+      }
       else if (_tree_vars_float_vector_var[tree_name].find(name)!=_tree_vars_float_vector_var[tree_name].end()){
 	for (int i=0;i<_tree_vars_counter_size[_current_tree][name];i++){
-	  _tree_vars_float_vector_var[tree_name][name]->Fill(i,(Float_t)ini);	  
+	  _tree_vars_float_vector_var[tree_name][name]->Fill(i,(Float_t)ini);
 	}
       }
       else if (_tree_vars_double_vector_var[tree_name].find(name)!=_tree_vars_double_vector_var[tree_name].end()){
 	for (int i=0;i<_tree_vars_counter_size[_current_tree][name];i++){
-	  _tree_vars_double_vector_var[tree_name][name]->Fill(i,(Double_t)ini);	  
+	  _tree_vars_double_vector_var[tree_name][name]->Fill(i,(Double_t)ini);
 	}
       }
     }
@@ -673,12 +795,12 @@ void OutputManager::InitializeMatrixVar(Int_t index, Double_t ini){
   // Initialise int and double analysis variables to the value ini
   /*
   std::map< std::string, TTree* >::iterator cit;
-  for (cit= GetTrees().begin();cit!=GetTrees().end();cit++){    
+  for (cit= GetTrees().begin();cit!=GetTrees().end();cit++){
     std::string tree_name = cit->first;
     if (_tree_vars_int_matrix_var[tree_name].find(name)!=_tree_vars_int_matrix_var[tree_name].end()){
       for (unsigned int i=0;i<_tree_vars_int_matrix_var[tree_name][name]->size();i++){
 	for (unsigned int j=0;j<(*_tree_vars_int_matrix_var[tree_name][name])[i].size();j++){
-	  (*(_tree_vars_int_matrix_var[tree_name][name]))[i][j]=(Float_t)ini; 
+	  (*(_tree_vars_int_matrix_var[tree_name][name]))[i][j]=(Float_t)ini;
 	}
       }
     }
@@ -686,8 +808,8 @@ void OutputManager::InitializeMatrixVar(Int_t index, Double_t ini){
     else if (_tree_vars_double_matrix_var[tree_name].find(name)!=_tree_vars_double_matrix_var[tree_name].end()){
       for (unsigned int i=0;i<_tree_vars_double_matrix_var[tree_name][name]->size();i++){
 	for (unsigned int j=0;j<(*_tree_vars_double_matrix_var[tree_name][name])[i].size();j++){
-	  (*(_tree_vars_double_matrix_var[tree_name][name]))[i][j]=(Double_t)ini; 
-	}    	
+	  (*(_tree_vars_double_matrix_var[tree_name][name]))[i][j]=(Double_t)ini;
+	}
       }
     }
 
@@ -712,13 +834,13 @@ void OutputManager::InitializeAnalysisVectorVar(Int_t index, Double_t ini){
 
 //********************************************************************
 void OutputManager::FillTree(Int_t tree_index){
-//********************************************************************  
+//********************************************************************
 
   if(_file)
     _file->cd();
   if (GetTree(tree_index))
-    GetTree(tree_index)->Fill();  
-  
+    GetTree(tree_index)->Fill();
+
 }
 
 //********************************************************************
@@ -728,6 +850,9 @@ bool OutputManager::OpenOutputFile(const std::string& file){
   if (_file) delete _file;
 
   _file = new TFile(file.c_str(),"NEW");
+
+  // Store the output filename for later use in generating skim file
+  _outputFileName = file;
 
   return !_file->IsZombie();
 }
@@ -744,7 +869,7 @@ void OutputManager::CloseOutputFile(){
 void OutputManager::WriteTree(const std::string& file, const std::string& tree_name){
 //********************************************************************
 
-  // Write a tree to a file  
+  // Write a tree to a file
   _file = new TFile(file.c_str(),"NEW");
   GetTree(tree_name.c_str())->Write();
   _file->Close();
@@ -757,10 +882,10 @@ void OutputManager::WriteTrees(const std::string& file){
   // Write all trees to a file
   _file = new TFile(file.c_str(),"NEW");
 
-  for (UInt_t i= 0; i<_trees_indices.size();i++){    
+  for (UInt_t i= 0; i<_trees_indices.size();i++){
     GetTree(_trees_indices[i])->Write();
   }
-  _file->Close();  
+  _file->Close();
 }
 
 //********************************************************************
@@ -777,7 +902,7 @@ std::string OutputManager::GetString(int a){
 std::string OutputManager::GetSize(const std::string& counter_name, unsigned int size){
 //********************************************************************
 
-  std::string ssize=counter_name;  
+  std::string ssize=counter_name;
   if (ssize=="")
     ssize = GetString(size);
 
@@ -790,7 +915,7 @@ void OutputManager::FillMicroTrees(){
 
   // Number of toy experiments
   FillVar(NTOYS, (Int_t)GetNToys());
-  
+
   /*
   Float_t total=0;
   for (UInt_t i=0;i<GetNToys();i++){
@@ -808,7 +933,7 @@ void OutputManager::FillMicroTrees(){
     FillVectorVar(toy_weight, w, i);
 
   // Fill the tree
-  FillTree();  
+  FillTree();
 }
 
 
@@ -819,7 +944,7 @@ void OutputManager::SetNToys(Int_t tree_index, Int_t nana){
   if(HasCounter(tree_index, NTOYS))
     ResizeCounter(tree_index, NTOYS,nana);
   else
-    AddCounter(tree_index,NTOYS,"NTOYS",nana);	
+    AddCounter(tree_index,NTOYS,"NTOYS",nana);
 
   // Delete the variables that depend on the number of toy experiments
   DeleteVar(tree_index,toy_index);
@@ -837,13 +962,13 @@ void OutputManager::AddToyVar(Int_t index, const std::string& name, const std::s
 
   if (_single_tree_fill==-1){
     // Add a variable to all trees
-    for (UInt_t i= 0; i<_trees_indices.size();i++){    
+    for (UInt_t i= 0; i<_trees_indices.size();i++){
       Int_t tree_index = _trees_indices[i];
       if (IsSpecialTree(tree_index)) continue;
       AddVectorVar(tree_index, index, name, type,doc, NTOYS,"NTOYS", GetNToys(tree_index));
     }
   }
-  else{  
+  else{
     AddVectorVar(_single_tree_fill, index, name, type,doc, NTOYS,"NTOYS", GetNToys(_single_tree_fill));
   }
 }
@@ -861,13 +986,13 @@ void OutputManager::AddToyVectorVar(Int_t index, const std::string& name, const 
 
   if (_single_tree_fill==-1){
     // Add a variable to all trees
-    for (UInt_t i= 0; i<_trees_indices.size();i++){    
+    for (UInt_t i= 0; i<_trees_indices.size();i++){
       Int_t tree_index = _trees_indices[i];
       if (IsSpecialTree(tree_index)) continue;
       AddMatrixVar(tree_index, index, name, type,doc, NTOYS, "NTOYS",GetNToys(tree_index), size2);
     }
   }
-  else{  
+  else{
     AddMatrixVar(_single_tree_fill, index, name, type,doc, NTOYS, "NTOYS",GetNToys(_single_tree_fill), size2);
   }
 }
@@ -885,13 +1010,13 @@ void OutputManager::AddToyMatrixVar(Int_t index, const std::string& name, const 
 
   if (_single_tree_fill==-1){
     // Add a variable to all trees
-    for (UInt_t i= 0; i<_trees_indices.size();i++){    
+    for (UInt_t i= 0; i<_trees_indices.size();i++){
       Int_t tree_index = _trees_indices[i];
       if (IsSpecialTree(tree_index)) continue;
       Add3DMatrixVar(tree_index, index, name, type,doc, NTOYS, "NTOYS",GetNToys(tree_index), size2, size3);
     }
   }
-  else{  
+  else{
     Add3DMatrixVar(_single_tree_fill, index, name, type,doc, NTOYS, "NTOYS",GetNToys(_single_tree_fill), size2, size3);
   }
 }
@@ -910,20 +1035,20 @@ void OutputManager::AddVar(Int_t index, const std::string& name, const std::stri
 
   if (_single_tree_fill==-1){
     // Add a variable to all trees
-    for (UInt_t i= 0; i<_trees_indices.size();i++){    
+    for (UInt_t i= 0; i<_trees_indices.size();i++){
       Int_t tree_index = _trees_indices[i];
       if (IsSpecialTree(tree_index)) continue;
       AddVar(tree_index, index, name, type,doc, ini);
     }
   }
-  else{  
+  else{
     AddVar(_single_tree_fill, index, name, type,doc, ini);
   }
 }
 
 //********************************************************************
 void OutputManager::AddVar(Int_t tree_index, Int_t index, const std::string& name, const std::string& type, const std::string& doc, double ini){
-//********************************************************************  
+//********************************************************************
 
   ValidateVarNameAndIndex(tree_index,index,name);
 
@@ -965,13 +1090,13 @@ void OutputManager::AddVectorVar(Int_t index, const std::string& name, const std
 
   if (_single_tree_fill==-1){
     // Add a variable to all trees
-    for (UInt_t i= 0; i<_trees_indices.size();i++){    
+    for (UInt_t i= 0; i<_trees_indices.size();i++){
       Int_t tree_index = _trees_indices[i];
       if (IsSpecialTree(tree_index)) continue;
       AddVectorVar(tree_index, index, name, type,doc, counter_index, counter_name, size);
     }
   }
-  else{  
+  else{
     AddVectorVar(_single_tree_fill, index, name, type,doc, counter_index, counter_name, size);
   }
 }
@@ -983,33 +1108,33 @@ void OutputManager::AddVectorVar(Int_t tree_index, Int_t index, const std::strin
 
   ValidateVarNameAndIndex(tree_index,index,name);
 
-  std::string ssize= GetSize(counter_name,size);  
+  std::string ssize= GetSize(counter_name,size);
 
-  AddCounter(tree_index,index,counter_index,counter_name, size);	
+  AddCounter(tree_index,index,counter_index,counter_name, size);
 
   if (type=="I"){
-    _tree_vars_int_vector[tree_index][index]= new int_vector(abs(size));          
+    _tree_vars_int_vector[tree_index][index]= new int_vector(abs(size));
     _tree_vars_used_int_vector[tree_index].push_back(index);
     _tree_vars_exist_int_vector[tree_index][index]=true;
     _trees[tree_index]->Branch(name.c_str(), _tree_vars_int_vector[tree_index][index]->GetAddress(), (name+"["+ssize+"]/I").c_str());
     _trees[tree_index]->SetBranchAddress(name.c_str(), _tree_vars_int_vector[tree_index][index]->GetAddress());
   }
   else if (type=="F"){
-    _tree_vars_float_vector[tree_index][index]= new float_vector(abs(size));          
+    _tree_vars_float_vector[tree_index][index]= new float_vector(abs(size));
     _tree_vars_used_float_vector[tree_index].push_back(index);
     _tree_vars_exist_float_vector[tree_index][index]=true;
     _trees[tree_index]->Branch(name.c_str(), _tree_vars_float_vector[tree_index][index]->GetAddress(), (name+"["+ssize+"]/F").c_str());
     _trees[tree_index]->SetBranchAddress(name.c_str(), _tree_vars_float_vector[tree_index][index]->GetAddress());
   }
   else if (type=="D"){
-    _tree_vars_double_vector[tree_index][index]= new double_vector(abs(size));          
+    _tree_vars_double_vector[tree_index][index]= new double_vector(abs(size));
     _tree_vars_used_double_vector[tree_index].push_back(index);
     _tree_vars_exist_double_vector[tree_index][index]=true;
     _trees[tree_index]->Branch(name.c_str(), _tree_vars_double_vector[tree_index][index]->GetAddress(), (name+"["+ssize+"]/D").c_str());
     _trees[tree_index]->SetBranchAddress(name.c_str(), _tree_vars_double_vector[tree_index][index]->GetAddress());
   }
   else if (type=="C"){
-    _tree_vars_char_vector[tree_index][index]= new char_vector(abs(size));          
+    _tree_vars_char_vector[tree_index][index]= new char_vector(abs(size));
     _tree_vars_used_char_vector[tree_index].push_back(index);
     _tree_vars_exist_char_vector[tree_index][index]=true;
     _trees[tree_index]->Branch(name.c_str(), _tree_vars_char_vector[tree_index][index]->GetAddress());
@@ -1025,13 +1150,13 @@ void OutputManager::AddVectorVar(Int_t index, const std::string& name, const std
 
   if (_single_tree_fill==-1){
     // Add a variable to all trees
-    for (UInt_t i= 0; i<_trees_indices.size();i++){    
+    for (UInt_t i= 0; i<_trees_indices.size();i++){
       Int_t tree_index = _trees_indices[i];
       if (IsSpecialTree(tree_index)) continue;
       AddVectorVar(tree_index, index, name, type,doc, size);
     }
   }
-  else{  
+  else{
     AddVectorVar(_single_tree_fill, index, name, type,doc, size);
   }
 }
@@ -1042,33 +1167,33 @@ void OutputManager::AddVectorVar(Int_t tree_index, Int_t index, const std::strin
 
   ValidateVarNameAndIndex(tree_index,index,name);
 
-  std::string ssize= GetSize("",size);  
+  std::string ssize= GetSize("",size);
 
-  AddCounter(tree_index,index,-1,"", size);	
+  AddCounter(tree_index,index,-1,"", size);
 
   if (type=="I"){
-    _tree_vars_int_vector[tree_index][index]= new int_vector(abs(size));          
+    _tree_vars_int_vector[tree_index][index]= new int_vector(abs(size));
     _tree_vars_used_int_vector[tree_index].push_back(index);
     _tree_vars_exist_int_vector[tree_index][index]=true;
     _trees[tree_index]->Branch(name.c_str(), _tree_vars_int_vector[tree_index][index]->GetAddress(), (name+"["+ssize+"]/I").c_str());
     _trees[tree_index]->SetBranchAddress(name.c_str(), _tree_vars_int_vector[tree_index][index]->GetAddress());
   }
   else if (type=="F"){
-    _tree_vars_float_vector[tree_index][index]= new float_vector(abs(size));          
+    _tree_vars_float_vector[tree_index][index]= new float_vector(abs(size));
     _tree_vars_used_float_vector[tree_index].push_back(index);
     _tree_vars_exist_float_vector[tree_index][index]=true;
     _trees[tree_index]->Branch(name.c_str(), _tree_vars_float_vector[tree_index][index]->GetAddress(), (name+"["+ssize+"]/F").c_str());
     _trees[tree_index]->SetBranchAddress(name.c_str(), _tree_vars_float_vector[tree_index][index]->GetAddress());
   }
   else if (type=="D"){
-    _tree_vars_double_vector[tree_index][index]= new double_vector(abs(size));          
+    _tree_vars_double_vector[tree_index][index]= new double_vector(abs(size));
     _tree_vars_used_double_vector[tree_index].push_back(index);
     _tree_vars_exist_double_vector[tree_index][index]=true;
     _trees[tree_index]->Branch(name.c_str(), _tree_vars_double_vector[tree_index][index]->GetAddress(), (name+"["+ssize+"]/D").c_str());
     _trees[tree_index]->SetBranchAddress(name.c_str(), _tree_vars_double_vector[tree_index][index]->GetAddress());
   }
   else if (type=="C"){
-    _tree_vars_char_vector[tree_index][index]= new char_vector(abs(size));          
+    _tree_vars_char_vector[tree_index][index]= new char_vector(abs(size));
     _tree_vars_used_char_vector[tree_index].push_back(index);
     _tree_vars_exist_char_vector[tree_index][index]=true;
     _trees[tree_index]->Branch(name.c_str(), _tree_vars_char_vector[tree_index][index]->GetAddress());
@@ -1084,13 +1209,13 @@ void OutputManager::AddMatrixVar(Int_t index, const std::string& name, const std
 
   if (_single_tree_fill==-1){
     // Add a variable to all trees
-    for (UInt_t i= 0; i<_trees_indices.size();i++){    
+    for (UInt_t i= 0; i<_trees_indices.size();i++){
       Int_t tree_index = _trees_indices[i];
       if (IsSpecialTree(tree_index)) continue;
       AddMatrixVar(tree_index, index, name, type,doc, counter_index, counter_name, size1, size2);
     }
   }
-  else{  
+  else{
     AddMatrixVar(_single_tree_fill, index, name, type,doc, counter_index, counter_name, size1, size2);
   }
 }
@@ -1101,33 +1226,33 @@ void OutputManager::AddMatrixVar(Int_t tree_index, Int_t index, const std::strin
 
   ValidateVarNameAndIndex(tree_index,index,name);
 
-  std::string ssize1= GetSize(counter_name,size1);  
-  std::string ssize2= GetSize("",size2);  
-  AddCounter(tree_index,index,counter_index,counter_name, size1);	
-  //  AddCounter(tree_index,index,-1,"", size2);	
+  std::string ssize1= GetSize(counter_name,size1);
+  std::string ssize2= GetSize("",size2);
+  AddCounter(tree_index,index,counter_index,counter_name, size1);
+  //  AddCounter(tree_index,index,-1,"", size2);
   if (type=="I"){
-    _tree_vars_int_matrix[tree_index][index]= new int_matrix(abs(size1),size2);  
+    _tree_vars_int_matrix[tree_index][index]= new int_matrix(abs(size1),size2);
     _tree_vars_used_int_matrix[tree_index].push_back(index);
     _tree_vars_exist_int_matrix[tree_index][index]=true;
     _trees[tree_index]->Branch(name.c_str(), _tree_vars_int_matrix[tree_index][index]->GetAddress(), (name+"["+ssize1+"]["+ssize2+"]/I").c_str());
     _trees[tree_index]->SetBranchAddress(name.c_str(), _tree_vars_int_matrix[tree_index][index]->GetAddress());
   }
   else if (type=="D"){
-    _tree_vars_double_matrix[tree_index][index]= new double_matrix(abs(size1),size2);  
+    _tree_vars_double_matrix[tree_index][index]= new double_matrix(abs(size1),size2);
     _tree_vars_used_double_matrix[tree_index].push_back(index);
     _tree_vars_exist_double_matrix[tree_index][index]=true;
     _trees[tree_index]->Branch(name.c_str(), _tree_vars_double_matrix[tree_index][index]->GetAddress(), (name+"["+ssize1+"]["+ssize2+"]/D").c_str());
     _trees[tree_index]->SetBranchAddress(name.c_str(), _tree_vars_double_matrix[tree_index][index]->GetAddress());
-  } 
+  }
   else if (type=="F"){
-    _tree_vars_float_matrix[tree_index][index]= new float_matrix(abs(size1),size2);  
+    _tree_vars_float_matrix[tree_index][index]= new float_matrix(abs(size1),size2);
     _tree_vars_used_float_matrix[tree_index].push_back(index);
     _tree_vars_exist_float_matrix[tree_index][index]=true;
     _trees[tree_index]->Branch(name.c_str(), _tree_vars_float_matrix[tree_index][index]->GetAddress(), (name+"["+ssize1+"]["+ssize2+"]/F").c_str());
     _trees[tree_index]->SetBranchAddress(name.c_str(), _tree_vars_float_matrix[tree_index][index]->GetAddress());
-  } 
+  }
   else if (type=="C"){
-    _tree_vars_char_matrix[tree_index][index]= new char_matrix(abs(size1),size2);  
+    _tree_vars_char_matrix[tree_index][index]= new char_matrix(abs(size1),size2);
     _tree_vars_used_char_matrix[tree_index].push_back(index);
     _tree_vars_exist_char_matrix[tree_index][index]=true;
     _trees[tree_index]->Branch(name.c_str(), _tree_vars_char_matrix[tree_index][index]->GetAddress());
@@ -1143,13 +1268,13 @@ void OutputManager::AddMatrixVar(Int_t index, const std::string& name, const std
 
   if (_single_tree_fill==-1){
     // Add a variable to all trees
-    for (UInt_t i= 0; i<_trees_indices.size();i++){    
+    for (UInt_t i= 0; i<_trees_indices.size();i++){
       Int_t tree_index = _trees_indices[i];
       if (IsSpecialTree(tree_index)) continue;
       AddMatrixVar(tree_index, index, name, type,doc, size1, size2);
     }
   }
-  else{  
+  else{
     AddMatrixVar(_single_tree_fill, index, name, type,doc, size1, size2);
   }
 }
@@ -1160,33 +1285,33 @@ void OutputManager::AddMatrixVar(Int_t tree_index, Int_t index, const std::strin
 
   ValidateVarNameAndIndex(tree_index,index,name);
 
-  std::string ssize1= GetSize("",size1);  
-  std::string ssize2= GetSize("",size2);  
-  AddCounter(tree_index,index,-1,"", size1);	
+  std::string ssize1= GetSize("",size1);
+  std::string ssize2= GetSize("",size2);
+  AddCounter(tree_index,index,-1,"", size1);
 
   if (type=="I"){
-    _tree_vars_int_matrix[tree_index][index]= new int_matrix(abs(size1),size2);  
+    _tree_vars_int_matrix[tree_index][index]= new int_matrix(abs(size1),size2);
     _tree_vars_used_int_matrix[tree_index].push_back(index);
     _tree_vars_exist_int_matrix[tree_index][index]=true;
     _trees[tree_index]->Branch(name.c_str(), _tree_vars_int_matrix[tree_index][index]->GetAddress(), (name+"["+ssize1+"]["+ssize2+"]/I").c_str());
     _trees[tree_index]->SetBranchAddress(name.c_str(), _tree_vars_int_matrix[tree_index][index]->GetAddress());
   }
   else if (type=="D"){
-    _tree_vars_double_matrix[tree_index][index]= new double_matrix(abs(size1),size2);  
+    _tree_vars_double_matrix[tree_index][index]= new double_matrix(abs(size1),size2);
     _tree_vars_used_double_matrix[tree_index].push_back(index);
     _tree_vars_exist_double_matrix[tree_index][index]=true;
     _trees[tree_index]->Branch(name.c_str(), _tree_vars_double_matrix[tree_index][index]->GetAddress(), (name+"["+ssize1+"]["+ssize2+"]/D").c_str());
     _trees[tree_index]->SetBranchAddress(name.c_str(), _tree_vars_double_matrix[tree_index][index]->GetAddress());
-  } 
+  }
   else if (type=="F"){
-    _tree_vars_float_matrix[tree_index][index]= new float_matrix(abs(size1),size2);  
+    _tree_vars_float_matrix[tree_index][index]= new float_matrix(abs(size1),size2);
     _tree_vars_used_float_matrix[tree_index].push_back(index);
     _tree_vars_exist_float_matrix[tree_index][index]=true;
     _trees[tree_index]->Branch(name.c_str(), _tree_vars_float_matrix[tree_index][index]->GetAddress(), (name+"["+ssize1+"]["+ssize2+"]/F").c_str());
     _trees[tree_index]->SetBranchAddress(name.c_str(), _tree_vars_float_matrix[tree_index][index]->GetAddress());
-  } 
+  }
   else if (type=="C"){
-    _tree_vars_char_matrix[tree_index][index]= new char_matrix(abs(size1),size2);  
+    _tree_vars_char_matrix[tree_index][index]= new char_matrix(abs(size1),size2);
     _tree_vars_used_char_matrix[tree_index].push_back(index);
     _tree_vars_exist_char_matrix[tree_index][index]=true;
     _trees[tree_index]->Branch(name.c_str(), _tree_vars_char_matrix[tree_index][index]->GetAddress());
@@ -1203,13 +1328,13 @@ void OutputManager::Add3DMatrixVar(Int_t index, const std::string& name, const s
 
   if (_single_tree_fill==-1){
     // Add a variable to all trees
-    for (UInt_t i= 0; i<_trees_indices.size();i++){    
+    for (UInt_t i= 0; i<_trees_indices.size();i++){
       Int_t tree_index = _trees_indices[i];
       if (IsSpecialTree(tree_index)) continue;
       Add3DMatrixVar(tree_index, index, name, type,doc, counter_index, counter_name, size1, size2, size3);
     }
   }
-  else{  
+  else{
     Add3DMatrixVar(_single_tree_fill, index, name, type,doc, counter_index, counter_name, size1, size2, size3);
   }
 }
@@ -1220,33 +1345,33 @@ void OutputManager::Add3DMatrixVar(Int_t tree_index, Int_t index, const std::str
 
   ValidateVarNameAndIndex(tree_index,index,name);
 
-  std::string ssize1= GetSize(counter_name,size1);  
-  std::string ssize2= GetSize("",size2);  
-  std::string ssize3= GetSize("",size3);  
+  std::string ssize1= GetSize(counter_name,size1);
+  std::string ssize2= GetSize("",size2);
+  std::string ssize3= GetSize("",size3);
 
-  AddCounter(tree_index,index,counter_index,counter_name, size1);	
-  
+  AddCounter(tree_index,index,counter_index,counter_name, size1);
+
   if (type=="I"){
-    _tree_vars_int_3Dmatrix[tree_index][index]= new int_3Dmatrix(abs(size1),size2,size3);  
+    _tree_vars_int_3Dmatrix[tree_index][index]= new int_3Dmatrix(abs(size1),size2,size3);
     _tree_vars_used_int_3Dmatrix[tree_index].push_back(index);
     _tree_vars_exist_int_3Dmatrix[tree_index][index]=true;
     _trees[tree_index]->Branch(name.c_str(), _tree_vars_int_3Dmatrix[tree_index][index]->GetAddress(), (name+"["+ssize1+"]["+ssize2+"]["+ssize3+"]/I").c_str());
     _trees[tree_index]->SetBranchAddress(name.c_str(), _tree_vars_int_3Dmatrix[tree_index][index]->GetAddress());
   }
   else if (type=="D"){
-    _tree_vars_double_3Dmatrix[tree_index][index]= new double_3Dmatrix(abs(size1),size2,size3);  
+    _tree_vars_double_3Dmatrix[tree_index][index]= new double_3Dmatrix(abs(size1),size2,size3);
     _tree_vars_used_double_3Dmatrix[tree_index].push_back(index);
     _tree_vars_exist_double_3Dmatrix[tree_index][index]=true;
     _trees[tree_index]->Branch(name.c_str(), _tree_vars_double_3Dmatrix[tree_index][index]->GetAddress(), (name+"["+ssize1+"]["+ssize2+"]["+ssize3+"]/D").c_str());
     _trees[tree_index]->SetBranchAddress(name.c_str(), _tree_vars_double_3Dmatrix[tree_index][index]->GetAddress());
-  } 
+  }
   else if (type=="F"){
-    _tree_vars_float_3Dmatrix[tree_index][index]= new float_3Dmatrix(abs(size1),size2,size3);  
+    _tree_vars_float_3Dmatrix[tree_index][index]= new float_3Dmatrix(abs(size1),size2,size3);
     _tree_vars_used_float_3Dmatrix[tree_index].push_back(index);
     _tree_vars_exist_float_3Dmatrix[tree_index][index]=true;
     _trees[tree_index]->Branch(name.c_str(), _tree_vars_float_3Dmatrix[tree_index][index]->GetAddress(), (name+"["+ssize1+"]["+ssize2+"]["+ssize3+"]/F").c_str());
     _trees[tree_index]->SetBranchAddress(name.c_str(), _tree_vars_float_3Dmatrix[tree_index][index]->GetAddress());
-  } 
+  }
 
   docstrings().DocumentVar(GetTreeName(tree_index), name, docstring, type, size1, counter_name, size2, "", size3, "");
 }
@@ -1259,13 +1384,13 @@ void OutputManager::AddCounter(Int_t tree_index, Int_t counter_index, const std:
 
 
   _tree_vars_counter[tree_index][counter_index]=0;
-  _tree_vars_counter_size[tree_index][counter_index]=0;        
+  _tree_vars_counter_size[tree_index][counter_index]=0;
 
   // Give a fix value to the counter if requested
   if (size>0){
 
     _tree_vars_counter[tree_index][counter_index]=size;
-    _tree_vars_counter_size[tree_index][counter_index]=size;         
+    _tree_vars_counter_size[tree_index][counter_index]=size;
   }
 
   _trees[tree_index]->Branch(counter_name.c_str(), &_tree_vars_counter[tree_index][counter_index], (counter_name+"/I").c_str());
@@ -1285,24 +1410,24 @@ void OutputManager::AddCounter(Int_t tree_index, Int_t index, Int_t counter_inde
 //********************************************************************
 
   if (counter_index!=-1 && GetCounterName(counter_index)!="" && GetCounterName(counter_index) != counter_name){
-    
+
     std::cout << "OutputManager::AddCounter(). " << "Adding counter with name '" << counter_name << "' and index " << counter_index << std::endl;
     std::cout << "A counter with the same index and a different name '" << GetCounterName(counter_index) << "' already exists !!!!" << std::endl;
     std::cout << "Most likely this counter was added as a category counter in AddStandardObjectCategories. Check this call !!!!" << std::endl;
     exit(1);
   }
-    
-    
+
+
   if (counter_index==-1){
 
     _tree_vars_counter[tree_index][index]=0;
-    _tree_vars_counter_size[tree_index][index]=0;        
-    
+    _tree_vars_counter_size[tree_index][index]=0;
+
     // Give a fix value to the counter if requested
     if (size>0){
       _tree_vars_counter[tree_index][index]=size;
-      _tree_vars_counter_size[tree_index][index]=size;         
-    }    
+      _tree_vars_counter_size[tree_index][index]=size;
+    }
     _link_var_to_counter[tree_index][index]= index;
   }
   else{
@@ -1332,8 +1457,8 @@ bool OutputManager::GetFirstIndexFromCounter(Int_t index, Int_t& indx1){
 void OutputManager::FillVar(Int_t index,  Float_t var){
 //*********************<***********************************************
 
-  if (!_tree_vars_exist_float[_current_tree][index]) WrongVariableType(index, "","Float");  
-  _tree_vars_float[_current_tree][index]= var;  
+  if (!_tree_vars_exist_float[_current_tree][index]) WrongVariableType(index, "","Float");
+  _tree_vars_float[_current_tree][index]= var;
 
 }
 
@@ -1364,7 +1489,7 @@ void OutputManager::FillVar(Int_t index,  const std::string& var){
 //********************************************************************
 Float_t OutputManager::GetVarValueF(Int_t index){
 //********************************************************************
-  
+
   return _tree_vars_float[_current_tree][index];
 }
 
@@ -1387,7 +1512,7 @@ void OutputManager::FillVectorVar(Int_t index, Int_t var, Int_t indx){
 //********************************************************************
 
   if (!_tree_vars_exist_int_vector[_current_tree][index])  WrongVariableType(index, "Vector", "Int");
-  
+
   if (!GetFirstIndexFromCounter(index,indx)) return;
 
   // fill the variable
@@ -1403,7 +1528,7 @@ void OutputManager::FillVectorVarForceIndex(Int_t index, Int_t var, Int_t indx){
 //********************************************************************
 
   if (!_tree_vars_exist_int_vector[_current_tree][index])  WrongVariableType(index, "Vector", "Int");
-  
+
   // fill the variable
   try {
     (_tree_vars_int_vector[_current_tree][index])->Fill(indx,var);
@@ -1418,7 +1543,7 @@ void OutputManager::FillVectorVar(Int_t index, Float_t var, Int_t indx){
 //********************************************************************
 
   if (!_tree_vars_exist_float_vector[_current_tree][index])  WrongVariableType(index, "Vector", "Float");
-  
+
   if (!GetFirstIndexFromCounter(index,indx)) return;
 
   // fill the variable
@@ -1434,7 +1559,7 @@ void OutputManager::FillVectorVar(Int_t index, Double_t var, Int_t indx){
 //********************************************************************
 
   if (!_tree_vars_exist_double_vector[_current_tree][index])  WrongVariableType(index, "Vector", "Double");
-  
+
   if (!GetFirstIndexFromCounter(index,indx)) return;
 
   // fill the variable
@@ -1450,7 +1575,7 @@ void OutputManager::FillVectorVar(Int_t index, const std::string& var, Int_t ind
 //********************************************************************
 
   if (!_tree_vars_exist_char_vector[_current_tree][index])  WrongVariableType(index, "Vector", "Char");
-  
+
   if (!GetFirstIndexFromCounter(index,indx)) return;
 
   // fill the variable
@@ -1466,10 +1591,10 @@ void OutputManager::FillMatrixVar(Int_t index, Int_t var, Int_t indx1, Int_t ind
 //********************************************************************
 
   if (!_tree_vars_exist_int_matrix[_current_tree][index])  WrongVariableType(index, "Matrix", "Int");
-  
+
   if (!GetFirstIndexFromCounter(index,indx1)) return;
 
-  // fill the variable    
+  // fill the variable
   try {
     (_tree_vars_int_matrix[_current_tree][index])->Fill(indx1,indx2,var);
   } catch (const OutOfBounds&) {
@@ -1482,7 +1607,7 @@ void OutputManager::FillMatrixVarForceIndex(Int_t index, Int_t var, Int_t indx1,
 //********************************************************************
 
   if (!_tree_vars_exist_int_matrix[_current_tree][index])  WrongVariableType(index, "Matrix", "Int");
-  
+
   // fill the variable
   try {
     (_tree_vars_int_matrix[_current_tree][index])->Fill(indx1,indx2,var);
@@ -1496,10 +1621,10 @@ void OutputManager::FillMatrixVar(Int_t index, Float_t var, Int_t indx1, Int_t i
 //********************************************************************
 
   if (!_tree_vars_exist_float_matrix[_current_tree][index])  WrongVariableType(index, "Matrix", "Float");
-  
+
   if (!GetFirstIndexFromCounter(index,indx1)) return;
 
-  // fill the variable    
+  // fill the variable
   try {
     (_tree_vars_float_matrix[_current_tree][index])->Fill(indx1,indx2,var);
   } catch (const OutOfBounds&) {
@@ -1512,10 +1637,10 @@ void OutputManager::FillMatrixVar(Int_t index, Double_t var, Int_t indx1, Int_t 
 //********************************************************************
 
   if (!_tree_vars_exist_double_matrix[_current_tree][index])  WrongVariableType(index, "Matrix", "Double");
-  
+
   if (!GetFirstIndexFromCounter(index,indx1)) return;
 
-  // fill the variable    
+  // fill the variable
   try {
     (_tree_vars_double_matrix[_current_tree][index])->Fill(indx1,indx2,var);
   } catch (const OutOfBounds&) {
@@ -1528,10 +1653,10 @@ void OutputManager::Fill3DMatrixVar(Int_t index, Int_t var, Int_t indx1, Int_t i
 //********************************************************************
 
   if (!_tree_vars_exist_int_3Dmatrix[_current_tree][index])  WrongVariableType(index, "3DMatrix", "Int");
-  
+
   if (!GetFirstIndexFromCounter(index,indx1)) return;
 
-  // fill the variable    
+  // fill the variable
   try {
     (_tree_vars_int_3Dmatrix[_current_tree][index])->Fill(indx1,indx2,indx3,var);
   } catch (const OutOfBounds&) {
@@ -1544,7 +1669,7 @@ void OutputManager::Fill3DMatrixVarForceIndex(Int_t index, Int_t var, Int_t indx
 //********************************************************************
 
   if (!_tree_vars_exist_int_3Dmatrix[_current_tree][index])  WrongVariableType(index, "Matrix", "Int");
-  
+
   // fill the variable
   try {
     (_tree_vars_int_3Dmatrix[_current_tree][index])->Fill(indx1,indx2,indx3,var);
@@ -1558,10 +1683,10 @@ void OutputManager::Fill3DMatrixVar(Int_t index, Float_t var, Int_t indx1, Int_t
 //********************************************************************
 
   if (!_tree_vars_exist_float_3Dmatrix[_current_tree][index])  WrongVariableType(index, "3DMatrix", "Float");
-  
+
   if (!GetFirstIndexFromCounter(index,indx1)) return;
 
-  // fill the variable    
+  // fill the variable
   try {
     (_tree_vars_float_3Dmatrix[_current_tree][index])->Fill(indx1,indx2,indx3,var);
   } catch (const OutOfBounds&) {
@@ -1574,10 +1699,10 @@ void OutputManager::Fill3DMatrixVar(Int_t index, Double_t var, Int_t indx1, Int_
 //********************************************************************
 
   if (!_tree_vars_exist_double_3Dmatrix[_current_tree][index])  WrongVariableType(index, "3DMatrix", "Double");
-  
+
   if (!GetFirstIndexFromCounter(index,indx1)) return;
 
-  // fill the variable    
+  // fill the variable
   try {
     (_tree_vars_double_3Dmatrix[_current_tree][index])->Fill(indx1,indx2,indx3,var);
   } catch (const OutOfBounds&) {
@@ -1589,57 +1714,57 @@ void OutputManager::Fill3DMatrixVar(Int_t index, Double_t var, Int_t indx1, Int_
 void OutputManager::FillToyVar(Int_t index, Int_t var){
 //********************************************************************
 
-  FillVectorVar(index, var, GetToyIndex());  
+  FillVectorVar(index, var, GetToyIndex());
 }
 
 //********************************************************************
 void OutputManager::FillToyVar(Int_t index, Float_t var){
 //********************************************************************
-  FillVectorVar(index, var, GetToyIndex());  
+  FillVectorVar(index, var, GetToyIndex());
 }
 
 //********************************************************************
 void OutputManager::FillToyVar(Int_t index, Double_t var){
 //********************************************************************
-  FillVectorVar(index, var, GetToyIndex());  
+  FillVectorVar(index, var, GetToyIndex());
 }
 
 //********************************************************************
 void OutputManager::FillToyVectorVar(Int_t index, Int_t var, const Int_t comp){
-//******************************************************************** 
-  FillMatrixVar(index,var, GetToyIndex(),comp);  
+//********************************************************************
+  FillMatrixVar(index,var, GetToyIndex(),comp);
 }
 
 //********************************************************************
 void OutputManager::FillToyVectorVar(Int_t index, Float_t var, const Int_t comp){
 //********************************************************************
 
-  FillMatrixVar(index,var, GetToyIndex(),comp);  
+  FillMatrixVar(index,var, GetToyIndex(),comp);
 }
 
 //********************************************************************
 void OutputManager::FillToyVectorVar(Int_t index, Double_t var, const Int_t comp){
-//******************************************************************** 
-  FillMatrixVar(index,var, GetToyIndex(),comp);  
+//********************************************************************
+  FillMatrixVar(index,var, GetToyIndex(),comp);
 }
 
 //********************************************************************
 void OutputManager::FillToyMatrixVar(Int_t index, Int_t var, const Int_t comp1, const Int_t comp2){
-//******************************************************************** 
-  Fill3DMatrixVar(index,var, GetToyIndex(),comp1,comp2);  
+//********************************************************************
+  Fill3DMatrixVar(index,var, GetToyIndex(),comp1,comp2);
 }
 
 //********************************************************************
 void OutputManager::FillToyMatrixVar(Int_t index, Float_t var, const Int_t comp1, const Int_t comp2){
 //********************************************************************
 
-  Fill3DMatrixVar(index,var, GetToyIndex(),comp1,comp2);  
+  Fill3DMatrixVar(index,var, GetToyIndex(),comp1,comp2);
 }
 
 //********************************************************************
 void OutputManager::FillToyMatrixVar(Int_t index, Double_t var, const Int_t comp1, const Int_t comp2){
-//******************************************************************** 
-  Fill3DMatrixVar(index,var, GetToyIndex(),comp1,comp2);  
+//********************************************************************
+  Fill3DMatrixVar(index,var, GetToyIndex(),comp1,comp2);
 }
 
 //********************************************************************
@@ -1647,7 +1772,7 @@ void OutputManager::WrongVariableType(Int_t index, const std::string& dim, const
 //********************************************************************
 
   // The variable was not added to the tree
-  
+
   if (GetVarName(index)==""){
     std::cout << "ERROR in OutputManager::Fill" << dim << "Var(). Variable with index " <<  index << " has not been added to the tree !!!!" << std::endl;
     std::cout << "These are the previous and next variables: " << std::endl;
@@ -1658,7 +1783,7 @@ void OutputManager::WrongVariableType(Int_t index, const std::string& dim, const
   }
 
   // The variable has the wrong type
-  
+
   std::cout << "ERROR in OutputManager::Fill" << dim << "Var(). " << GetVarName(index) << " is not a " << type <<  " variable. !!!!" << std::endl;
   std::cout << "Please check the call to Fill" << dim << "Var(" << GetVarName(index) << ", A) in your analysis algorithm and cast the A input value if needed !!!!"  << std::endl;
   exit(1);
@@ -1670,9 +1795,9 @@ void OutputManager::DumpAllVars(){
 //********************************************************************
 
   // The variable was not added to the tree
-  
+
   for (size_t i=0;i<_tree_vars_all_vars[_current_tree].size();i++)
     if ( _tree_vars_all_vars[_current_tree][i]!="")
       std::cout << i  << ": " << _tree_vars_all_vars[_current_tree][i] << std::endl;
-  
+
 }

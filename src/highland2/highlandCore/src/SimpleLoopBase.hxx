@@ -14,7 +14,7 @@
 /// each spill.
 class SimpleLoopBase: public OutputManager {
  public :
-  
+
   SimpleLoopBase(int argc, char *argv[]);
   virtual ~SimpleLoopBase(){}
 
@@ -25,7 +25,7 @@ class SimpleLoopBase: public OutputManager {
   /// Entry point to the class, where argc and argv are the command line
   /// parameters.
   void Execute();
-  
+
  protected:
 
   /// Print the program's usage statement.
@@ -41,7 +41,7 @@ class SimpleLoopBase: public OutputManager {
 
   /// Tidy up, including closing the output file. Called after all spills have
   /// beem read.
- 
+
   virtual void Finalize();// = 0;
 
   /// Finalize each spill, including cleaning up data read from the input file.
@@ -72,6 +72,9 @@ class SimpleLoopBase: public OutputManager {
   /// Input file type. The file type is now found automatically, so this is
   /// deprecated.
   std::string _inputFileType;
+
+  /// Path to the file with the list of events to skim
+  std::string _inputSkimFileName;
 
   /// The output file name, as specified by the user.
   std::string _outputFileName;
@@ -106,6 +109,9 @@ class SimpleLoopBase: public OutputManager {
   /// Total number of entries run so far
   int _entry_count;
 
+  /// Total number of entries to be saved
+  int _entry_saved_max;
+
   HighlandInputManager _input;
 
   enum enumConfigTree_SimpleLoopBase{
@@ -116,6 +122,10 @@ class SimpleLoopBase: public OutputManager {
     OriginalFile,
     enumConfigTreeLast_SimpleLoopBase
   };
+
+ protected:
+  /// Total number of entries saved so far
+  int _entry_saved_count;
 
 };
 

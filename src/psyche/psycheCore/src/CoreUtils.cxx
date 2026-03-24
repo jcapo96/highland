@@ -5,6 +5,9 @@
 #include <iostream>
 #include <typeinfo>
 #include <unistd.h>
+#include <fstream>
+#include <set>
+#include <tuple>
 
 namespace anaUtils{
   std::string skimFileName="";
@@ -15,9 +18,9 @@ namespace anaUtils{
 //********************************************************************
 void anaUtils::ConfigureTreeBranch(TTree* tree, const char* bname, void* add, TBranch** ptr){
 //********************************************************************
-  
+
   if (!tree->FindLeaf(bname)) return;
-  tree->SetBranchAddress(bname,add,ptr);  
+  tree->SetBranchAddress(bname,add,ptr);
 }
 
 
@@ -110,7 +113,7 @@ void anaUtils::CreateArray(bool* &tgtArr, int nObj, bool ini){
         tgtArr[i] = ini;
     }
 }
- 
+
 //********************************************************************
 Float_t anaUtils::ScalarProduct(Float_t* array1, Float_t* array2, Int_t size){
 //********************************************************************
@@ -124,39 +127,38 @@ Float_t anaUtils::ScalarProduct(Float_t* array1, Float_t* array2, Int_t size){
 
 //*****************************************************************************
 bool anaUtils::CheckSkimmedEvent(Int_t sRun, Int_t sSubrun, Int_t sEvt){
-//*****************************************************************************  
+//*****************************************************************************
 
   if (skimFileName=="") return true;
-  
-  static std::ifstream inputFile(skimFileName.c_str(), std::ios::in);
-  static bool first=true;
-  static bool found=true;
-  
-  if (first){
+
+  // Load entire skim file into memory on first call (more efficient and order-independent)
+  static bool initialized = false;
+  static std::set<std::tuple<Int_t, Int_t, Int_t>> skimEvents;
+
+  if (!initialized) {
+    std::ifstream inputFile(skimFileName.c_str(), std::ios::in);
     if (!inputFile) {
       std::cerr << "Cannot open skim file '" << skimFileName << "'. Exit!" << std::endl;
       exit(0);
     }
-    first=false;
+
+    Int_t run, subrun, evt;
+    int eventCount = 0;
+    while (inputFile >> run >> subrun >> evt) {
+      skimEvents.insert(std::make_tuple(run, subrun, evt));
+      eventCount++;
+    }
+    inputFile.close();
+    initialized = true;
+
+    std::cout << "Loaded " << eventCount << " events from skim file '" << skimFileName << "'" << std::endl;
+    if (skimEvents.size() < (size_t)eventCount) {
+      std::cout << "Warning: " << (eventCount - skimEvents.size()) << " duplicate events removed" << std::endl;
+    }
   }
 
-
-  static std::string run, subrun, evt;
-  char* pEnd;
-  if (found && !breakLoop){
-    if(!(inputFile >> run >> subrun >> evt)){breakLoop=true;inputFile.close(); }
-    found=false;
-  }
-  if (sRun    == strtod(run.c_str(),     &pEnd) &&
-      sSubrun == strtod(subrun.c_str(),  &pEnd) &&
-      sEvt    == strtod(evt.c_str(),     &pEnd)){
-    found=true;
-    return true;
-  }
-  found= false;
-
-
-  return false;
+  // Fast lookup - O(log N) instead of sequential
+  return skimEvents.count(std::make_tuple(sRun, sSubrun, sEvt)) > 0;
 
 }
 
@@ -175,19 +177,19 @@ std::string anaUtils::GetSoftwareVersionFromPath(const std::string& path){
 std::string anaUtils::GetPackageNameFromProgram(const std::string& program){
 //********************************************************************
 
-  // Imagine we run all an executable (../../../numuCCAnalysis/v1r12/Darwin/RunNumuCCAnalysis.exe) from 
+  // Imagine we run all an executable (../../../numuCCAnalysis/v1r12/Darwin/RunNumuCCAnalysis.exe) from
   // another package (PWD=/hep/T2K/nd280rep/ANALYSIS/HIGHLAND2/SIFS2/highland2/numuCCMultiPiAnalysis/v1r12/cmt)
 
   char the_path[256];
 
-  // Get the current working directory 
+  // Get the current working directory
   // i.e. /hep/T2K/nd280rep/ANALYSIS/HIGHLAND2/SIFS2/highland2/numuCCMultiPiAnalysis/v1r12/cmt
   getcwd(the_path, 255);
 
-  // Add the relative path to the executable 
+  // Add the relative path to the executable
   // i.e. /hep/T2K/nd280rep/ANALYSIS/HIGHLAND2/SIFS2/highland2/numuCCMultiPiAnalysis/v1r12/cmt/../../../numuCCAnalysis/v1r12/Darwin/RunNumuCCAnalysis.exe
   strcat(the_path, "/");
-  strcat(the_path, program.c_str());  
+  strcat(the_path, program.c_str());
 
   return GetPackageNameFromPath(std::string(the_path));
 }
@@ -200,7 +202,7 @@ std::string anaUtils::GetPackageNameFromPath(const std::string& full_path){
 
   char real_path[256];
 
-  // convert into a canonical path (resolving .., env variables and symbolic links) 
+  // convert into a canonical path (resolving .., env variables and symbolic links)
   // i.e. /hep/T2K/nd280rep/ANALYSIS/HIGHLAND2/SIFS2/highland2/numuCCAnalysis/v1r12/Darwin/RunNumuCCAnalysis.exe
   realpath(full_path.c_str(), real_path);
 
@@ -211,14 +213,14 @@ std::string anaUtils::GetPackageNameFromPath(const std::string& full_path){
   // i.e. /hep/T2K/nd280rep/ANALYSIS/HIGHLAND2/SIFS2/highland2/numuCCAnalysis/v1r12
   path = path.substr(0, path.rfind(getenv("CMTCONFIG"))-1);
 
-  // Check that the next substring is a package version and not a package name 
-  // This is needed because in some configurations (i.e. jenkins validation) the package version 
+  // Check that the next substring is a package version and not a package name
+  // This is needed because in some configurations (i.e. jenkins validation) the package version
   // is not present
   std::string version = path.substr(path.find_last_of("/")+1);
 
   if (version[0]=='v' && (version[2]=='r' || version[3]=='r') &&
-      version.find("Analysis")==std::string::npos && 
-      version.find("highland")==std::string::npos && 
+      version.find("Analysis")==std::string::npos &&
+      version.find("highland")==std::string::npos &&
       version.find("psyche")  ==std::string::npos){
 
     // Get all path up to the last "/" (excluded)
@@ -240,9 +242,9 @@ std::vector<std::string> anaUtils::GetPackageHierarchy(){
 
 
   // TODO. We must identify the package corresponding to the current executable and start by that one
-  
+
   std::vector<std::string> packages;
-  
+
   std::string PACKAGE_HIERARCHY = getenv("HIGHLAND_PACKAGE_HIERARCHY");
 
   if (PACKAGE_HIERARCHY !=""){
