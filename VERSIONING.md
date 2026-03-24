@@ -9,7 +9,7 @@ Use annotated tags for production-ready reconstruction states.
 ## Rules
 - Tag only commits already merged to `master`.
 - For each `highland` tag, define the paired `highlandPD` tag used in production.
-- Record run metadata in `RUN_MANIFEST.md`.
+- Record run metadata in `RUN_MANIFEST.md` using the shared spec in `/Users/jcapo/cernbox/DUNE-IFIC/Software/HIGHLAND_NEW/RUN_FRAMEWORK.md`.
 
 ## Create and publish a tag
 ```bash

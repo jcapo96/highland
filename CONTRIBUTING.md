@@ -2,8 +2,9 @@
 
 ## Branching model
 - `master`: stable branch used for production analyses.
-- `feature/<topic>`: normal development work.
-- `hotfix/<topic>`: urgent fixes that must be released quickly.
+- `neutralKaon/<feature>`: normal neutral kaon development work.
+- `neutralKaon/hotfix/<topic>`: urgent neutral kaon fixes.
+- For coordinated changes across repositories, use the same suffix in both repos (example: `neutralKaon/eventdisplay-cleanup`).
 
 ## Commit style
 - Keep commits focused and atomic.
@@ -22,7 +23,7 @@
 
 ## Suggested local workflow
 1. `git checkout master && git pull --ff-only`
-2. `git checkout -b feature/<topic>`
+2. `git checkout -b neutralKaon/<feature>`
 3. Develop, test, and commit in small chunks.
-4. `git push -u origin feature/<topic>`
+4. `git push -u origin neutralKaon/<feature>`
 5. Open PR and merge after review/checks.
