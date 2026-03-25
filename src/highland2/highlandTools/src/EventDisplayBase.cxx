@@ -127,7 +127,7 @@ public:
     void RequestStableRedraw() {
         CameraBookmark bookmark = CaptureCameraState();
         if (gEve) {
-            gEve->Redraw3D(kFALSE);
+            gEve->Redraw3D(kTRUE);
         }
         RestoreCameraState(bookmark);
         if (fViewer) {
@@ -361,13 +361,23 @@ private:
 class TGLRulerEventHandler : public TGLEventHandler {
 public:
     TGLRulerEventHandler(TGLViewer* viewer, TRulerTool* tool)
-        : TGLEventHandler(viewer ? viewer->GetGLWidget() : nullptr, viewer), fViewer(viewer), fTool(tool) {}
+        : TGLEventHandler(viewer ? viewer->GetGLWidget() : nullptr, viewer),
+          fViewer(viewer), fTool(tool), fRetinaScale(1) {}
 
     void SetTool(TRulerTool* tool) { fTool = tool; }
+    void SetRetinaScale(Int_t s) { fRetinaScale = s; }
 
     void SetViewer(TGLViewer* viewer) {
         fViewer = viewer;
         fGLViewer = viewer;
+    }
+
+    Bool_t HandleConfigureNotify(Event_t* event) override {
+        if (fRetinaScale > 1 && event) {
+            event->fWidth  *= fRetinaScale;
+            event->fHeight *= fRetinaScale;
+        }
+        return TGLEventHandler::HandleConfigureNotify(event);
     }
 
     Bool_t HandleButton(Event_t* event) override {
@@ -377,6 +387,8 @@ public:
 
         if (fTool->IsActive()) {
             if (event->fType == kButtonPress && event->fCode == kButton1) {
+                // Let TEve process the click first for visual highlighting
+                TGLEventHandler::HandleButton(event);
                 fTool->HandleClick(event->fX, event->fY);
                 return kTRUE;
             }
@@ -421,6 +433,7 @@ public:
 private:
     TGLViewer* fViewer;
     TRulerTool* fTool;
+    Int_t fRetinaScale;
 };
 #include <TEveText.h>
 #include <TVector3.h>
@@ -587,6 +600,12 @@ Double_t EventDisplayBase::StoreMeasurement(const TVector3& p1, const TVector3& 
     container->AddElement(text);
 
     _measurementList->AddElement(container);
+
+    // ROOT 6.36+: register in the browser list tree for toggle visibility
+    if (gEve) {
+        gEve->AddToListTree(_measurementList, kTRUE);
+        gEve->AddToListTree(container, kTRUE);
+    }
 
     if (!_measurementVisible) {
         container->SetRnrSelf(kFALSE);
@@ -774,20 +793,7 @@ void EventDisplayBase::GenerateDisplay(const std::string& filename, Int_t run, I
                             ", Event " + std::to_string(event);
     _scene3D->SetElementName(sceneTitle.c_str());
 
-    // Diagnostic: check TEve state
-    std::cout << "\n--- TEve diagnostics ---" << std::endl;
-    std::cout << "  gEve:            " << (void*)gEve << std::endl;
-    std::cout << "  Browser:         " << (void*)gEve->GetBrowser() << std::endl;
-    std::cout << "  DefaultViewer:   " << (void*)gEve->GetDefaultViewer() << std::endl;
-    std::cout << "  EventScene:      " << (void*)gEve->GetEventScene() << std::endl;
-    std::cout << "  Scene children:  " << _scene3D->NumChildren() << std::endl;
-    std::cout << "  ListTree:        " << (void*)gEve->GetListTree() << std::endl;
-    if (gEve->GetListTree()) {
-        std::cout << "  ListTree entries: " << gEve->GetListTree()->GetSelected() << std::endl;
-    }
-    std::cout << "--- end diagnostics ---\n" << std::endl;
-
-    // Redraw everything
+    // Redraw 3D
     gEve->Redraw3D(kTRUE);
 
     // Configure 3D camera
@@ -796,22 +802,29 @@ void EventDisplayBase::GenerateDisplay(const std::string& filename, Int_t run, I
         Configure3DCamera(viewer3D);
     }
 
-    // macOS Retina/HiDPI fix: ROOT's GetScreenScalingFactor() returns 1
-    // on Cocoa builds, leaving the GL viewport in logical points instead
-    // of backing-store pixels (renders in bottom-left quarter).
-    // Force the viewport to the correct pixel dimensions.
-    gSystem->ProcessEvents();
+    // Install custom event handler with permanent Retina fix.
+    // The handler intercepts every HandleConfigureNotify and scales
+    // the viewport dimensions so the GL rendering fills the full window.
+    Int_t retinaScale = 1;
+#ifdef __APPLE__
+    if (TGLUtil::GetScreenScalingFactor() <= 1.0f) {
+        retinaScale = 2;
+    }
+#endif
     TGLViewer* glv = gEve->GetDefaultGLViewer();
+    if (glv) {
+        InstallRulerTool(glv);
+        if (_rulerEventHandler && retinaScale > 1) {
+            _rulerEventHandler->SetRetinaScale(retinaScale);
+        }
+    }
+
+    // Apply initial Retina viewport fix
+    gSystem->ProcessEvents();
     if (glv && glv->GetGLWidget()) {
         TGLWidget* glw = glv->GetGLWidget();
-        Int_t w = glw->GetWidth();
-        Int_t h = glw->GetHeight();
-#ifdef __APPLE__
-        if (TGLUtil::GetScreenScalingFactor() <= 1.0f) {
-            w *= 2;
-            h *= 2;
-        }
-#endif
+        Int_t w = glw->GetWidth()  * retinaScale;
+        Int_t h = glw->GetHeight() * retinaScale;
         Event_t ev;
         memset(&ev, 0, sizeof(ev));
         ev.fType   = kConfigureNotify;
@@ -820,6 +833,42 @@ void EventDisplayBase::GenerateDisplay(const std::string& filename, Int_t run, I
         glw->HandleConfigureNotify(&ev);
         glv->RequestDraw(TGLRnrCtx::kLODHigh);
     }
+
+    // Create and populate 2D canvas views (after Retina fix to avoid
+    // "non-existing drawable" errors from premature ProcessEvents)
+    Create2DCanvases();
+
+    if (_canvasXY) {
+        _canvasXY->cd();
+        DrawDetectorCanvas2D(_canvasXY, "XY");
+        DrawParticlesCanvas2D(_canvasXY, "XY");
+        DrawAnalysisContentCanvas2D(_canvasXY, "XY");
+        _canvasXY->RedrawAxis();
+        _canvasXY->Modified();
+        _canvasXY->Update();
+    }
+
+    if (_canvasXZ) {
+        _canvasXZ->cd();
+        DrawDetectorCanvas2D(_canvasXZ, "XZ");
+        DrawParticlesCanvas2D(_canvasXZ, "XZ");
+        DrawAnalysisContentCanvas2D(_canvasXZ, "XZ");
+        _canvasXZ->RedrawAxis();
+        _canvasXZ->Modified();
+        _canvasXZ->Update();
+    }
+
+    if (_canvasYZ) {
+        _canvasYZ->cd();
+        DrawDetectorCanvas2D(_canvasYZ, "YZ");
+        DrawParticlesCanvas2D(_canvasYZ, "YZ");
+        DrawAnalysisContentCanvas2D(_canvasYZ, "YZ");
+        _canvasYZ->RedrawAxis();
+        _canvasYZ->Modified();
+        _canvasYZ->Update();
+    }
+
+    UpdateWindowTitles(run, subrun, event);
 
     std::cout << "\n✓ Event Display READY!" << std::endl;
     std::cout << "  Event: " << sceneTitle << std::endl;
