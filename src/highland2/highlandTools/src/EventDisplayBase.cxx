@@ -29,6 +29,7 @@
 #include <TGLRnrCtx.h>
 #include <TSystem.h>
 #include <TVirtualX.h>
+#include <TEveSelection.h>
 #include <TCanvas.h>
 #include <TH2F.h>
 #include <TGraph.h>
@@ -104,10 +105,16 @@ public:
     void HandleClick(Int_t px, Int_t py) {
         if (!fActive || !fViewer) return;
 
+        TEveElement* snapped = nullptr;
         TVector3 worldPoint;
-        if (!TryGetPoint(px, py, worldPoint)) {
+        if (!TryGetPoint(px, py, worldPoint, &snapped)) {
             std::cout << "[Ruler] Unable to determine 3D position. Please click on a visible object." << std::endl;
             return;
+        }
+
+        // Highlight the snapped element in TEve
+        if (snapped && gEve) {
+            gEve->GetSelection()->UserPickedElement(snapped);
         }
 
         if (!fHasFirst) {
@@ -125,11 +132,9 @@ public:
     }
 
     void RequestStableRedraw() {
-        CameraBookmark bookmark = CaptureCameraState();
         if (gEve) {
-            gEve->Redraw3D(kTRUE);
+            gEve->Redraw3D(kFALSE);
         }
-        RestoreCameraState(bookmark);
         if (fViewer) {
             fViewer->RequestDraw();
         }
@@ -177,7 +182,7 @@ private:
         return FindAnchorForHierarchy(element, visited);
     }
 
-    bool TryHighlightedAnchor(TVector3& outPoint) {
+    bool TryHighlightedAnchor(TVector3& outPoint, TEveElement** snappedElement = nullptr) {
         if (!gEve || !fAnchors || fAnchors->empty()) {
             return false;
         }
@@ -194,6 +199,9 @@ private:
 
             if (const MeasurementAnchor* anchor = FindAnchorForHierarchy(hovered)) {
                 outPoint.SetXYZ(anchor->position.X(), anchor->position.Y(), anchor->position.Z());
+                if (snappedElement && anchor->owner) {
+                    *snappedElement = anchor->owner;
+                }
                 return true;
             }
         }
@@ -209,14 +217,16 @@ private:
         Bool_t valid = kFALSE;
     };
 
-    bool TryGetPoint(Int_t px, Int_t py, TVector3& outPoint) {
+    bool TryGetPoint(Int_t px, Int_t py, TVector3& outPoint, TEveElement** snappedElement = nullptr) {
         if (!fViewer) return false;
 
-        if (TryHighlightedAnchor(outPoint)) {
+        if (snappedElement) *snappedElement = nullptr;
+
+        if (TryHighlightedAnchor(outPoint, snappedElement)) {
             return true;
         }
 
-        if (fAnchors && !fAnchors->empty() && TrySnapToAnchors(px, py, outPoint)) {
+        if (fAnchors && !fAnchors->empty() && TrySnapToAnchors(px, py, outPoint, snappedElement)) {
             return true;
         }
 
@@ -235,7 +245,7 @@ private:
         return false;
     }
 
-    bool TrySnapToAnchors(Int_t px, Int_t py, TVector3& outPoint) {
+    bool TrySnapToAnchors(Int_t px, Int_t py, TVector3& outPoint, TEveElement** snappedElement = nullptr) {
         if (!fViewer || !fAnchors || fAnchors->empty()) {
             return false;
         }
@@ -285,6 +295,9 @@ private:
         double threshold = std::max(2.0, 0.02 * bestCamDist);
         if (bestPerp <= threshold) {
             outPoint = best->position;
+            if (snappedElement && best->owner) {
+                *snappedElement = best->owner;
+            }
             return true;
         }
 
@@ -380,15 +393,25 @@ public:
         return TGLEventHandler::HandleConfigureNotify(event);
     }
 
+    Bool_t HandleMotion(Event_t* event) override {
+        if (fRetinaScale > 1 && event) {
+            event->fX *= fRetinaScale;
+            event->fY *= fRetinaScale;
+        }
+        return TGLEventHandler::HandleMotion(event);
+    }
+
     Bool_t HandleButton(Event_t* event) override {
+        if (fRetinaScale > 1 && event) {
+            event->fX *= fRetinaScale;
+            event->fY *= fRetinaScale;
+        }
         if (!fTool || !fViewer) {
             return TGLEventHandler::HandleButton(event);
         }
 
         if (fTool->IsActive()) {
             if (event->fType == kButtonPress && event->fCode == kButton1) {
-                // Let TEve process the click first for visual highlighting
-                TGLEventHandler::HandleButton(event);
                 fTool->HandleClick(event->fX, event->fY);
                 return kTRUE;
             }
