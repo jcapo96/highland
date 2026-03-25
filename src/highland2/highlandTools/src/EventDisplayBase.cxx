@@ -26,6 +26,9 @@
 #include <TGLPhysicalShape.h>
 #include <TGLUtil.h>
 #include <TGLEventHandler.h>
+#include <TGLRnrCtx.h>
+#include <TSystem.h>
+#include <TVirtualX.h>
 #include <TCanvas.h>
 #include <TH2F.h>
 #include <TGraph.h>
@@ -737,16 +740,7 @@ void EventDisplayBase::GenerateDisplay(const std::string& filename, Int_t run, I
         return;
     }
 
-    ResetMeasurementAnchors();
-    SetMeasurementCallbacksSuspended(kTRUE);
-    ClearAllMeasurements();
-    SetMeasurementCallbacksSuspended(kFALSE);
-    if (_measurementList) {
-        _measurementList->Destroy();
-        _measurementList = nullptr;
-    }
-
-    // Initialize TEve with multi-view layout
+    // Initialize TEve
     InitializeTEve();
 
     // Create/get 3D scene and clear previous content
@@ -754,13 +748,8 @@ void EventDisplayBase::GenerateDisplay(const std::string& filename, Int_t run, I
         _scene3D = gEve->SpawnNewScene("Event Scene", "Scene holding event data");
     } else {
         _scene3D = gEve->GetEventScene();
-        BeforeSceneCleared();
-        _scene3D->DestroyElements(); // Clear previous event
+        _scene3D->DestroyElements();
     }
-
-    EnsureMeasurementList();
-    AttachMeasurementListToScene();
-    NotifyMeasurementsChanged(kFALSE);
 
     // Draw coordinate axes in 3D view
     DrawCoordinateAxes(_scene3D);
@@ -771,45 +760,13 @@ void EventDisplayBase::GenerateDisplay(const std::string& filename, Int_t run, I
     // Draw particles and hits in 3D
     DrawParticles3D(_scene3D);
 
-    // Create and populate 2D canvas views
-    Create2DCanvases();
-
-    // Draw detector geometry on 2D canvases
-    if (_canvasXY) {
-        _canvasXY->cd();
-        DrawDetectorCanvas2D(_canvasXY, "XY");
-        DrawParticlesCanvas2D(_canvasXY, "XY");
-        DrawAnalysisContentCanvas2D(_canvasXY, "XY");
-        _canvasXY->RedrawAxis(); // Redraw axes on top
-        _canvasXY->Modified();
-        _canvasXY->Update();
-        std::cout << "✓ XY canvas populated" << std::endl;
+    // ROOT 6.36+: scene->AddElement() no longer auto-registers in the
+    // browser list tree.  Explicitly register all top-level scene children
+    // so they appear with visibility checkboxes in the Eve panel.
+    for (TEveElement::List_i it = _scene3D->BeginChildren();
+         it != _scene3D->EndChildren(); ++it) {
+        gEve->AddToListTree(*it, kTRUE);
     }
-
-    if (_canvasXZ) {
-        _canvasXZ->cd();
-        DrawDetectorCanvas2D(_canvasXZ, "XZ");
-        DrawParticlesCanvas2D(_canvasXZ, "XZ");
-        DrawAnalysisContentCanvas2D(_canvasXZ, "XZ");
-        _canvasXZ->RedrawAxis(); // Redraw axes on top
-        _canvasXZ->Modified();
-        _canvasXZ->Update();
-        std::cout << "✓ XZ canvas populated" << std::endl;
-    }
-
-    if (_canvasYZ) {
-        _canvasYZ->cd();
-        DrawDetectorCanvas2D(_canvasYZ, "YZ");
-        DrawParticlesCanvas2D(_canvasYZ, "YZ");
-        DrawAnalysisContentCanvas2D(_canvasYZ, "YZ");
-        _canvasYZ->RedrawAxis(); // Redraw axes on top
-        _canvasYZ->Modified();
-        _canvasYZ->Update();
-        std::cout << "✓ YZ canvas populated" << std::endl;
-    }
-
-    // Update window titles with current event identifiers
-    UpdateWindowTitles(run, subrun, event);
 
     // Set scene name
     std::string sceneTitle = "Event Display: Run " + std::to_string(run) +
@@ -817,12 +774,51 @@ void EventDisplayBase::GenerateDisplay(const std::string& filename, Int_t run, I
                             ", Event " + std::to_string(event);
     _scene3D->SetElementName(sceneTitle.c_str());
 
+    // Diagnostic: check TEve state
+    std::cout << "\n--- TEve diagnostics ---" << std::endl;
+    std::cout << "  gEve:            " << (void*)gEve << std::endl;
+    std::cout << "  Browser:         " << (void*)gEve->GetBrowser() << std::endl;
+    std::cout << "  DefaultViewer:   " << (void*)gEve->GetDefaultViewer() << std::endl;
+    std::cout << "  EventScene:      " << (void*)gEve->GetEventScene() << std::endl;
+    std::cout << "  Scene children:  " << _scene3D->NumChildren() << std::endl;
+    std::cout << "  ListTree:        " << (void*)gEve->GetListTree() << std::endl;
+    if (gEve->GetListTree()) {
+        std::cout << "  ListTree entries: " << gEve->GetListTree()->GetSelected() << std::endl;
+    }
+    std::cout << "--- end diagnostics ---\n" << std::endl;
+
     // Redraw everything
     gEve->Redraw3D(kTRUE);
 
-    // Configure 3D camera for main viewer
-    if (_viewer3D) {
-        Configure3DCamera(_viewer3D);
+    // Configure 3D camera
+    TEveViewer* viewer3D = gEve->GetDefaultViewer();
+    if (viewer3D) {
+        Configure3DCamera(viewer3D);
+    }
+
+    // macOS Retina/HiDPI fix: ROOT's GetScreenScalingFactor() returns 1
+    // on Cocoa builds, leaving the GL viewport in logical points instead
+    // of backing-store pixels (renders in bottom-left quarter).
+    // Force the viewport to the correct pixel dimensions.
+    gSystem->ProcessEvents();
+    TGLViewer* glv = gEve->GetDefaultGLViewer();
+    if (glv && glv->GetGLWidget()) {
+        TGLWidget* glw = glv->GetGLWidget();
+        Int_t w = glw->GetWidth();
+        Int_t h = glw->GetHeight();
+#ifdef __APPLE__
+        if (TGLUtil::GetScreenScalingFactor() <= 1.0f) {
+            w *= 2;
+            h *= 2;
+        }
+#endif
+        Event_t ev;
+        memset(&ev, 0, sizeof(ev));
+        ev.fType   = kConfigureNotify;
+        ev.fWidth  = w;
+        ev.fHeight = h;
+        glw->HandleConfigureNotify(&ev);
+        glv->RequestDraw(TGLRnrCtx::kLODHigh);
     }
 
     std::cout << "\n✓ Event Display READY!" << std::endl;
@@ -1108,29 +1104,11 @@ void EventDisplayBase::InitializeTEve()
 //********************************************************************
 {
     if (!gEve) {
-        // "FI" = single-viewport (no browser layout)
-        TEveManager::Create(kTRUE, "FI");
-
-        std::cout << "\n✓ TEve window opened in single-viewport mode!" << std::endl;
-
-        // Create a scene for global and event elements
-        gEve->SpawnNewScene("Event Scene", "Scene with event elements");
-        gEve->SpawnNewScene("Global Scene", "Scene with global geometry");
-
-        // Create and attach a single viewer immediately
-        TEveViewer* viewer = Create3DView();
-        if (viewer && viewer->GetGLViewer()) {
-            InstallRulerTool(viewer->GetGLViewer());
-        }
-
-        gEve->Redraw3D(kTRUE);
-
+        TEveManager::Create(kTRUE);
+        std::cout << "\n✓ TEve window opened!" << std::endl;
         _teveInitialized = true;
     } else {
         std::cout << "\n✓ Updating TEve display..." << std::endl;
-        if (gEve->GetDefaultGLViewer()) {
-            InstallRulerTool(gEve->GetDefaultGLViewer());
-        }
     }
 }
 
@@ -1138,19 +1116,12 @@ void EventDisplayBase::InitializeTEve()
 TEveViewer* EventDisplayBase::Create3DView()
 //********************************************************************
 {
-    TEveViewer* viewer = gEve->SpawnNewViewer("3D View");
-    viewer->AddScene(gEve->GetEventScene());
-    viewer->AddScene(gEve->GetGlobalScene());
-
-    // Configure the 3D camera and look
-    viewer->GetGLViewer()->SetCurrentCamera(TGLViewer::kCameraPerspXOZ);
-    viewer->GetGLViewer()->ColorSet().Background().SetColor(kBlack);
-
-    if (viewer->GetGLViewer()) {
-        InstallRulerTool(viewer->GetGLViewer());
+    TEveViewer* viewer = gEve->GetDefaultViewer();
+    if (!viewer) {
+        viewer = gEve->SpawnNewViewer("3D View");
+        viewer->AddScene(gEve->GetEventScene());
+        viewer->AddScene(gEve->GetGlobalScene());
     }
-
-    std::cout << "✓ Single 3D viewer created and attached.\n";
     return viewer;
 }
 
