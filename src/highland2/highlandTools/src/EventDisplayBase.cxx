@@ -860,39 +860,9 @@ void EventDisplayBase::GenerateDisplay(const std::string& filename, Int_t run, I
         glv->RequestDraw(TGLRnrCtx::kLODHigh);
     }
 
-    // Create and populate 2D canvas views (after Retina fix to avoid
-    // "non-existing drawable" errors from premature ProcessEvents)
-    Create2DCanvases();
-
-    if (_canvasXY) {
-        _canvasXY->cd();
-        DrawDetectorCanvas2D(_canvasXY, "XY");
-        DrawParticlesCanvas2D(_canvasXY, "XY");
-        DrawAnalysisContentCanvas2D(_canvasXY, "XY");
-        _canvasXY->RedrawAxis();
-        _canvasXY->Modified();
-        _canvasXY->Update();
-    }
-
-    if (_canvasXZ) {
-        _canvasXZ->cd();
-        DrawDetectorCanvas2D(_canvasXZ, "XZ");
-        DrawParticlesCanvas2D(_canvasXZ, "XZ");
-        DrawAnalysisContentCanvas2D(_canvasXZ, "XZ");
-        _canvasXZ->RedrawAxis();
-        _canvasXZ->Modified();
-        _canvasXZ->Update();
-    }
-
-    if (_canvasYZ) {
-        _canvasYZ->cd();
-        DrawDetectorCanvas2D(_canvasYZ, "YZ");
-        DrawParticlesCanvas2D(_canvasYZ, "YZ");
-        DrawAnalysisContentCanvas2D(_canvasYZ, "YZ");
-        _canvasYZ->RedrawAxis();
-        _canvasYZ->Modified();
-        _canvasYZ->Update();
-    }
+    // 2D canvas event displays are intentionally disabled for now.
+    // Keep only the interactive 3D view.
+    std::cout << "2D canvas event displays are disabled; showing 3D view only." << std::endl;
 
     UpdateWindowTitles(run, subrun, event);
 
@@ -1447,24 +1417,27 @@ void EventDisplayBase::UpdateWindowTitles(Int_t run, Int_t subrun, Int_t event) 
 //********************************************************************
 void EventDisplayBase::DrawCoordinateAxes(TEveScene* scene) {
 //********************************************************************
+    TEveElementList* axesGroup = new TEveElementList("Axes");
+    scene->AddElement(axesGroup);
+
     // Add coordinate axes with labels
     TEveStraightLineSet* xAxis = new TEveStraightLineSet("X Axis");
     xAxis->AddLine(-360, 0, 0, 360, 0, 0);
     xAxis->SetMainColor(kRed);
     xAxis->SetLineWidth(2);
-    scene->AddElement(xAxis);
+    axesGroup->AddElement(xAxis);
 
     TEveStraightLineSet* yAxis = new TEveStraightLineSet("Y Axis");
     yAxis->AddLine(0, 0, 0, 0, 700, 0);
     yAxis->SetMainColor(kGreen);
     yAxis->SetLineWidth(2);
-    scene->AddElement(yAxis);
+    axesGroup->AddElement(yAxis);
 
     TEveStraightLineSet* zAxis = new TEveStraightLineSet("Z Axis");
     zAxis->AddLine(0, 0, 0, 0, 0, 700);
     zAxis->SetMainColor(kBlue);
     zAxis->SetLineWidth(2);
-    scene->AddElement(zAxis);
+    axesGroup->AddElement(zAxis);
 }
 
 //********************************************************************
