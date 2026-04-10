@@ -235,9 +235,18 @@ bool AnalysisLoop::InitializeSpill(){
   // Increment the number of entries run so far
   _entry_count += entry1-entry0;
 
-  // Dump info about number of entries run
-  if (_entry_count%1000==0 || _entry_count == _entry_nmax)
-    std::cout << "entry: " <<  _entry_count  << " of " << _entry_nmax << " (" << (100*_entry_count/_entry_nmax) << "%) --> " << _entry << std::endl;
+  // Dump progress in a compact progress bar
+  if (_entry_count % 100 == 0 || _entry_count == _entry_nmax) {
+    const int barWidth = 40;
+    const double frac = (_entry_nmax > 0) ? static_cast<double>(_entry_count) / static_cast<double>(_entry_nmax) : 0.0;
+    const int filled = static_cast<int>(barWidth * frac);
+
+    std::cout << "\rProgress [";
+    for (int i = 0; i < barWidth; ++i) std::cout << (i < filled ? '=' : ' ');
+    std::cout << "] " << static_cast<int>(100.0 * frac) << "% (" << _entry_count << "/" << _entry_nmax << ")" << std::flush;
+
+    if (_entry_count == _entry_nmax) std::cout << std::endl;
+  }
 
   // return if the read spill is not OK
   if (!spillOK) return false;

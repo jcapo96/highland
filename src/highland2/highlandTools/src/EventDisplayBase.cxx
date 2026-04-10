@@ -41,9 +41,11 @@
 #include <KeySymbols.h>
 #include <TLeaf.h>
 #include <TString.h>
+#include <TTreeFormula.h>
 #include <TEveSelection.h>
 #include <cmath>
 #include <limits>
+#include <unordered_map>
 #include <unordered_set>
 
 namespace {
@@ -790,6 +792,7 @@ void EventDisplayBase::GenerateDisplay(const std::string& filename, Int_t run, I
         _scene3D = gEve->SpawnNewScene("Event Scene", "Scene holding event data");
     } else {
         _scene3D = gEve->GetEventScene();
+        BeforeSceneCleared();
         _scene3D->DestroyElements();
     }
 
@@ -857,39 +860,9 @@ void EventDisplayBase::GenerateDisplay(const std::string& filename, Int_t run, I
         glv->RequestDraw(TGLRnrCtx::kLODHigh);
     }
 
-    // Create and populate 2D canvas views (after Retina fix to avoid
-    // "non-existing drawable" errors from premature ProcessEvents)
-    Create2DCanvases();
-
-    if (_canvasXY) {
-        _canvasXY->cd();
-        DrawDetectorCanvas2D(_canvasXY, "XY");
-        DrawParticlesCanvas2D(_canvasXY, "XY");
-        DrawAnalysisContentCanvas2D(_canvasXY, "XY");
-        _canvasXY->RedrawAxis();
-        _canvasXY->Modified();
-        _canvasXY->Update();
-    }
-
-    if (_canvasXZ) {
-        _canvasXZ->cd();
-        DrawDetectorCanvas2D(_canvasXZ, "XZ");
-        DrawParticlesCanvas2D(_canvasXZ, "XZ");
-        DrawAnalysisContentCanvas2D(_canvasXZ, "XZ");
-        _canvasXZ->RedrawAxis();
-        _canvasXZ->Modified();
-        _canvasXZ->Update();
-    }
-
-    if (_canvasYZ) {
-        _canvasYZ->cd();
-        DrawDetectorCanvas2D(_canvasYZ, "YZ");
-        DrawParticlesCanvas2D(_canvasYZ, "YZ");
-        DrawAnalysisContentCanvas2D(_canvasYZ, "YZ");
-        _canvasYZ->RedrawAxis();
-        _canvasYZ->Modified();
-        _canvasYZ->Update();
-    }
+    // 2D canvas event displays are intentionally disabled for now.
+    // Keep only the interactive 3D view.
+    std::cout << "2D canvas event displays are disabled; showing 3D view only." << std::endl;
 
     UpdateWindowTitles(run, subrun, event);
 
@@ -1010,8 +983,49 @@ void EventDisplayBase::ListAvailableEvents(const std::string& filename, const st
     std::string resolvedCategory;
     TBranch* categoryBranch = nullptr;
     TLeaf* categoryLeaf = nullptr;
+    bool useExpressionFilter = false;
+    TTree* anaTree = nullptr;
+    TTreeFormula* selectionFormula = nullptr;
+
+    auto makeEventKey = [](Int_t run, Int_t subrun, Int_t evt) -> Long64_t {
+        return (static_cast<Long64_t>(run) << 40) ^
+               (static_cast<Long64_t>(subrun) << 20) ^
+               static_cast<Long64_t>(evt);
+    };
+    auto looksLikeExpression = [](const std::string& text) -> bool {
+        if (text.empty()) return false;
+        if (text.find(' ') != std::string::npos) return true;
+        const std::string exprTokens = "=<>!&|()+*/[]$";
+        return text.find_first_of(exprTokens) != std::string::npos;
+    };
 
     if (!category.empty()) {
+        useExpressionFilter = looksLikeExpression(category);
+
+        if (useExpressionFilter) {
+            anaTree = (TTree*)file->Get("ana");
+            if (!anaTree) {
+                std::cout << "WARNING: 'ana' tree not found. Cannot apply filter '" << category
+                          << "'. Listing without filtering." << std::endl;
+                useExpressionFilter = false;
+            } else if (!anaTree->GetBranch("run") || !anaTree->GetBranch("subrun") || !anaTree->GetBranch("evt")) {
+                std::cout << "WARNING: 'ana' tree missing run/subrun/evt branches. Cannot apply filter '"
+                          << category << "'. Listing without filtering." << std::endl;
+                useExpressionFilter = false;
+            } else {
+                selectionFormula = new TTreeFormula("evtDisplaySelection", category.c_str(), anaTree);
+                if (!selectionFormula || selectionFormula->GetNdim() <= 0) {
+                    std::cout << "WARNING: Invalid filter expression '" << category
+                              << "'. Listing without filtering." << std::endl;
+                    if (selectionFormula) delete selectionFormula;
+                    selectionFormula = nullptr;
+                    useExpressionFilter = false;
+                }
+            }
+        }
+    }
+
+    if (!category.empty() && !useExpressionFilter) {
         std::vector<std::string> candidates;
         candidates.push_back(category);
         if (category.rfind("ED_", 0) != 0) {
@@ -1047,11 +1061,13 @@ void EventDisplayBase::ListAvailableEvents(const std::string& filename, const st
 
     // Print header
     std::cout << "\nStored events with display data:\n" << std::endl;
-    std::cout << std::setw(4) << "Idx" << "  "
+    std::cout << std::setw(6) << "EDIdx" << "  "
               << std::setw(8) << "Run" << " "
               << std::setw(8) << "Subrun" << " "
               << std::setw(8) << "Event";
-    if (categoryBranch && categoryLeaf) {
+    if (useExpressionFilter) {
+        std::cout << "  " << category;
+    } else if (categoryBranch && categoryLeaf) {
         std::cout << "  " << resolvedCategory;
     }
     std::cout << std::endl;
@@ -1061,16 +1077,46 @@ void EventDisplayBase::ListAvailableEvents(const std::string& filename, const st
     Long64_t nEntries = tree->GetEntries();
     int displayCount = 0;
 
+    std::unordered_map<Long64_t, bool> passByEvent;
+    if (useExpressionFilter && anaTree && selectionFormula) {
+        Int_t anaRun = 0, anaSubrun = 0, anaEvt = 0;
+        anaTree->SetBranchAddress("run", &anaRun);
+        anaTree->SetBranchAddress("subrun", &anaSubrun);
+        anaTree->SetBranchAddress("evt", &anaEvt);
+        const Long64_t nAnaEntries = anaTree->GetEntries();
+        for (Long64_t j = 0; j < nAnaEntries; ++j) {
+            anaTree->GetEntry(j);
+            bool pass = false;
+            const Int_t nFormulaData = selectionFormula->GetNdata();
+            for (Int_t iData = 0; iData < nFormulaData; ++iData) {
+                if (selectionFormula->EvalInstance(iData) != 0.0) {
+                    pass = true;
+                    break;
+                }
+            }
+            passByEvent[makeEventKey(anaRun, anaSubrun, anaEvt)] = pass;
+        }
+    }
+
     for (Long64_t i = 0; i < nEntries; i++) {
         tree->GetEntry(i);
 
         // Only show entries that have event display data (where ED_run != 0)
         if (ed_run > 0) {
-            std::cout << std::setw(4) << displayCount << "  "
+            bool passFilter = true;
+            if (useExpressionFilter) {
+                auto it = passByEvent.find(makeEventKey(ed_run, ed_subrun, ed_event));
+                passFilter = (it != passByEvent.end()) ? it->second : false;
+            }
+            if (!passFilter) continue;
+
+            std::cout << std::setw(6) << i << "  "
                       << std::setw(8) << ed_run << " "
                       << std::setw(8) << ed_subrun << " "
                       << std::setw(8) << ed_event;
-            if (categoryBranch && categoryLeaf) {
+            if (useExpressionFilter) {
+                std::cout << "  1";
+            } else if (categoryBranch && categoryLeaf) {
                 Double_t catValue = categoryLeaf->GetValue();
                 std::cout << "  " << catValue;
             }
@@ -1086,6 +1132,7 @@ void EventDisplayBase::ListAvailableEvents(const std::string& filename, const st
     std::cout << "  draw.EvtDisplayByIndex(index)" << std::endl;
     std::cout << std::endl;
 
+    if (selectionFormula) delete selectionFormula;
     file->Close();
 }
 
@@ -1164,6 +1211,7 @@ void EventDisplayBase::BeforeSceneCleared() {
 //********************************************************************
     SetMeasurementCallbacksSuspended(kTRUE);
     ClearAllMeasurements();
+    ResetMeasurementAnchors();
     SetMeasurementCallbacksSuspended(kFALSE);
     if (_measurementList) {
         _measurementList->Destroy();
@@ -1369,24 +1417,27 @@ void EventDisplayBase::UpdateWindowTitles(Int_t run, Int_t subrun, Int_t event) 
 //********************************************************************
 void EventDisplayBase::DrawCoordinateAxes(TEveScene* scene) {
 //********************************************************************
+    TEveElementList* axesGroup = new TEveElementList("Axes");
+    scene->AddElement(axesGroup);
+
     // Add coordinate axes with labels
     TEveStraightLineSet* xAxis = new TEveStraightLineSet("X Axis");
     xAxis->AddLine(-360, 0, 0, 360, 0, 0);
     xAxis->SetMainColor(kRed);
     xAxis->SetLineWidth(2);
-    scene->AddElement(xAxis);
+    axesGroup->AddElement(xAxis);
 
     TEveStraightLineSet* yAxis = new TEveStraightLineSet("Y Axis");
     yAxis->AddLine(0, 0, 0, 0, 700, 0);
     yAxis->SetMainColor(kGreen);
     yAxis->SetLineWidth(2);
-    scene->AddElement(yAxis);
+    axesGroup->AddElement(yAxis);
 
     TEveStraightLineSet* zAxis = new TEveStraightLineSet("Z Axis");
     zAxis->AddLine(0, 0, 0, 0, 0, 700);
     zAxis->SetMainColor(kBlue);
     zAxis->SetLineWidth(2);
-    scene->AddElement(zAxis);
+    axesGroup->AddElement(zAxis);
 }
 
 //********************************************************************
