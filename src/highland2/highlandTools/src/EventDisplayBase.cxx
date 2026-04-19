@@ -839,6 +839,7 @@ void EventDisplayBase::GenerateDisplay(const std::string& filename, Int_t run, I
 #endif
     TGLViewer* glv = gEve->GetDefaultGLViewer();
     if (glv) {
+        glv->SetClearColor(kWhite);
         InstallRulerTool(glv);
         if (_rulerEventHandler && retinaScale > 1) {
             _rulerEventHandler->SetRetinaScale(retinaScale);
